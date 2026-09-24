@@ -464,6 +464,108 @@ async function login() {
 
 }
 
+async function showProfile() {
+  hideAll();
+
+  const profileSection = document.getElementById("profileSection");
+
+  if (!profileSection) {
+    alert("Profile section not found");
+    return;
+  }
+
+  profileSection.classList.remove("hidden");
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    console.error(error);
+    alert("Could not load profile");
+    return;
+  }
+
+  document.getElementById("profileName").value =
+    data.full_name || "";
+
+  document.getElementById("profilePhone").value =
+    data.phone || "";
+
+  document.getElementById("profileCity").value =
+    data.city || "";
+
+  document.getElementById("profileCountry").value =
+    data.country || "Georgia";
+
+  document.getElementById("profileOperatorType").value =
+    data.operator_type || "";
+
+  document.getElementById("profileExperience").value =
+    data.experience_years || "";
+
+  document.getElementById("profileAbout").value =
+    data.about || "";
+}
+
+
+async function saveProfile() {
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("profiles")
+    .update({
+      full_name:
+        document.getElementById("profileName").value.trim(),
+
+      phone:
+        document.getElementById("profilePhone").value.trim(),
+
+      city:
+        document.getElementById("profileCity").value.trim(),
+
+      country:
+        document.getElementById("profileCountry").value.trim(),
+
+      operator_type:
+        document.getElementById("profileOperatorType").value,
+
+      experience_years:
+        Number(
+          document.getElementById("profileExperience").value
+        ) || null,
+
+      about:
+        document.getElementById("profileAbout").value.trim()
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Profile updated successfully!");
+}
 
 async function logout() {
 
