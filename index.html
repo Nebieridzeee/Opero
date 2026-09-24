@@ -600,6 +600,8 @@ async function showProfile() {
     return;
   }
 
+  await repairEmploymentStatus(user.id, data);
+
   document.getElementById("profileAccountTypeLabel").textContent =
     data.account_type === "company" ? "Company" : "Operator";
 
@@ -645,8 +647,24 @@ function choiceToBoolean(value) {
   return value === "yes" ? true : value === "no" ? false : null;
 }
 
+async function repairEmploymentStatus(userId, profile) {
+  if (profile?.account_type !== "operator" || profile.is_employed !== true || profile.looking_for_permanent_job !== true) return;
+  const { error } = await supabaseClient.from("profiles")
+    .update({ looking_for_permanent_job: false })
+    .eq("id", userId)
+    .eq("is_employed", true)
+    .eq("looking_for_permanent_job", true);
+  if (error) console.error("Could not correct employment status:", error);
+  profile.looking_for_permanent_job = false;
+}
+
 function toggleReplacementProfileFields() {
   const employed = document.getElementById("profileIsEmployed")?.value;
+  const permanentJob = document.getElementById("profileLookingPermanent");
+  if (permanentJob) {
+    permanentJob.disabled = employed === "yes";
+    if (employed === "yes") permanentJob.value = "no";
+  }
   document.getElementById("needsReplacementField")?.classList.toggle("hidden", employed !== "yes");
   document.getElementById("availableReplacementField")?.classList.toggle("hidden", employed !== "no");
 }
@@ -678,7 +696,9 @@ async function saveProfile() {
     const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
     updates.operator_type = document.getElementById("profileOperatorType").value;
     updates.is_employed = employed;
-    updates.looking_for_permanent_job = choiceToBoolean(document.getElementById("profileLookingPermanent").value);
+    updates.looking_for_permanent_job = employed === true
+      ? false
+      : choiceToBoolean(document.getElementById("profileLookingPermanent").value);
     updates.needs_replacement = employed === true
       ? choiceToBoolean(document.getElementById("profileNeedsReplacement").value)
       : null;
@@ -996,6 +1016,47 @@ async function showOperatorProfile(operatorId) {
   `;
 }
 
+async function showCompanyProfile(companyId) {
+  hideAll();
+  const content = document.getElementById("content");
+  document.getElementById("mainContent").classList.remove("hidden");
+  content.innerHTML = "<h2>Company Profile</h2><p class='muted'>Loading profile...</p>";
+  if (!companyId) {
+    content.innerHTML = "<p class='muted'>Company profile not found.</p><button onclick=\"showJobs('replacement')\">Back to Jobs</button>";
+    return;
+  }
+  const { data, error } = await supabaseClient.from("profiles")
+    .select("full_name, city, country, about, phone")
+    .eq("id", companyId)
+    .eq("account_type", "company")
+    .single();
+  if (error || !data) {
+    content.innerHTML = "<p class='muted'>Could not load this company profile.</p><button onclick=\"showJobs('replacement')\">Back to Jobs</button>";
+    return;
+  }
+  content.innerHTML = `
+    <button class="secondary" onclick="showJobs('replacement')">Back to Jobs</button>
+    <div class="card" style="margin-top:15px;">
+      <h2>${escapeHtml(data.full_name || "Company")}</h2>
+      <p>${escapeHtml(data.city || "")}${data.country ? ", " + escapeHtml(data.country) : ""}</p>
+      <p style="white-space:pre-wrap; margin-top:15px;">${escapeHtml(data.about || "")}</p>
+      ${data.phone ? `<p>Phone: ${escapeHtml(data.phone)}</p>` : ""}
+    </div>`;
+}
+
+async function showPublicProfile(profileId) {
+  if (!profileId) return;
+  const { data, error } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", profileId).maybeSingle();
+  if (error || !data) {
+    document.getElementById("content").innerHTML = "<p class='muted'>Profile not found.</p>";
+    document.getElementById("mainContent").classList.remove("hidden");
+    return;
+  }
+  if (data.account_type === "company") return showCompanyProfile(profileId);
+  if (data.account_type === "operator") return showOperatorProfile(profileId);
+}
+
 let availableJobs = [];
 let currentAccountType = "";
 let currentJobCategory = "all";
@@ -1045,9 +1106,9 @@ async function showJobs(category = "all") {
     </div>
   ` : "";
 
-  const replacementForm = currentAccountType === "operator" && currentJobCategory === "replacement" ? `
+  const replacementForm = ["operator", "company"].includes(currentAccountType) && currentJobCategory === "replacement" ? `
     <div class="card">
-      <h3>🔄 Need a replacement?</h3>
+      <h3>🔄 ${currentAccountType === "company" ? "Post a replacement job" : "Need a replacement?"}</h3>
       <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
         <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
         <label for="replacementDate">Date</label>
@@ -1096,9 +1157,9 @@ async function showJobs(category = "all") {
     </div>
   `;
   const roleMessage = currentJobCategory === "replacement" && currentAccountType === "company"
-    ? "<p class=\"muted\">Only Operators can post replacement requests.</p>"
+    ? ""
     : currentJobCategory === "replacement" && !currentAccountType
-      ? "<p class=\"muted\">Log in as an Operator to post a replacement request.</p>"
+      ? "<p class=\"muted\">Log in as an Operator or Company to post a replacement job.</p>"
       : currentAccountType === "operator" && currentJobCategory !== "replacement"
         ? "<p class=\"muted\">Replacement requests can be posted from the Replacement category.</p>"
         : "";
@@ -1157,7 +1218,7 @@ function renderJobs() {
           <p>Time: ${escapeHtml(startTime)}${endTime ? "–" + escapeHtml(endTime) : ""}</p>
           <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
           <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-          <p class="muted">Posted by: <button class="text-link" onclick="showOperatorProfile('${escapeHtml(job.created_by || "")}')">Operator</button></p>
+          <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Operator")}</button></p>
           ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
         </div>
       `;
@@ -1213,9 +1274,9 @@ async function publishReplacementJob() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { status.textContent = "Please log in as an Operator."; return; }
   const { data: profile } = await supabaseClient.from("profiles")
-    .select("account_type, phone").eq("id", user.id).maybeSingle();
-  if (profile?.account_type !== "operator") {
-    status.textContent = "Only Operator accounts can post replacement requests.";
+    .select("account_type, phone, full_name").eq("id", user.id).maybeSingle();
+  if (!["operator", "company"].includes(profile?.account_type)) {
+    status.textContent = "Only Operator and Company accounts can post replacement jobs.";
     return;
   }
 
@@ -1246,6 +1307,7 @@ async function publishReplacementJob() {
     operator_type: operatorType,
     salary: `${payment} GEL`,
     description,
+    company: profile.account_type === "company" ? (profile.full_name || "Company") : null,
     contact_phone: profile.phone || null,
     created_by: user.id
   });
