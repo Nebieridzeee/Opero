@@ -719,6 +719,57 @@ async function showOperators() {
 }
 
 
+async function showOperatorProfile(operatorId) {
+
+  hideAll();
+
+  const mainContent = document.getElementById("mainContent");
+  const content = document.getElementById("content");
+  mainContent.classList.remove("hidden");
+  content.innerHTML =
+    "<h2>Operator Profile</h2><p class=\"muted\">Loading profile...</p>";
+
+  if (!operatorId) {
+    content.innerHTML =
+      "<p class=\"muted\">Operator profile not found.</p>" +
+      "<button onclick=\"showOperators()\">Back to Operators</button>";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("full_name, operator_type, city, country, experience_years, about")
+    .eq("id", operatorId)
+    .single();
+
+  if (error || !data) {
+    console.error("Could not load operator profile:", error);
+    content.innerHTML =
+      "<p class=\"muted\">Could not load this operator profile.</p>" +
+      "<button onclick=\"showOperators()\">Back to Operators</button>";
+    return;
+  }
+
+  const name = escapeHtml(data.full_name || "Operator");
+  const operatorType = escapeHtml(data.operator_type || "Operator");
+  const city = escapeHtml(data.city || "");
+  const country = escapeHtml(data.country || "");
+  const location = [city, country].filter(Boolean).join(", ");
+  const experience = escapeHtml(data.experience_years ?? 0);
+  const about = escapeHtml(data.about || "No description provided.");
+
+  content.innerHTML = `
+    <button class="secondary" onclick="showOperators()">Back to Operators</button>
+    <div class="card" style="margin-top: 15px;">
+      <h2>${name}</h2>
+      <p class="muted">${operatorType}</p>
+      <p>${location || "Location not specified"}</p>
+      <p>Experience: ${experience} years</p>
+      <p style="white-space: pre-wrap;">${about}</p>
+    </div>
+  `;
+}
+
 async function showJobs() {
 
   hideAll();
