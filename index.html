@@ -259,6 +259,10 @@
 
   <input id="profileName" type="text" placeholder="Full name">
 
+  <div id="companyAddressField" class="hidden">
+    <input id="profileCompanyAddress" type="text" placeholder="Company address">
+  </div>
+
   <input id="profilePhone" type="text" placeholder="Phone">
 
   <input id="profileCity" type="text" placeholder="City">
@@ -312,9 +316,10 @@
     </div>
   </div>
 
-  <input id="profileExperience" type="number" placeholder="Experience years">
-
-  <textarea id="profileAbout" placeholder="About you"></textarea>
+  <div id="operatorExperienceProfileFields" class="hidden">
+    <input id="profileExperience" type="number" placeholder="Experience years">
+    <textarea id="profileAbout" placeholder="About you"></textarea>
+  </div>
 
   <button onclick="saveProfile()">Save Profile</button>
 
@@ -346,41 +351,51 @@
 
   <div class="form">
 
-    <h2>Create Operator Profile</h2>
+    <h2>Create your Opero account</h2>
 
-    <input id="fullName" placeholder="Full name">
+    <div class="buttons" role="group" aria-label="Account type">
+      <button id="operatorAccountChoice" type="button" aria-pressed="true" onclick="setRegistrationAccountType('operator')">I am an operator</button>
+      <button id="companyAccountChoice" type="button" class="secondary" aria-pressed="false" onclick="setRegistrationAccountType('company')">I represent a company</button>
+    </div>
+    <input id="accountType" type="hidden" value="operator">
 
-    <select id="accountType" aria-label="Account type">
-      <option value="operator">I am an operator</option>
-      <option value="company">I represent a company</option>
-    </select>
+    <div id="operatorRegistrationFields">
+      <input id="fullName" placeholder="Full name" autocomplete="name">
+      <select id="operatorType">
+        <option value="">Operator type</option>
+        <option>Tower Crane Operator</option>
+        <option>Mobile Crane Operator</option>
+        <option>Excavator Operator</option>
+        <option>Forklift Operator</option>
+        <option>Loader Operator</option>
+        <option>Bulldozer Operator</option>
+        <option>Other</option>
+      </select>
+      <label for="registerIsEmployed">Currently employed?</label>
+      <select id="registerIsEmployed">
+        <option value="">Select yes or no</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+      <input id="experience" type="number" min="0" placeholder="Experience (years)">
+      <textarea id="about" placeholder="About you / experience"></textarea>
+    </div>
+
+    <div id="companyRegistrationFields" class="hidden">
+      <input id="companyName" placeholder="Company name" autocomplete="organization">
+      <input id="companyAddress" placeholder="Company address" autocomplete="street-address">
+    </div>
 
     <input id="registerEmail" type="email" placeholder="Email">
 
-    <input id="registerPassword" type="password" placeholder="Password">
+    <input id="registerPassword" type="password" placeholder="Password" autocomplete="new-password">
+    <input id="registerPasswordConfirm" type="password" placeholder="Repeat password" autocomplete="new-password">
 
-    <input id="phone" placeholder="Phone">
+    <input id="phone" type="tel" placeholder="Phone" autocomplete="tel">
 
-    <input id="city" placeholder="City">
+    <input id="city" placeholder="City" autocomplete="address-level2">
 
-    <input id="country" value="Georgia" placeholder="Country">
-
-    <select id="operatorType">
-
-      <option value="">Operator type</option>
-      <option>Tower Crane Operator</option>
-      <option>Mobile Crane Operator</option>
-      <option>Excavator Operator</option>
-      <option>Forklift Operator</option>
-      <option>Loader Operator</option>
-      <option>Bulldozer Operator</option>
-      <option>Other</option>
-
-    </select>
-
-    <input id="experience" type="number" placeholder="Experience (years)">
-
-    <textarea id="about" placeholder="About you / experience"></textarea>
+    <input id="country" placeholder="Country" autocomplete="country-name">
 
     <button onclick="register()">Create Account</button>
 
@@ -445,19 +460,32 @@ function showRegister() {
 
   document.getElementById("registerSection").classList.remove("hidden");
 
+  setRegistrationAccountType(document.getElementById("accountType").value || "operator");
+
+}
+
+function setRegistrationAccountType(accountType) {
+  const isCompany = accountType === "company";
+  document.getElementById("accountType").value = isCompany ? "company" : "operator";
+  document.getElementById("operatorAccountChoice").classList.toggle("secondary", isCompany);
+  document.getElementById("companyAccountChoice").classList.toggle("secondary", !isCompany);
+  document.getElementById("operatorAccountChoice").setAttribute("aria-pressed", String(!isCompany));
+  document.getElementById("companyAccountChoice").setAttribute("aria-pressed", String(isCompany));
+  document.getElementById("operatorRegistrationFields").classList.toggle("hidden", isCompany);
+  document.getElementById("companyRegistrationFields").classList.toggle("hidden", !isCompany);
 }
 
 
 async function register() {
-
-  const fullName =
-    document.getElementById("fullName").value.trim();
 
   const email =
     document.getElementById("registerEmail").value.trim();
 
   const password =
     document.getElementById("registerPassword").value;
+
+  const passwordConfirm =
+    document.getElementById("registerPasswordConfirm").value;
 
   const accountType =
     document.getElementById("accountType").value;
@@ -471,14 +499,22 @@ async function register() {
   const country =
     document.getElementById("country").value.trim();
 
-  const operatorType =
-    document.getElementById("operatorType").value;
+  const isCompany = accountType === "company";
+  const fullName = (isCompany
+    ? document.getElementById("companyName").value
+    : document.getElementById("fullName").value).trim();
+  const companyAddress = isCompany
+    ? document.getElementById("companyAddress").value.trim()
+    : "";
+  const operatorType = isCompany ? "" : document.getElementById("operatorType").value;
 
   const experience =
     document.getElementById("experience").value;
 
   const about =
     document.getElementById("about").value.trim();
+
+  const isEmployed = isCompany ? null : choiceToBoolean(document.getElementById("registerIsEmployed").value);
 
   const status =
     document.getElementById("registerStatus");
@@ -487,10 +523,24 @@ async function register() {
   status.textContent = "Creating account...";
 
 
-  if (!fullName || !email || !password) {
+  if (!fullName || !email || !password || !passwordConfirm || !phone || !city || !country || (isCompany && !companyAddress)) {
+    status.textContent = "Please complete all required fields.";
+    return;
+  }
 
-    status.textContent =
-      "Please enter name, email and password.";
+  if (password !== passwordConfirm) {
+    status.textContent = "Passwords do not match.";
+    return;
+  }
+
+  if (!isCompany && isEmployed === null) {
+    status.textContent = "Please select whether you are currently employed.";
+    return;
+  }
+
+  const parsedExperience = experience === "" ? null : Number(experience);
+  if (!isCompany && parsedExperience !== null && (!Number.isInteger(parsedExperience) || parsedExperience < 0)) {
+    status.textContent = "Experience must be a whole number of zero or more.";
 
     return;
 
@@ -511,9 +561,14 @@ async function register() {
     phone: phone,
     city: city,
     country: country,
-    operator_type: accountType === "operator" ? operatorType : null,
-    experience_years: accountType === "operator" ? experience : null,
-    about: about
+    company_address: isCompany ? companyAddress : null,
+    operator_type: isCompany ? null : operatorType || null,
+    experience_years: isCompany ? null : parsedExperience,
+    is_employed: isCompany ? null : isEmployed,
+    looking_for_permanent_job: isCompany ? null : false,
+    needs_replacement: null,
+    available_for_replacement: null,
+    about: isCompany ? null : about
   }
 }
 
@@ -636,6 +691,11 @@ async function showProfile() {
 
   document.getElementById("profileName").value =
     data.full_name || "";
+
+  document.getElementById("profileName").placeholder = data.account_type === "company" ? "Company name" : "Full name";
+  document.getElementById("companyAddressField").classList.toggle("hidden", data.account_type !== "company");
+  document.getElementById("operatorExperienceProfileFields").classList.toggle("hidden", data.account_type !== "operator");
+  document.getElementById("profileCompanyAddress").value = data.company_address || "";
 
   document.getElementById("profilePhone").value =
     data.phone || "";
@@ -911,7 +971,7 @@ async function showMyJobs() {
   document.getElementById("mainContent").classList.remove("hidden");
   content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Loading...</p>";
   const { data: jobs, error } = await supabaseClient.from("jobs")
-    .select("id, title, operator_type, company, city, country, description, salary")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time")
     .eq("created_by", user.id).order("created_at", { ascending: false });
   if (error) {
     content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Could not load your jobs.</p>";
@@ -921,6 +981,7 @@ async function showMyJobs() {
     (jobs?.length ? jobs.map(job => `
       <div class="card">
         <h3>${escapeHtml(job.title)}</h3><p>${escapeHtml(job.company || "")}</p>
+        ${job.job_type === "replacement" ? `<p class="muted">Replacement · ${escapeHtml(job.replacement_date || "Date not set")} · ${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}–${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}</p>` : "<p class='muted'>Regular job</p>"}
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
@@ -949,10 +1010,33 @@ async function editJob(jobId) {
   if (country === null) return;
   const salary = prompt("Salary", job.salary || "");
   if (salary === null) return;
-  const { error } = await supabaseClient.from("jobs").update({
+  const updates = {
     title: title.trim(), operator_type: operatorType.trim(), description: description.trim(), company: company.trim(),
     city: city.trim(), country: country.trim(), salary: salary.trim()
-  }).eq("id", jobId).eq("created_by", user.id);
+  };
+  if (profile.account_type === "company") {
+    updates.company_address = document.getElementById("profileCompanyAddress").value.trim();
+    updates.experience_years = null;
+    updates.about = null;
+    updates.operator_type = null;
+  }
+  if (job.job_type === "replacement") {
+    const replacementDate = prompt("Replacement date (YYYY-MM-DD)", job.replacement_date || "");
+    if (replacementDate === null) return;
+    const replacementStartTime = prompt("Start time (HH:MM)", String(job.replacement_start_time || "").slice(0, 5));
+    if (replacementStartTime === null) return;
+    const replacementEndTime = prompt("End time (HH:MM)", String(job.replacement_end_time || "").slice(0, 5));
+    if (replacementEndTime === null) return;
+    if (!replacementDate || !replacementStartTime || !replacementEndTime || replacementStartTime >= replacementEndTime) {
+      alert("Please enter a valid replacement date and time range.");
+      return;
+    }
+    updates.replacement_date = replacementDate;
+    updates.replacement_start_time = replacementStartTime;
+    updates.replacement_end_time = replacementEndTime;
+  }
+  const { error } = await supabaseClient.from("jobs").update(updates)
+    .eq("id", jobId).eq("created_by", user.id);
   if (error) { alert("Could not update job: " + error.message); return; }
   await showMyJobs();
 }
@@ -1103,7 +1187,7 @@ async function showCompanyProfile(companyId) {
     return;
   }
   const { data, error } = await supabaseClient.from("profiles")
-    .select("full_name, city, country, about, phone")
+    .select("full_name, city, country, about, phone, company_address")
     .eq("id", companyId)
     .eq("account_type", "company")
     .single();
@@ -1116,6 +1200,7 @@ async function showCompanyProfile(companyId) {
     <div class="card" style="margin-top:15px;">
       <h2>${escapeHtml(data.full_name || "Company")}</h2>
       <p>${escapeHtml(data.city || "")}${data.country ? ", " + escapeHtml(data.country) : ""}</p>
+      ${data.company_address ? `<p>Address: ${escapeHtml(data.company_address)}</p>` : ""}
       <p style="white-space:pre-wrap; margin-top:15px;">${escapeHtml(data.about || "")}</p>
       ${data.phone ? `<p>Phone: ${escapeHtml(data.phone)}</p>` : ""}
     </div>`;
@@ -1522,25 +1607,19 @@ async function showApplications(category = "all", focusApplicationId = null) {
       && application.jobs?.created_by === user.id
       && ["Pending", "Reviewed"].includes(application.status)
       && ["application_sent", "replacement_request_sent"].includes(notification.event_type);
-    const profileAction = notification.related_profile_id && notification.sender_user_id !== user.id
+    const profileAction = notification.related_profile_id
       ? `<button class="secondary" onclick="openNotificationProfile(${Number(notification.id)}, '${escapeHtml(notification.related_profile_id)}')">View Profile</button>`
-      : "";
-    const applicationAction = notification.related_application_id
-      ? `<button class="secondary" onclick="openNotificationApplication(${Number(notification.id)}, ${Number(notification.related_application_id)})">View Application</button>`
-      : "";
-    const jobAction = notification.related_job_id
-      ? `<button class="secondary" onclick="openNotificationJob(${Number(notification.id)}, ${Number(notification.related_job_id)}, '${escapeHtml(notification.category)}')">View ${notification.category === "replacement" ? "Replacement" : "Job"}</button>`
       : "";
     const responseActions = canRespond
       ? `<button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${Number(notification.id)})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${Number(notification.id)})">Decline</button>`
       : "";
-    const markReadAction = !notification.is_read && !profileAction && !applicationAction && !jobAction
+    const markReadAction = !notification.is_read && !profileAction
       ? `<button class="secondary" onclick="markNotificationRead(${Number(notification.id)})">Mark read</button>`
       : "";
     return `<article class="card notification-card ${notification.is_read ? "read" : "unread"}">
       <h3>${escapeHtml(notification.title)}</h3><p>${escapeHtml(notification.message)}</p>
       <p class="muted">${escapeHtml(formatNotificationTime(notification.created_at))}</p>
-      <div class="notification-actions">${profileAction}${applicationAction}${jobAction}${responseActions}${markReadAction}</div>
+      <div class="notification-actions">${profileAction}${responseActions}${markReadAction}</div>
     </article>`;
   }).join("") : `<p class="muted">No ${currentNotificationCategory === "all" ? "history" : "events in this category"} yet.</p>`;
 
