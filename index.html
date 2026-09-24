@@ -104,6 +104,24 @@
       color: #9299a3;
     }
 
+    .status-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid #303945;
+      border-radius: 999px;
+      background: #1b222c;
+      color: #d7dde5;
+      font-size: 13px;
+    }
+
     .form {
       max-width: 500px;
       margin: 50px auto;
@@ -219,6 +237,40 @@
       <option value="Forklift Operator">Forklift Operator</option>
       <option value="Other">Other</option>
     </select>
+  </div>
+
+  <div id="operatorAvailabilityFields" class="hidden">
+    <label for="profileIsEmployed">Currently employed?</label>
+    <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
+      <option value="">Select yes or no</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+
+    <label for="profileLookingPermanent">Looking for a permanent job?</label>
+    <select id="profileLookingPermanent">
+      <option value="">Select yes or no</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+
+    <div id="needsReplacementField" class="hidden">
+      <label for="profileNeedsReplacement">Needs a replacement sometimes?</label>
+      <select id="profileNeedsReplacement">
+        <option value="">Select yes or no</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+
+    <div id="availableReplacementField" class="hidden">
+      <label for="profileAvailableReplacement">Available to work as a replacement?</label>
+      <select id="profileAvailableReplacement">
+        <option value="">Select yes or no</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
   </div>
 
   <input id="profileExperience" type="number" placeholder="Experience years">
@@ -558,6 +610,14 @@ async function showProfile() {
   );
   document.getElementById("profileOperatorType").value =
     data.account_type === "operator" ? data.operator_type || "" : "";
+  document.getElementById("operatorAvailabilityFields").classList.toggle(
+    "hidden", data.account_type !== "operator"
+  );
+  document.getElementById("profileIsEmployed").value = booleanToChoice(data.is_employed);
+  document.getElementById("profileLookingPermanent").value = booleanToChoice(data.looking_for_permanent_job);
+  document.getElementById("profileNeedsReplacement").value = booleanToChoice(data.needs_replacement);
+  document.getElementById("profileAvailableReplacement").value = booleanToChoice(data.available_for_replacement);
+  toggleReplacementProfileFields();
 
   document.getElementById("profileExperience").value =
     data.experience_years || "";
@@ -566,6 +626,20 @@ async function showProfile() {
     data.about || "";
 }
 
+
+function booleanToChoice(value) {
+  return value === true ? "yes" : value === false ? "no" : "";
+}
+
+function choiceToBoolean(value) {
+  return value === "yes" ? true : value === "no" ? false : null;
+}
+
+function toggleReplacementProfileFields() {
+  const employed = document.getElementById("profileIsEmployed")?.value;
+  document.getElementById("needsReplacementField")?.classList.toggle("hidden", employed !== "yes");
+  document.getElementById("availableReplacementField")?.classList.toggle("hidden", employed !== "no");
+}
 
 async function saveProfile() {
 
@@ -591,7 +665,16 @@ async function saveProfile() {
     about: document.getElementById("profileAbout").value.trim()
   };
   if (profile.account_type === "operator") {
+    const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
     updates.operator_type = document.getElementById("profileOperatorType").value;
+    updates.is_employed = employed;
+    updates.looking_for_permanent_job = choiceToBoolean(document.getElementById("profileLookingPermanent").value);
+    updates.needs_replacement = employed === true
+      ? choiceToBoolean(document.getElementById("profileNeedsReplacement").value)
+      : null;
+    updates.available_for_replacement = employed === false
+      ? choiceToBoolean(document.getElementById("profileAvailableReplacement").value)
+      : null;
   }
 
   const { error } = await supabaseClient.from("profiles")
@@ -704,6 +787,7 @@ async function showDashboard() {
     <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Operator")}.</p>
     <div class="card"><h3>Profile completion: ${completion}%</h3><p>Complete your profile so companies can learn about your experience.</p><button onclick="showProfile()">My profile</button></div>
     <div class="card"><h3>Browse jobs</h3><button onclick="showJobs()">Find jobs</button></div>
+    <div class="card"><h3>Need a replacement?</h3><p>Post the dates and details for an operator to cover your shift.</p><button onclick="showJobs('replacement')">Need a Replacement</button></div>
     <div class="card"><h3>My applications</h3><button onclick="showApplications()">View applications</button></div>
     <div class="card"><h3>Discover operators</h3><button onclick="showOperators()">Open operator directory</button></div>
   `;
@@ -787,7 +871,7 @@ async function showOperators() {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("id, full_name, operator_type, city, country, experience_years, about, created_at")
+    .select("id, full_name, operator_type, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
     .order("created_at", { ascending: false });
 
@@ -828,9 +912,21 @@ function renderOperators(operators, searched = false) {
       <p class="muted">${escapeHtml(operator.operator_type || "Operator")}</p>
       <p>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years</p>
+      ${renderOperatorStatuses(operator)}
       <p>${escapeHtml(operator.about || "")}</p>
     </div>
   `).join("");
+}
+
+function renderOperatorStatuses(operator) {
+  const badges = [];
+  if (operator.is_employed === true) badges.push("🟢 Currently employed");
+  if (operator.is_employed === false) badges.push("⚪ Not currently employed");
+  if (operator.looking_for_permanent_job === true) badges.push("🔎 Looking for permanent job");
+  if (operator.is_employed === true && operator.needs_replacement === true) badges.push("🔄 Needs replacement sometimes");
+  if (operator.is_employed === false && operator.available_for_replacement === true) badges.push("🔄 Available for replacement");
+  if (!badges.length) return "";
+  return `<div class="status-badges">${badges.map(label => `<span class="status-badge">${label}</span>`).join("")}</div>`;
 }
 
 async function showOperatorProfile(operatorId) {
@@ -893,9 +989,13 @@ async function showOperatorProfile(operatorId) {
 
 let availableJobs = [];
 let currentAccountType = "";
+let currentJobCategory = "all";
+let currentJobSearchTerm = "";
 
-async function showJobs() {
+async function showJobs(category = "all") {
 
+  currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "all";
+  currentJobSearchTerm = "";
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   const content = document.getElementById("content");
@@ -909,9 +1009,10 @@ async function showJobs() {
     accountProfile = data;
   }
   currentAccountType = accountProfile?.account_type || "";
-  const postingForm = currentAccountType === "company" ? `
+
+  const companyForm = currentAccountType === "company" && currentJobCategory !== "replacement" ? `
     <div class="card">
-      <h3>Post a job</h3>
+      <h3>Post a regular job</h3>
       <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
         <input id="jobTitle" type="text" placeholder="Job title" required>
         <label for="jobOperatorType">What type of operator are you looking for?</label>
@@ -933,92 +1034,159 @@ async function showJobs() {
         <p class="status" id="jobStatus"></p>
       </div>
     </div>
-  ` : (user
-    ? "<p class=\"muted\">Only Company accounts can publish jobs.</p>"
-    : "<p class=\"muted\">Log in as a Company account to publish a job.</p>");
+  ` : "";
+
+  const replacementForm = currentAccountType === "operator" && currentJobCategory === "replacement" ? `
+    <div class="card">
+      <h3>🔄 Need a replacement?</h3>
+      <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
+        <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
+        <label for="replacementDate">Date</label>
+        <input id="replacementDate" type="date" required>
+        <label for="replacementStartTime">Start time</label>
+        <input id="replacementStartTime" type="time" required>
+        <label for="replacementEndTime">End time</label>
+        <input id="replacementEndTime" type="time" required>
+        <input id="replacementCity" type="text" placeholder="Location / city" required>
+        <input id="replacementCountry" type="text" value="Georgia" placeholder="Country">
+        <label for="replacementOperatorType">Crane / operator type</label>
+        <select id="replacementOperatorType" required>
+          <option value="">Select type</option>
+          <option value="Tower Crane Operator">Tower Crane Operator</option>
+          <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+          <option value="Excavator Operator">Excavator Operator</option>
+          <option value="Loader Operator">Loader Operator</option>
+          <option value="Forklift Operator">Forklift Operator</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="replacementPayment" type="number" min="0" step="0.01" placeholder="Payment (GEL)" required>
+        <textarea id="replacementDescription" placeholder="Description / additional information"></textarea>
+        <button onclick="publishReplacementJob()">Publish replacement request</button>
+        <p class="status" id="replacementJobStatus"></p>
+      </div>
+    </div>
+  ` : "";
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("id, title, operator_type, company, city, country, description, salary, created_at")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Could not load jobs:", error);
-    content.innerHTML = "<h2>Jobs</h2>" + postingForm + "<p class=\"muted\">Could not load jobs. Please try again later.</p>";
+    content.innerHTML = "<h2>Jobs</h2><p class=\"muted\">Could not load jobs. Please try again later.</p>";
     return;
   }
 
   availableJobs = data || [];
+  const categoryTabs = `
+    <div class="buttons" style="margin:16px 0;">
+      <button class="${currentJobCategory === "all" ? "" : "secondary"}" onclick="filterJobCategory('all')">All Jobs</button>
+      <button class="${currentJobCategory === "regular" ? "" : "secondary"}" onclick="filterJobCategory('regular')">Regular Jobs</button>
+      <button class="${currentJobCategory === "replacement" ? "" : "secondary"}" onclick="filterJobCategory('replacement')">🔄 Replacement</button>
+    </div>
+  `;
+  const roleMessage = currentJobCategory === "replacement" && currentAccountType === "company"
+    ? "<p class=\"muted\">Only Operators can post replacement requests.</p>"
+    : currentJobCategory === "replacement" && !currentAccountType
+      ? "<p class=\"muted\">Log in as an Operator to post a replacement request.</p>"
+      : currentAccountType === "operator" && currentJobCategory !== "replacement"
+        ? "<p class=\"muted\">Replacement requests can be posted from the Replacement category.</p>"
+        : "";
+
   content.innerHTML = `
     <h2>Jobs</h2>
-    ${postingForm}
-    <input type="search" id="jobSearch" placeholder="Search jobs by title, company or location" oninput="filterJobs(this.value)" aria-label="Search jobs" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
+    ${categoryTabs}
+    ${companyForm}
+    ${replacementForm}
+    ${roleMessage}
+    <input type="search" id="jobSearch" placeholder="Search jobs by title, operator type or location" oninput="filterJobs(this.value)" aria-label="Search jobs" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
     <div id="jobResults"></div>
   `;
-  renderJobs(availableJobs);
+  renderJobs();
+}
+
+function filterJobCategory(category) {
+  if (!["all", "regular", "replacement"].includes(category)) return;
+  currentJobCategory = category;
+  showJobs(category);
 }
 
 function filterJobs(query) {
-  const term = String(query || "").trim().toLocaleLowerCase();
-  const matches = availableJobs.filter(job =>
-    [job.title, job.operator_type, job.company, job.city, job.country, job.description, job.salary]
-      .some(value => String(value || "").toLocaleLowerCase().includes(term))
-  );
-  renderJobs(matches, Boolean(term));
+  currentJobSearchTerm = String(query || "").trim().toLocaleLowerCase();
+  renderJobs();
 }
 
-function renderJobs(jobs, searched = false) {
+function renderJobs() {
   const results = document.getElementById("jobResults");
   if (!results) return;
+  const jobs = availableJobs.filter(job => {
+    const type = job.job_type || "regular";
+    const categoryMatches = currentJobCategory === "all" || type === currentJobCategory;
+    const searchMatches = [job.title, job.operator_type, job.company, job.city, job.country, job.description, job.salary]
+      .some(value => String(value || "").toLocaleLowerCase().includes(currentJobSearchTerm));
+    return categoryMatches && searchMatches;
+  });
   if (!jobs.length) {
-    results.innerHTML = `<p class="muted">${searched ? "No jobs match your search." : "No jobs available yet."}</p>`;
+    results.innerHTML = `<p class="muted">${currentJobSearchTerm ? "No jobs match your search." : "No jobs available in this category yet."}</p>`;
     return;
   }
-  results.innerHTML = jobs.map(job => `
-    <div class="card">
-      <h3>${escapeHtml(job.title || "Untitled job")}</h3>
-      <p>${escapeHtml(job.company || "")}</p>
-      <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
-      <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
-      <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-      <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
-      ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
-    </div>
-  `).join("");
+  results.innerHTML = jobs.map(job => {
+    const isReplacement = job.job_type === "replacement";
+    if (isReplacement) {
+      const day = job.replacement_date
+        ? new Date(`${job.replacement_date}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+        : "Date not set";
+      const startTime = String(job.replacement_start_time || "").slice(0, 5);
+      const endTime = String(job.replacement_end_time || "").slice(0, 5);
+      return `
+        <div class="card">
+          <h3>🔄 ${escapeHtml(job.title || "Replacement Needed")}</h3>
+          <p>Date: ${escapeHtml(day)}</p>
+          <p>Location: ${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
+          <p>Crane: ${escapeHtml(job.operator_type || "Not specified")}</p>
+          <p>Time: ${escapeHtml(startTime)}${endTime ? "–" + escapeHtml(endTime) : ""}</p>
+          <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
+          <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
+          <p class="muted">Posted by: Operator</p>
+          ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
+        </div>
+      `;
+    }
+    return `
+      <div class="card">
+        <h3>${escapeHtml(job.title || "Untitled job")}</h3>
+        <p>${escapeHtml(job.company || "")}</p>
+        <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
+        <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
+        <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
+        <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
+        ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
+      </div>
+    `;
+  }).join("");
 }
 
 async function publishJob() {
-
   const status = document.getElementById("jobStatus");
   const title = document.getElementById("jobTitle").value.trim();
-
-  if (!title) {
-    status.textContent = "Please enter a job title.";
-    return;
-  }
+  if (!title) { status.textContent = "Please enter a job title."; return; }
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    status.textContent = "Please log in to publish a job.";
-    return;
-  }
-
+  if (!user) { status.textContent = "Please log in to publish a job."; return; }
   const { data: profile } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
   if (profile?.account_type !== "company") {
-    status.textContent = "Only Company accounts can publish jobs.";
+    status.textContent = "Only Company accounts can publish regular jobs.";
     return;
   }
-
   const operatorType = document.getElementById("jobOperatorType").value;
-  if (!operatorType) {
-    status.textContent = "Please select the type of operator you are looking for.";
-    return;
-  }
+  if (!operatorType) { status.textContent = "Please select the type of operator you are looking for."; return; }
 
   status.textContent = "Publishing job...";
   const { error } = await supabaseClient.from("jobs").insert({
     title,
+    job_type: "regular",
     company: document.getElementById("jobCompany").value.trim(),
     city: document.getElementById("jobCity").value.trim(),
     country: document.getElementById("jobCountry").value.trim(),
@@ -1027,16 +1195,58 @@ async function publishJob() {
     operator_type: operatorType,
     created_by: user.id
   });
+  if (error) { console.error("Could not publish job:", error); status.textContent = "Could not publish job: " + error.message; return; }
+  await showJobs("regular");
+}
 
-  if (error) {
-    console.error("Could not publish job:", error);
-    status.textContent = "Could not publish job: " + error.message;
+async function publishReplacementJob() {
+  const status = document.getElementById("replacementJobStatus");
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { status.textContent = "Please log in as an Operator."; return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type, phone").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "operator") {
+    status.textContent = "Only Operator accounts can post replacement requests.";
     return;
   }
 
-  await showJobs();
-}
+  const title = document.getElementById("replacementTitle").value.trim() || "Replacement Needed";
+  const date = document.getElementById("replacementDate").value;
+  const startTime = document.getElementById("replacementStartTime").value;
+  const endTime = document.getElementById("replacementEndTime").value;
+  const city = document.getElementById("replacementCity").value.trim();
+  const country = document.getElementById("replacementCountry").value.trim() || "Georgia";
+  const operatorType = document.getElementById("replacementOperatorType").value;
+  const payment = Number(document.getElementById("replacementPayment").value);
+  const description = document.getElementById("replacementDescription").value.trim();
 
+  if (!date || !startTime || !endTime || startTime >= endTime || !city || !operatorType || !Number.isFinite(payment) || payment < 0) {
+    status.textContent = "Enter a date, valid time range, location, operator type and payment.";
+    return;
+  }
+
+  status.textContent = "Publishing replacement request...";
+  const { error } = await supabaseClient.from("jobs").insert({
+    title,
+    job_type: "replacement",
+    replacement_date: date,
+    replacement_start_time: startTime,
+    replacement_end_time: endTime,
+    city,
+    country,
+    operator_type: operatorType,
+    salary: `${payment} GEL`,
+    description,
+    contact_phone: profile.phone || null,
+    created_by: user.id
+  });
+  if (error) {
+    console.error("Could not publish replacement request:", error);
+    status.textContent = "Could not publish replacement request: " + error.message;
+    return;
+  }
+  await showJobs("replacement");
+}
 
 async function applyToJob(jobId) {
   const { data: { user } } = await supabaseClient.auth.getUser();
