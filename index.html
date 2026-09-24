@@ -817,7 +817,7 @@ async function showDashboard() {
     <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Operator")}.</p>
     <div class="card"><h3>Profile completion: ${completion}%</h3><p>Complete your profile so companies can learn about your experience.</p><button onclick="showProfile()">My profile</button></div>
     <div class="card"><h3>Browse jobs</h3><button onclick="showJobs()">Find jobs</button></div>
-    <div class="card"><h3>Need a replacement?</h3><p>Post the dates and details for an operator to cover your shift.</p><button onclick="showJobs('replacement')">Need a Replacement</button></div>
+    <div class="card"><h3>Need a replacement?</h3><p>Post the dates and details for an operator to cover your shift.</p><button onclick="showOperatorReplacementForm()">Need a Replacement</button></div>
     <div class="card"><h3>My applications</h3><button onclick="showApplications()">View applications</button></div>
     <div class="card"><h3>Discover operators</h3><button onclick="showOperators()">Open operator directory</button></div>
   `;
@@ -1059,8 +1059,56 @@ async function showPublicProfile(profileId) {
 
 let availableJobs = [];
 let currentAccountType = "";
+let currentUserEmployed = null;
 let currentJobCategory = "all";
 let currentJobSearchTerm = "";
+
+function replacementJobFormMarkup(accountType) {
+  return `
+    <div class="card">
+      <h3>🔄 ${accountType === "company" ? "Post a replacement job" : "Need a replacement?"}</h3>
+      <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
+        <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
+        <label for="replacementDate">Date</label>
+        <input id="replacementDate" type="date" required>
+        <label for="replacementStartTime">Start time</label>
+        <input id="replacementStartTime" type="time" required>
+        <label for="replacementEndTime">End time</label>
+        <input id="replacementEndTime" type="time" required>
+        <input id="replacementCity" type="text" placeholder="Location / city" required>
+        <input id="replacementCountry" type="text" value="Georgia" placeholder="Country">
+        <label for="replacementOperatorType">Crane / operator type</label>
+        <select id="replacementOperatorType" required>
+          <option value="">Select type</option>
+          <option value="Tower Crane Operator">Tower Crane Operator</option>
+          <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+          <option value="Excavator Operator">Excavator Operator</option>
+          <option value="Loader Operator">Loader Operator</option>
+          <option value="Forklift Operator">Forklift Operator</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="replacementPayment" type="number" min="0" step="0.01" placeholder="Payment (GEL)" required>
+        <textarea id="replacementDescription" placeholder="Description / additional information"></textarea>
+        <button onclick="publishReplacementJob()">Publish replacement request</button>
+        <p class="status" id="replacementJobStatus"></p>
+      </div>
+    </div>`;
+}
+
+async function showOperatorReplacementForm() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "operator") { showDashboard(); return; }
+  currentAccountType = "operator";
+  hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
+  document.getElementById("content").innerHTML = `
+    <h2>Post a Replacement Job</h2>
+    <button class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+    ${replacementJobFormMarkup("operator")}`;
+}
 
 async function showJobs(category = "all") {
 
@@ -1075,10 +1123,11 @@ async function showJobs(category = "all") {
   let accountProfile = null;
   if (user) {
     const { data } = await supabaseClient.from("profiles")
-      .select("account_type").eq("id", user.id).maybeSingle();
+      .select("account_type, is_employed").eq("id", user.id).maybeSingle();
     accountProfile = data;
   }
   currentAccountType = accountProfile?.account_type || "";
+  currentUserEmployed = accountProfile?.is_employed ?? null;
 
   const companyForm = currentAccountType === "company" && currentJobCategory !== "replacement" ? `
     <div class="card">
@@ -1106,36 +1155,9 @@ async function showJobs(category = "all") {
     </div>
   ` : "";
 
-  const replacementForm = ["operator", "company"].includes(currentAccountType) && currentJobCategory === "replacement" ? `
-    <div class="card">
-      <h3>🔄 ${currentAccountType === "company" ? "Post a replacement job" : "Need a replacement?"}</h3>
-      <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
-        <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
-        <label for="replacementDate">Date</label>
-        <input id="replacementDate" type="date" required>
-        <label for="replacementStartTime">Start time</label>
-        <input id="replacementStartTime" type="time" required>
-        <label for="replacementEndTime">End time</label>
-        <input id="replacementEndTime" type="time" required>
-        <input id="replacementCity" type="text" placeholder="Location / city" required>
-        <input id="replacementCountry" type="text" value="Georgia" placeholder="Country">
-        <label for="replacementOperatorType">Crane / operator type</label>
-        <select id="replacementOperatorType" required>
-          <option value="">Select type</option>
-          <option value="Tower Crane Operator">Tower Crane Operator</option>
-          <option value="Mobile Crane Operator">Mobile Crane Operator</option>
-          <option value="Excavator Operator">Excavator Operator</option>
-          <option value="Loader Operator">Loader Operator</option>
-          <option value="Forklift Operator">Forklift Operator</option>
-          <option value="Other">Other</option>
-        </select>
-        <input id="replacementPayment" type="number" min="0" step="0.01" placeholder="Payment (GEL)" required>
-        <textarea id="replacementDescription" placeholder="Description / additional information"></textarea>
-        <button onclick="publishReplacementJob()">Publish replacement request</button>
-        <p class="status" id="replacementJobStatus"></p>
-      </div>
-    </div>
-  ` : "";
+  const replacementForm = currentAccountType === "company" && currentJobCategory === "replacement"
+    ? replacementJobFormMarkup("company")
+    : "";
 
   const { data, error } = await supabaseClient
     .from("jobs")
@@ -1160,8 +1182,6 @@ async function showJobs(category = "all") {
     ? ""
     : currentJobCategory === "replacement" && !currentAccountType
       ? "<p class=\"muted\">Log in as an Operator or Company to post a replacement job.</p>"
-      : currentAccountType === "operator" && currentJobCategory !== "replacement"
-        ? "<p class=\"muted\">Replacement requests can be posted from the Replacement category.</p>"
         : "";
 
   content.innerHTML = `
@@ -1219,19 +1239,19 @@ function renderJobs() {
           <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
           <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
           <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Operator")}</button></p>
-          ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
+          ${currentAccountType === "operator" && currentUserEmployed !== true ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
         </div>
       `;
     }
     return `
       <div class="card">
         <h3>${escapeHtml(job.title || "Untitled job")}</h3>
-        <p>${escapeHtml(job.company || "")}</p>
+        <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Company")}</button></p>
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
         <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
-        ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
+        ${currentAccountType === "operator" && currentUserEmployed !== true ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
       </div>
     `;
   }).join("");
@@ -1326,9 +1346,13 @@ async function applyToJob(jobId) {
     return;
   }
   const { data: profile } = await supabaseClient.from("profiles")
-    .select("account_type").eq("id", user.id).maybeSingle();
+    .select("account_type, is_employed").eq("id", user.id).maybeSingle();
   if (profile?.account_type !== "operator") {
     alert("Only operator accounts can apply to jobs.");
+    return;
+  }
+  if (profile.is_employed === true) {
+    alert("Currently employed Operators cannot apply to jobs.");
     return;
   }
   const message = prompt("Add a short message to your application (optional):") || "";
