@@ -104,6 +104,16 @@
       color: #9299a3;
     }
 
+    button.text-link {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: #d7dde5;
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
     .status-badges {
       display: flex;
       flex-wrap: wrap;
@@ -873,6 +883,7 @@ async function showOperators() {
     .from("profiles")
     .select("id, full_name, operator_type, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
+    .eq("is_employed", false)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -920,10 +931,8 @@ function renderOperators(operators, searched = false) {
 
 function renderOperatorStatuses(operator) {
   const badges = [];
-  if (operator.is_employed === true) badges.push("🟢 Currently employed");
   if (operator.is_employed === false) badges.push("⚪ Not currently employed");
-  if (operator.looking_for_permanent_job === true) badges.push("🔎 Looking for permanent job");
-  if (operator.is_employed === true && operator.needs_replacement === true) badges.push("🔄 Needs replacement sometimes");
+  if (operator.is_employed === false && operator.looking_for_permanent_job === true) badges.push("🔎 Looking for permanent job");
   if (operator.is_employed === false && operator.available_for_replacement === true) badges.push("🔄 Available for replacement");
   if (!badges.length) return "";
   return `<div class="status-badges">${badges.map(label => `<span class="status-badge">${label}</span>`).join("")}</div>`;
@@ -1069,7 +1078,7 @@ async function showJobs(category = "all") {
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time, created_at")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time, created_by, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -1148,7 +1157,7 @@ function renderJobs() {
           <p>Time: ${escapeHtml(startTime)}${endTime ? "–" + escapeHtml(endTime) : ""}</p>
           <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
           <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-          <p class="muted">Posted by: Operator</p>
+          <p class="muted">Posted by: <button class="text-link" onclick="showOperatorProfile('${escapeHtml(job.created_by || "")}')">Operator</button></p>
           ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
         </div>
       `;
