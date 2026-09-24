@@ -161,6 +161,7 @@
     <button onclick="showHome()">Home</button>
     <button onclick="showOperators()">Operators</button>
     <button onclick="showJobs()">Jobs</button>
+    <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
     <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications</button>
     <button id="loginNav" onclick="showLogin()">Login</button>
     <button id="registerNav" onclick="showRegister()">Register</button>
@@ -200,10 +201,7 @@
 
   <h2>My Profile</h2>
 
-  <select id="profileAccountType">
-    <option value="operator">Operator account</option>
-    <option value="company">Company account</option>
-  </select>
+  <p class="muted">Account type: <strong id="profileAccountTypeLabel"></strong></p>
 
   <input id="profileName" type="text" placeholder="Full name">
 
@@ -501,13 +499,8 @@ async function login() {
     "Login successful!";
 
 
-  updateAuthUI();
-
-  setTimeout(() => {
-
-    showHome();
-
-  }, 700);
+  updateAuthUI(true);
+  await showDashboard();
 
 }
 
@@ -544,8 +537,8 @@ async function showProfile() {
     return;
   }
 
-  document.getElementById("profileAccountType").value =
-    data.account_type || user.user_metadata?.account_type || "operator";
+  document.getElementById("profileAccountTypeLabel").textContent =
+    data.account_type === "company" ? "Company" : "Operator";
 
   document.getElementById("profileName").value =
     data.full_name || "";
@@ -584,9 +577,6 @@ async function saveProfile() {
   const { error } = await supabaseClient
     .from("profiles")
     .update({
-      account_type:
-        document.getElementById("profileAccountType").value,
-
       full_name:
         document.getElementById("profileName").value.trim(),
 
@@ -624,47 +614,127 @@ async function logout() {
 
   await supabaseClient.auth.signOut();
 
-  updateAuthUI();
+  updateAuthUI(false);
 
   showHome();
 
 }
 
 
-async function updateAuthUI() {
-
-  const { data } =
-    await supabaseClient.auth.getSession();
-
-  const loggedIn =
-    !!data.session;
-
-
-  document
-    .getElementById("loginNav")
-    .classList.toggle("hidden", loggedIn);
-
-
-  document
-    .getElementById("registerNav")
-    .classList.toggle("hidden", loggedIn);
-
-
-  document
-    .getElementById("logoutNav")
-    .classList.toggle("hidden", !loggedIn);
-
-  document
-    .getElementById("applicationsNav")
-    .classList.toggle("hidden", !loggedIn);
-
-    
-    
-  document.getElementById("profileNav").
-  classList.toggle("hidden", !loggedIn);
-
+function updateAuthUI(loggedIn) {
+  document.getElementById("loginNav").classList.toggle("hidden", loggedIn);
+  document.getElementById("registerNav").classList.toggle("hidden", loggedIn);
+  document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("applicationsNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("dashboardNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("profileNav").classList.toggle("hidden", !loggedIn);
 }
 
+async function showDashboard() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  hideAll();
+  const mainContent = document.getElementById("mainContent");
+  const content = document.getElementById("content");
+  mainContent.classList.remove("hidden");
+  content.innerHTML = "<h2>Dashboard</h2><p class='muted'>Loading...</p>";
+
+  const { data: profile, error } = await supabaseClient.from("profiles")
+    .select("account_type, full_name, operator_type, city, experience_years, about")
+    .eq("id", user.id).maybeSingle();
+  if (error || !profile || !["operator", "company"].includes(profile.account_type)) {
+    content.innerHTML = "<h2>Dashboard</h2><p class='muted'>Your account profile is not ready. Please sign out and sign in again, or contact support.</p>";
+    return;
+  }
+
+  if (profile.account_type === "company") {
+    content.innerHTML = `
+      <h2>Company Dashboard</h2>
+      <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Company member")}.</p>
+      <div class="card"><h3>Post a job</h3><p>Publish an opening for operators.</p><button onclick="showJobs()">Create a job</button></div>
+      <div class="card"><h3>My jobs</h3><p>Manage jobs posted by this account.</p><button onclick="showMyJobs()">View my jobs</button></div>
+      <div class="card"><h3>Applications</h3><p>Review applicants and update their status.</p><button onclick="showApplications()">View applications</button></div>
+      <div class="card"><h3>Find operators</h3><button onclick="showOperators()">Browse operators</button></div>
+      <div class="card"><h3>Company profile</h3><button onclick="showProfile()">View profile</button></div>
+    `;
+    return;
+  }
+
+  const fields = [profile.full_name, profile.operator_type, profile.city, profile.experience_years, profile.about];
+  const completion = Math.round(fields.filter(value => value !== null && value !== undefined && String(value).trim() !== "").length / fields.length * 100);
+  content.innerHTML = `
+    <h2>Operator Dashboard</h2>
+    <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Operator")}.</p>
+    <div class="card"><h3>Profile completion: ${completion}%</h3><p>Complete your profile so companies can learn about your experience.</p><button onclick="showProfile()">My profile</button></div>
+    <div class="card"><h3>Browse jobs</h3><button onclick="showJobs()">Find jobs</button></div>
+    <div class="card"><h3>My applications</h3><button onclick="showApplications()">View applications</button></div>
+    <div class="card"><h3>Discover operators</h3><button onclick="showOperators()">Open operator directory</button></div>
+  `;
+}
+
+async function showMyJobs() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "company") { showDashboard(); return; }
+  hideAll();
+  const content = document.getElementById("content");
+  document.getElementById("mainContent").classList.remove("hidden");
+  content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Loading...</p>";
+  const { data: jobs, error } = await supabaseClient.from("jobs")
+    .select("id, title, company, city, country, description, salary")
+    .eq("created_by", user.id).order("created_at", { ascending: false });
+  if (error) {
+    content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Could not load your jobs.</p>";
+    return;
+  }
+  content.innerHTML = "<h2>My Jobs</h2><button onclick=\"showDashboard()\">Back to Dashboard</button>" +
+    (jobs?.length ? jobs.map(job => `
+      <div class="card">
+        <h3>${escapeHtml(job.title)}</h3><p>${escapeHtml(job.company || "")}</p>
+        <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
+        <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
+        <button onclick="editJob(${Number(job.id)})">Edit</button>
+        <button class="secondary" onclick="deleteJob(${Number(job.id)})">Delete</button>
+      </div>`).join("") : "<p class=\"muted\">You have not posted any jobs yet.</p>");
+}
+
+async function editJob(jobId) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: job } = await supabaseClient.from("jobs").select("*")
+    .eq("id", jobId).eq("created_by", user.id).maybeSingle();
+  if (!job) { alert("Job not found or you do not own it."); return; }
+  const title = prompt("Job title", job.title || "");
+  if (title === null) return;
+  const description = prompt("Description", job.description || "");
+  if (description === null) return;
+  const company = prompt("Company name", job.company || "");
+  if (company === null) return;
+  const city = prompt("City", job.city || "");
+  if (city === null) return;
+  const country = prompt("Country", job.country || "Georgia");
+  if (country === null) return;
+  const salary = prompt("Salary", job.salary || "");
+  if (salary === null) return;
+  const { error } = await supabaseClient.from("jobs").update({
+    title: title.trim(), description: description.trim(), company: company.trim(),
+    city: city.trim(), country: country.trim(), salary: salary.trim()
+  }).eq("id", jobId).eq("created_by", user.id);
+  if (error) { alert("Could not update job: " + error.message); return; }
+  await showMyJobs();
+}
+
+async function deleteJob(jobId) {
+  if (!confirm("Delete this job? This cannot be undone.")) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { error } = await supabaseClient.from("jobs").delete()
+    .eq("id", jobId).eq("created_by", user.id);
+  if (error) { alert("Could not delete job: " + error.message); return; }
+  await showMyJobs();
+}
 
 let operatorDirectory = [];
 
@@ -678,6 +748,7 @@ async function showOperators() {
   const { data, error } = await supabaseClient
     .from("profiles")
     .select("id, full_name, operator_type, city, country, experience_years, about, created_at")
+    .eq("account_type", "operator")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -790,14 +861,13 @@ async function showJobs() {
   content.innerHTML = "<h2>Jobs</h2><p class='muted'>Loading...</p>";
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (user) await ensureProfileAccountType(user);
   let accountProfile = null;
   if (user) {
     const { data } = await supabaseClient.from("profiles")
       .select("account_type").eq("id", user.id).maybeSingle();
     accountProfile = data;
   }
-  currentAccountType = accountProfile?.account_type || user?.user_metadata?.account_type || "operator";
+  currentAccountType = accountProfile?.account_type || "";
   const postingForm = currentAccountType === "company" ? `
     <div class="card">
       <h3>Post a job</h3>
@@ -813,12 +883,12 @@ async function showJobs() {
       </div>
     </div>
   ` : (user
-    ? "<p class=\"muted\">Company accounts can publish jobs. Change your account type in My Profile if needed.</p>"
-    : "<p class=\"muted\">Log in as a company to publish a job.</p>");
+    ? "<p class=\"muted\">Only Company accounts can publish jobs.</p>"
+    : "<p class=\"muted\">Log in as a Company account to publish a job.</p>");
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("id, created_by, title, company, city, country, description, salary, created_at")
+    .select("id, title, company, city, country, description, salary, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -881,6 +951,13 @@ async function publishJob() {
     return;
   }
 
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "company") {
+    status.textContent = "Only Company accounts can publish jobs.";
+    return;
+  }
+
   status.textContent = "Publishing job...";
   const { error } = await supabaseClient.from("jobs").insert({
     title,
@@ -902,36 +979,6 @@ async function publishJob() {
 }
 
 
-async function ensureProfileAccountType(user) {
-  const accountType = user.user_metadata?.account_type;
-  if (!["operator", "company"].includes(accountType)) return;
-  const { data: profile, error: readError } = await supabaseClient.from("profiles")
-    .select("id, account_type").eq("id", user.id).maybeSingle();
-  if (readError) {
-    console.error("Could not read account type:", readError);
-    return;
-  }
-  if (profile?.account_type === accountType) return;
-  let result;
-  if (profile) {
-    result = await supabaseClient.from("profiles").update({ account_type: accountType }).eq("id", user.id);
-  } else {
-    const metadata = user.user_metadata || {};
-    result = await supabaseClient.from("profiles").insert({
-      id: user.id,
-      full_name: metadata.full_name || user.email || "Opero member",
-      phone: metadata.phone || null,
-      city: metadata.city || null,
-      country: metadata.country || "Georgia",
-      operator_type: metadata.operator_type || null,
-      experience_years: Number(metadata.experience_years) || null,
-      about: metadata.about || null,
-      account_type: accountType
-    });
-  }
-  if (result.error) console.error("Could not save account type:", result.error);
-}
-
 async function applyToJob(jobId) {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
@@ -940,7 +987,7 @@ async function applyToJob(jobId) {
   }
   const { data: profile } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
-  if ((profile?.account_type || user.user_metadata?.account_type || "operator") !== "operator") {
+  if (profile?.account_type !== "operator") {
     alert("Only operator accounts can apply to jobs.");
     return;
   }
@@ -967,7 +1014,7 @@ async function showApplications() {
   if (!user) { showLogin(); return; }
   const { data: profile } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
-  const accountType = profile?.account_type || user.user_metadata?.account_type || "operator";
+  const accountType = profile?.account_type || "";
   const companyView = accountType === "company";
   const query = companyView
     ? "id, status, message, created_at, applicant_id, job_id, jobs(title), profiles!applications_applicant_id_fkey(full_name)"
@@ -1019,14 +1066,15 @@ function escapeHtml(value) {
 }
 
 
-supabaseClient.auth.onAuthStateChange(() => {
-
-  updateAuthUI();
-
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  updateAuthUI(!!session);
 });
 
-
-updateAuthUI();
+supabaseClient.auth.getSession().then(({ data }) => {
+  const session = data?.session;
+  updateAuthUI(!!session);
+  if (session) showDashboard();
+});
 
 </script>
 
