@@ -181,10 +181,7 @@
       Connect operators, companies and construction jobs.
     </p>
 
-    <div class="buttons">
-      <button onclick="showRegister()">Create Profile</button>
-      <button class="secondary" onclick="showJobs()">Find Jobs</button>
-    </div>
+    <div class="buttons" id="homeCtas" aria-live="polite"></div>
 
   </div>
 
@@ -503,6 +500,7 @@ async function login() {
 
 
   updateAuthUI(true);
+  await updateHomeCTAs(data.user);
   await showDashboard();
 
 }
@@ -611,6 +609,7 @@ async function logout() {
   await supabaseClient.auth.signOut();
 
   updateAuthUI(false);
+  updateHomeCTAs(null);
 
   showHome();
 
@@ -624,6 +623,48 @@ function updateAuthUI(loggedIn) {
   document.getElementById("applicationsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("dashboardNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("profileNav").classList.toggle("hidden", !loggedIn);
+}
+
+let homeCtaRequest = 0;
+
+async function updateHomeCTAs(user) {
+  const ctas = document.getElementById("homeCtas");
+  if (!ctas) return;
+  const requestId = ++homeCtaRequest;
+
+  if (!user) {
+    ctas.innerHTML = `
+      <button onclick="showRegister()">Create Profile</button>
+      <button class="secondary" onclick="showJobs()">Find Jobs</button>
+    `;
+    return;
+  }
+
+  ctas.innerHTML = "<span class=\"muted\">Loading your options...</span>";
+  const { data: profile, error } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (requestId !== homeCtaRequest) return;
+
+  if (error || !profile || !["operator", "company"].includes(profile.account_type)) {
+    ctas.innerHTML = "<span class=\"muted\">Your account profile is not available yet.</span>";
+    return;
+  }
+
+  if (profile.account_type === "operator") {
+    ctas.innerHTML = `
+      <button class="secondary" onclick="showJobs()">Find Jobs</button>
+      <button onclick="showProfile()">My Profile</button>
+      <button onclick="showDashboard()">Dashboard</button>
+    `;
+    return;
+  }
+
+  ctas.innerHTML = `
+    <button class="secondary" onclick="showOperators()">Find Operators</button>
+    <button onclick="showJobs()">Post a Job</button>
+    <button onclick="showProfile()">My Profile</button>
+    <button onclick="showDashboard()">Dashboard</button>
+  `;
 }
 
 async function showDashboard() {
@@ -1086,11 +1127,13 @@ function escapeHtml(value) {
 
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   updateAuthUI(!!session);
+  setTimeout(() => updateHomeCTAs(session?.user || null), 0);
 });
 
 supabaseClient.auth.getSession().then(({ data }) => {
   const session = data?.session;
   updateAuthUI(!!session);
+  updateHomeCTAs(session?.user || null);
   if (session) showDashboard();
 });
 
