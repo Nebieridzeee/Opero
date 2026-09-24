@@ -691,8 +691,9 @@ async function showOperators() {
 
       <div class="card">
 
-        <h3>${escapeHtml(operator.full_name)}</h3>
-
+<h3 onclick="showOperatorProfile('${operator.id}')" style="cursor:pointer;">
+  ${escapeHtml(operator.full_name)}
+</h3>
         <p class="muted">
           ${escapeHtml(operator.operator_type || "Operator")}
         </p>
