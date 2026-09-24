@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Opero — Heavy Equipment Operator Network</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+      color: #111;
+    }
+
+    header {
+      background: #111;
+      color: white;
+      padding: 18px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    nav button {
+      background: transparent;
+      border: 1px solid #555;
+      color: white;
+      padding: 9px 15px;
+      border-radius: 7px;
+      margin-left: 8px;
+      cursor: pointer;
+    }
+
+    .hero {
+      padding: 80px 20px;
+      text-align: center;
+      background: white;
+    }
+
+    .hero h1 {
+      font-size: 46px;
+      margin-bottom: 15px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .buttons button {
+      padding: 13px 22px;
+      border: none;
+      border-radius: 8px;
+      margin: 5px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .primary {
+      background: #111;
+      color: white;
+    }
+
+    .secondary {
+      background: #e9eaed;
+      color: #111;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+    }
+
+    .card h3 {
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: #666;
+      line-height: 1.5;
+    }
+
+    footer {
+      margin-top: 70px;
+      padding: 30px;
+      text-align: center;
+      background: #111;
+      color: #aaa;
+    }
+
+    #status {
+      text-align: center;
+      padding: 10px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">OPERO</div>
+
+  <nav>
+    <button onclick="showSection('operators')">Operators</button>
+    <button onclick="showSection('jobs')">Jobs</button>
+    <button onclick="showSection('login')">Login</button>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>OPERO</h1>
+
+  <p>
+    Heavy Equipment Operator Network
+  </p>
+
+  <div class="buttons">
+    <button class="primary" onclick="showSection('operators')">
+      Find Operators
+    </button>
+
+    <button class="secondary" onclick="showSection('jobs')">
+      Find Jobs
+    </button>
+  </div>
+</section>
+
+<div id="status">
+  Connecting to Opero...
+</div>
+
+<main class="container">
+
+  <section id="operators">
+    <h2 class="section-title">Operators</h2>
+
+    <div id="operatorList" class="cards">
+      Loading operators...
+    </div>
+  </section>
+
+  <br><br>
+
+  <section id="jobs">
+    <h2 class="section-title">Latest Jobs</h2>
+
+    <div id="jobList" class="cards">
+      Loading jobs...
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Opero © 2026 — Heavy Equipment Operator Network
+</footer>
+
+<script>
+
+const SUPABASE_URL =
+  "https://nghjkjrpsvmvpqntdbtp.supabase.co";
+
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5naGpranJwc3ZtdnBxbnRkYnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQ5MjMsImV4cCI6MjEwNTgyMDkyM30.uWNx_dXsN_a3-BYmAG15NxBTIJugrCDaq5hkY49_HM0";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+
+async function loadOperators() {
+
+  const { data, error } =
+    await supabaseClient
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+  const list =
+    document.getElementById("operatorList");
+
+  if (error) {
+    list.innerHTML =
+      "<p>Could not load operators.</p>";
+
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.innerHTML =
+      "<p>No operators registered yet.</p>";
+
+    return;
+  }
+
+  list.innerHTML = data.map(operator => `
+
+    <div class="card">
+
+      <h3>
+        ${operator.full_name || "Operator"}
+      </h3>
+
+      <p>
+        ${operator.operator_type || "Heavy Equipment Operator"}
+      </p>
+
+      <p>
+        📍 ${operator.city || "Unknown"}
+      </p>
+
+      <p>
+        Experience:
+        ${operator.experience_years || 0} years
+      </p>
+
+    </div>
+
+  `).join("");
+}
+
+
+async function loadJobs() {
+
+  const { data, error } =
+    await supabaseClient
+      .from("jobs")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+  const list =
+    document.getElementById("jobList");
+
+  if (error) {
+    list.innerHTML =
+      "<p>Could not load jobs.</p>";
+
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.innerHTML =
+      "<p>No jobs posted yet.</p>";
+
+    return;
+  }
+
+  list.innerHTML = data.map(job => `
+
+    <div class="card">
+
+      <h3>
+        ${job.title}
+      </h3>
+
+      <p>
+        ${job.company || "Company not specified"}
+      </p>
+
+      <p>
+        📍 ${job.city || "Unknown"}
+      </p>
+
+      <p>
+        💰 ${job.salary || "Salary not specified"}
+      </p>
+
+    </div>
+
+  `).join("");
+}
+
+
+function showSection(section) {
+
+  document
+    .getElementById(section)
+    ?.scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+
+async function init() {
+
+  document.getElementById("status").innerText =
+    "Opero is connected to Supabase.";
+
+  await loadOperators();
+
+  await loadJobs();
+
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>
