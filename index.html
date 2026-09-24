@@ -369,10 +369,16 @@ async function register() {
       password: password,
 
       options: {
-        data: {
-          full_name: fullName
-        }
-      }
+  data: {
+    full_name: fullName,
+    phone: phone,
+    city: city,
+    country: country,
+    operator_type: operatorType,
+    experience_years: experience,
+    about: about
+  }
+}
 
     });
 
