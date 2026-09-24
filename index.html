@@ -641,83 +641,61 @@ async function updateAuthUI() {
 }
 
 
+let operatorDirectory = [];
+
 async function showOperators() {
 
   hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
+  const content = document.getElementById("content");
+  content.innerHTML = "<h2>Operators</h2><p class='muted'>Loading...</p>";
 
-  document
-    .getElementById("mainContent")
-    .classList.remove("hidden");
-
-
-  const content =
-    document.getElementById("content");
-
-
-  content.innerHTML =
-    "<h2>Operators</h2><p class='muted'>Loading...</p>";
-
-
-  const { data, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("id, full_name, operator_type, city, country, experience_years, about, created_at")
+    .order("created_at", { ascending: false });
 
   if (error) {
-
-    content.innerHTML =
-      "<p>Error loading operators.</p>";
-
+    console.error("Could not load operators:", error);
+    content.innerHTML = "<h2>Operators</h2><p class='muted'>Could not load operators. Please try again later.</p>";
     return;
-
   }
 
-
-  if (!data.length) {
-
-    content.innerHTML =
-      "<h2>Operators</h2><p class='muted'>No operators yet.</p>";
-
-    return;
-
-  }
-
-
-  content.innerHTML =
-    "<h2>Operators</h2>" +
-    data.map(operator => `
-
-      <div class="card">
-
-<h3 onclick="showOperatorProfile('${operator.id}')" style="cursor:pointer;">
-  ${escapeHtml(operator.full_name)}
-</h3>
-        <p class="muted">
-          ${escapeHtml(operator.operator_type || "Operator")}
-        </p>
-
-        <p>
-          ${escapeHtml(operator.city || "")}
-          ${operator.country ? ", " + escapeHtml(operator.country) : ""}
-        </p>
-
-        <p>
-          Experience:
-          ${operator.experience_years || 0} years
-        </p>
-
-        <p>
-          ${escapeHtml(operator.about || "")}
-        </p>
-
-      </div>
-
-    `).join("");
-
+  operatorDirectory = data || [];
+  content.innerHTML = `
+    <h2>Operators</h2>
+    <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
+    <div id="operatorResults"></div>
+  `;
+  renderOperators(operatorDirectory);
 }
 
+function filterOperators(query) {
+  const term = String(query || "").trim().toLocaleLowerCase();
+  const matches = operatorDirectory.filter(operator =>
+    [operator.full_name, operator.operator_type, operator.city, operator.country, operator.about]
+      .some(value => String(value || "").toLocaleLowerCase().includes(term))
+  );
+  renderOperators(matches, Boolean(term));
+}
+
+function renderOperators(operators, searched = false) {
+  const results = document.getElementById("operatorResults");
+  if (!results) return;
+  if (!operators.length) {
+    results.innerHTML = `<p class="muted">${searched ? "No operators match your search." : "No operators yet."}</p>`;
+    return;
+  }
+  results.innerHTML = operators.map(operator => `
+    <div class="card">
+      <h3 onclick="showOperatorProfile('${escapeHtml(operator.id)}')" style="cursor:pointer;">${escapeHtml(operator.full_name || "Operator")}</h3>
+      <p class="muted">${escapeHtml(operator.operator_type || "Operator")}</p>
+      <p>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
+      <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years</p>
+      <p>${escapeHtml(operator.about || "")}</p>
+    </div>
+  `).join("");
+}
 
 async function showOperatorProfile(operatorId) {
 
@@ -776,11 +754,12 @@ async function showOperatorProfile(operatorId) {
   `;
 }
 
+let availableJobs = [];
+
 async function showJobs() {
 
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
-
   const content = document.getElementById("content");
   content.innerHTML = "<h2>Jobs</h2><p class='muted'>Loading...</p>";
 
@@ -788,7 +767,7 @@ async function showJobs() {
   const postingForm = user ? `
     <div class="card">
       <h3>Post a job</h3>
-      <div class="form" style="margin: 15px 0 0; padding: 0; background: transparent; border: 0;">
+      <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
         <input id="jobTitle" type="text" placeholder="Job title" required>
         <input id="jobCompany" type="text" placeholder="Company name">
         <input id="jobCity" type="text" placeholder="City">
@@ -803,29 +782,51 @@ async function showJobs() {
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("*")
+    .select("title, company, city, country, description, salary, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Could not load jobs:", error);
-    content.innerHTML = "<h2>Jobs</h2>" + postingForm +
-      "<p class=\"muted\">Could not load jobs. Please try again later.</p>";
+    content.innerHTML = "<h2>Jobs</h2>" + postingForm + "<p class=\"muted\">Could not load jobs. Please try again later.</p>";
     return;
   }
 
-  const jobsMarkup = data.length ? data.map(job => `
+  availableJobs = data || [];
+  content.innerHTML = `
+    <h2>Jobs</h2>
+    ${postingForm}
+    <input type="search" id="jobSearch" placeholder="Search jobs by title, company or location" oninput="filterJobs(this.value)" aria-label="Search jobs" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
+    <div id="jobResults"></div>
+  `;
+  renderJobs(availableJobs);
+}
+
+function filterJobs(query) {
+  const term = String(query || "").trim().toLocaleLowerCase();
+  const matches = availableJobs.filter(job =>
+    [job.title, job.company, job.city, job.country, job.description, job.salary]
+      .some(value => String(value || "").toLocaleLowerCase().includes(term))
+  );
+  renderJobs(matches, Boolean(term));
+}
+
+function renderJobs(jobs, searched = false) {
+  const results = document.getElementById("jobResults");
+  if (!results) return;
+  if (!jobs.length) {
+    results.innerHTML = `<p class="muted">${searched ? "No jobs match your search." : "No jobs available yet."}</p>`;
+    return;
+  }
+  results.innerHTML = jobs.map(job => `
     <div class="card">
       <h3>${escapeHtml(job.title || "Untitled job")}</h3>
       <p>${escapeHtml(job.company || "")}</p>
       <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
-      <p style="white-space: pre-wrap;">${escapeHtml(job.description || "")}</p>
+      <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
       <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
     </div>
-  `).join("") : "<p class=\"muted\">No jobs available yet.</p>";
-
-  content.innerHTML = "<h2>Jobs</h2>" + postingForm + jobsMarkup;
+  `).join("");
 }
-
 
 async function publishJob() {
 
@@ -850,8 +851,7 @@ async function publishJob() {
     city: document.getElementById("jobCity").value.trim(),
     country: document.getElementById("jobCountry").value.trim(),
     description: document.getElementById("jobDescription").value.trim(),
-    salary: document.getElementById("jobSalary").value.trim(),
-    user_id: user.id
+    salary: document.getElementById("jobSalary").value.trim()
   });
 
   if (error) {
