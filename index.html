@@ -779,75 +779,88 @@ async function showOperatorProfile(operatorId) {
 async function showJobs() {
 
   hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
 
-  document
-    .getElementById("mainContent")
-    .classList.remove("hidden");
+  const content = document.getElementById("content");
+  content.innerHTML = "<h2>Jobs</h2><p class='muted'>Loading...</p>";
 
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  const postingForm = user ? `
+    <div class="card">
+      <h3>Post a job</h3>
+      <div class="form" style="margin: 15px 0 0; padding: 0; background: transparent; border: 0;">
+        <input id="jobTitle" type="text" placeholder="Job title" required>
+        <input id="jobCompany" type="text" placeholder="Company name">
+        <input id="jobCity" type="text" placeholder="City">
+        <input id="jobCountry" type="text" placeholder="Country">
+        <textarea id="jobDescription" placeholder="Job description"></textarea>
+        <input id="jobSalary" type="text" placeholder="Salary (optional)">
+        <button onclick="publishJob()">Publish job</button>
+        <p class="status" id="jobStatus"></p>
+      </div>
+    </div>
+  ` : "<p class=\"muted\">Log in to publish a job.</p>";
 
-  const content =
-    document.getElementById("content");
-
-
-  content.innerHTML =
-    "<h2>Jobs</h2><p class='muted'>Loading...</p>";
-
-
-  const { data, error } =
-    await supabaseClient
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+  const { data, error } = await supabaseClient
+    .from("jobs")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
-
-    content.innerHTML =
-      "<p>Error loading jobs.</p>";
-
+    console.error("Could not load jobs:", error);
+    content.innerHTML = "<h2>Jobs</h2>" + postingForm +
+      "<p class=\"muted\">Could not load jobs. Please try again later.</p>";
     return;
-
   }
 
+  const jobsMarkup = data.length ? data.map(job => `
+    <div class="card">
+      <h3>${escapeHtml(job.title || "Untitled job")}</h3>
+      <p>${escapeHtml(job.company || "")}</p>
+      <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
+      <p style="white-space: pre-wrap;">${escapeHtml(job.description || "")}</p>
+      <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
+    </div>
+  `).join("") : "<p class=\"muted\">No jobs available yet.</p>";
 
-  if (!data.length) {
+  content.innerHTML = "<h2>Jobs</h2>" + postingForm + jobsMarkup;
+}
 
-    content.innerHTML =
-      "<h2>Jobs</h2><p class='muted'>No jobs available yet.</p>";
 
+async function publishJob() {
+
+  const status = document.getElementById("jobStatus");
+  const title = document.getElementById("jobTitle").value.trim();
+
+  if (!title) {
+    status.textContent = "Please enter a job title.";
     return;
-
   }
 
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    status.textContent = "Please log in to publish a job.";
+    return;
+  }
 
-  content.innerHTML =
-    "<h2>Jobs</h2>" +
-    data.map(job => `
+  status.textContent = "Publishing job...";
+  const { error } = await supabaseClient.from("jobs").insert({
+    title,
+    company: document.getElementById("jobCompany").value.trim(),
+    city: document.getElementById("jobCity").value.trim(),
+    country: document.getElementById("jobCountry").value.trim(),
+    description: document.getElementById("jobDescription").value.trim(),
+    salary: document.getElementById("jobSalary").value.trim(),
+    user_id: user.id
+  });
 
-      <div class="card">
+  if (error) {
+    console.error("Could not publish job:", error);
+    status.textContent = "Could not publish job: " + error.message;
+    return;
+  }
 
-        <h3>${escapeHtml(job.title)}</h3>
-
-        <p>${escapeHtml(job.company || "")}</p>
-
-        <p class="muted">
-          ${escapeHtml(job.city || "")},
-          ${escapeHtml(job.country || "")}
-        </p>
-
-        <p>
-          ${escapeHtml(job.description || "")}
-        </p>
-
-        <p>
-          Salary:
-          ${escapeHtml(job.salary || "Not specified")}
-        </p>
-
-      </div>
-
-    `).join("");
-
+  await showJobs();
 }
 
 
