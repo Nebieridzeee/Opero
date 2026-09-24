@@ -161,6 +161,7 @@
     <button onclick="showHome()">Home</button>
     <button onclick="showOperators()">Operators</button>
     <button onclick="showJobs()">Jobs</button>
+    <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications</button>
     <button id="loginNav" onclick="showLogin()">Login</button>
     <button id="registerNav" onclick="showRegister()">Register</button>
     <button id="profileNav" onclick="showProfile()">My Profile</button>
@@ -198,6 +199,11 @@
 <section id="profileSection" class="hidden">
 
   <h2>My Profile</h2>
+
+  <select id="profileAccountType">
+    <option value="operator">Operator account</option>
+    <option value="company">Company account</option>
+  </select>
 
   <input id="profileName" type="text" placeholder="Full name">
 
@@ -254,6 +260,11 @@
     <h2>Create Operator Profile</h2>
 
     <input id="fullName" placeholder="Full name">
+
+    <select id="accountType" aria-label="Account type">
+      <option value="operator">I am an operator</option>
+      <option value="company">I represent a company</option>
+    </select>
 
     <input id="registerEmail" type="email" placeholder="Email">
 
@@ -359,6 +370,9 @@ async function register() {
   const password =
     document.getElementById("registerPassword").value;
 
+  const accountType =
+    document.getElementById("accountType").value;
+
   const phone =
     document.getElementById("phone").value.trim();
 
@@ -404,6 +418,7 @@ async function register() {
       options: {
   data: {
     full_name: fullName,
+    account_type: accountType,
     phone: phone,
     city: city,
     country: country,
@@ -529,6 +544,9 @@ async function showProfile() {
     return;
   }
 
+  document.getElementById("profileAccountType").value =
+    data.account_type || user.user_metadata?.account_type || "operator";
+
   document.getElementById("profileName").value =
     data.full_name || "";
 
@@ -566,6 +584,9 @@ async function saveProfile() {
   const { error } = await supabaseClient
     .from("profiles")
     .update({
+      account_type:
+        document.getElementById("profileAccountType").value,
+
       full_name:
         document.getElementById("profileName").value.trim(),
 
@@ -631,6 +652,10 @@ async function updateAuthUI() {
 
   document
     .getElementById("logoutNav")
+    .classList.toggle("hidden", !loggedIn);
+
+  document
+    .getElementById("applicationsNav")
     .classList.toggle("hidden", !loggedIn);
 
     
@@ -755,6 +780,7 @@ async function showOperatorProfile(operatorId) {
 }
 
 let availableJobs = [];
+let currentAccountType = "";
 
 async function showJobs() {
 
@@ -764,7 +790,15 @@ async function showJobs() {
   content.innerHTML = "<h2>Jobs</h2><p class='muted'>Loading...</p>";
 
   const { data: { user } } = await supabaseClient.auth.getUser();
-  const postingForm = user ? `
+  if (user) await ensureProfileAccountType(user);
+  let accountProfile = null;
+  if (user) {
+    const { data } = await supabaseClient.from("profiles")
+      .select("account_type").eq("id", user.id).maybeSingle();
+    accountProfile = data;
+  }
+  currentAccountType = accountProfile?.account_type || user?.user_metadata?.account_type || "operator";
+  const postingForm = currentAccountType === "company" ? `
     <div class="card">
       <h3>Post a job</h3>
       <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
@@ -778,11 +812,13 @@ async function showJobs() {
         <p class="status" id="jobStatus"></p>
       </div>
     </div>
-  ` : "<p class=\"muted\">Log in to publish a job.</p>";
+  ` : (user
+    ? "<p class=\"muted\">Company accounts can publish jobs. Change your account type in My Profile if needed.</p>"
+    : "<p class=\"muted\">Log in as a company to publish a job.</p>");
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("title, company, city, country, description, salary, created_at")
+    .select("id, created_by, title, company, city, country, description, salary, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -824,6 +860,7 @@ function renderJobs(jobs, searched = false) {
       <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
       <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
       <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
+      ${currentAccountType === "operator" ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
     </div>
   `).join("");
 }
@@ -851,7 +888,8 @@ async function publishJob() {
     city: document.getElementById("jobCity").value.trim(),
     country: document.getElementById("jobCountry").value.trim(),
     description: document.getElementById("jobDescription").value.trim(),
-    salary: document.getElementById("jobSalary").value.trim()
+    salary: document.getElementById("jobSalary").value.trim(),
+    created_by: user.id
   });
 
   if (error) {
@@ -861,6 +899,111 @@ async function publishJob() {
   }
 
   await showJobs();
+}
+
+
+async function ensureProfileAccountType(user) {
+  const accountType = user.user_metadata?.account_type;
+  if (!["operator", "company"].includes(accountType)) return;
+  const { data: profile, error: readError } = await supabaseClient.from("profiles")
+    .select("id, account_type").eq("id", user.id).maybeSingle();
+  if (readError) {
+    console.error("Could not read account type:", readError);
+    return;
+  }
+  if (profile?.account_type === accountType) return;
+  let result;
+  if (profile) {
+    result = await supabaseClient.from("profiles").update({ account_type: accountType }).eq("id", user.id);
+  } else {
+    const metadata = user.user_metadata || {};
+    result = await supabaseClient.from("profiles").insert({
+      id: user.id,
+      full_name: metadata.full_name || user.email || "Opero member",
+      phone: metadata.phone || null,
+      city: metadata.city || null,
+      country: metadata.country || "Georgia",
+      operator_type: metadata.operator_type || null,
+      experience_years: Number(metadata.experience_years) || null,
+      about: metadata.about || null,
+      account_type: accountType
+    });
+  }
+  if (result.error) console.error("Could not save account type:", result.error);
+}
+
+async function applyToJob(jobId) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    showLogin();
+    return;
+  }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if ((profile?.account_type || user.user_metadata?.account_type || "operator") !== "operator") {
+    alert("Only operator accounts can apply to jobs.");
+    return;
+  }
+  const message = prompt("Add a short message to your application (optional):") || "";
+  const { error } = await supabaseClient.from("applications").insert({
+    job_id: jobId,
+    applicant_id: user.id,
+    message
+  });
+  if (error) {
+    alert(error.code === "23505" ? "You have already applied to this job." : "Could not submit application: " + error.message);
+    return;
+  }
+  alert("Application submitted.");
+}
+
+async function showApplications() {
+  hideAll();
+  const mainContent = document.getElementById("mainContent");
+  const content = document.getElementById("content");
+  mainContent.classList.remove("hidden");
+  content.innerHTML = "<h2>Applications</h2><p class='muted'>Loading...</p>";
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  const accountType = profile?.account_type || user.user_metadata?.account_type || "operator";
+  const companyView = accountType === "company";
+  const query = companyView
+    ? "id, status, message, created_at, applicant_id, job_id, jobs(title), profiles!applications_applicant_id_fkey(full_name)"
+    : "id, status, message, created_at, job_id, jobs(title, company, city, country)";
+  const { data, error } = await supabaseClient.from("applications")
+    .select(query).order("created_at", { ascending: false });
+  if (error) {
+    console.error("Could not load applications:", error);
+    content.innerHTML = "<h2>Applications</h2><p class='muted'>Could not load applications. Check that the database migration and access policies are installed.</p>";
+    return;
+  }
+  if (!data?.length) {
+    content.innerHTML = `<h2>${companyView ? "Applications to your jobs" : "My Applications"}</h2><p class="muted">${companyView ? "No applications received yet." : "You have not applied to any jobs yet."}</p>`;
+    return;
+  }
+  content.innerHTML = `<h2>${companyView ? "Applications to your jobs" : "My Applications"}</h2>` + data.map(application => `
+    <div class="card">
+      <h3>${escapeHtml(companyView ? application.jobs?.title || "Job" : application.jobs?.title || "Job")}</h3>
+      ${companyView ? `<p>Operator: ${escapeHtml(application.profiles?.full_name || "Operator")}</p>` : `<p>${escapeHtml(application.jobs?.company || "")}${application.jobs?.city ? " · " + escapeHtml(application.jobs.city) : ""}</p>`}
+      <p>${escapeHtml(application.message || "No message")}</p>
+      <p class="muted">Status: ${escapeHtml(application.status || "Pending")}</p>
+      ${companyView ? `<label>Status <select onchange="updateApplicationStatus(${Number(application.id)}, this.value)"><option ${application.status === "Pending" ? "selected" : ""}>Pending</option><option ${application.status === "Reviewed" ? "selected" : ""}>Reviewed</option><option ${application.status === "Accepted" ? "selected" : ""}>Accepted</option><option ${application.status === "Rejected" ? "selected" : ""}>Rejected</option></select></label>` : ""}
+    </div>
+  `).join("");
+}
+
+async function updateApplicationStatus(applicationId, status) {
+  if (!["Pending", "Reviewed", "Accepted", "Rejected"].includes(status)) return;
+  const { error } = await supabaseClient.from("applications")
+    .update({ status }).eq("id", applicationId);
+  if (error) {
+    alert("Could not update application status: " + error.message);
+    await showApplications();
+    return;
+  }
+  await showApplications();
 }
 
 
