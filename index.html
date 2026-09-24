@@ -13,121 +13,141 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      font-family: Arial, sans-serif;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f6f8;
-      color: #111;
+      background: #0b0f14;
+      color: white;
+      min-height: 100vh;
     }
 
     header {
-      background: #111;
-      color: white;
-      padding: 18px 30px;
+      padding: 20px;
+      border-bottom: 1px solid #222;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
     .logo {
-      font-size: 25px;
+      font-size: 24px;
       font-weight: 800;
       letter-spacing: 1px;
     }
 
     nav button {
-      background: transparent;
-      border: 1px solid #555;
-      color: white;
-      padding: 9px 15px;
-      border-radius: 7px;
-      margin-left: 8px;
+      background: none;
+      border: none;
+      color: #aaa;
+      margin-left: 15px;
       cursor: pointer;
+      font-size: 14px;
+    }
+
+    nav button:hover {
+      color: white;
     }
 
     .hero {
-      padding: 80px 20px;
       text-align: center;
-      background: white;
+      padding: 70px 20px 50px;
     }
 
     .hero h1 {
-      font-size: 46px;
+      font-size: 42px;
       margin-bottom: 15px;
     }
 
     .hero p {
+      color: #aaa;
       font-size: 18px;
-      color: #666;
       margin-bottom: 30px;
     }
 
-    .buttons button {
-      padding: 13px 22px;
+    .buttons button,
+    .form button {
+      background: white;
+      color: black;
       border: none;
+      padding: 13px 20px;
       border-radius: 8px;
-      margin: 5px;
-      cursor: pointer;
-      font-size: 15px;
       font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
     }
 
-    .primary {
-      background: #111;
+    .buttons button.secondary {
+      background: #1b222c;
       color: white;
     }
 
-    .secondary {
-      background: #e9eaed;
-      color: #111;
-    }
-
     .container {
-      max-width: 1100px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-
-    .section-title {
-      margin-bottom: 20px;
-      font-size: 28px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 18px;
+      max-width: 900px;
+      margin: auto;
+      padding: 30px 20px;
     }
 
     .card {
-      background: white;
-      padding: 25px;
+      background: #121820;
+      border: 1px solid #242c35;
       border-radius: 12px;
-      border: 1px solid #ddd;
+      padding: 20px;
+      margin-bottom: 15px;
     }
 
     .card h3 {
       margin-bottom: 8px;
     }
 
-    .card p {
-      color: #666;
+    .muted {
+      color: #9299a3;
+    }
+
+    .form {
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 25px;
+      background: #121820;
+      border: 1px solid #242c35;
+      border-radius: 14px;
+    }
+
+    .form h2 {
+      margin-bottom: 20px;
+    }
+
+    .form input,
+    .form textarea,
+    .form select {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #303945;
+      background: #0b0f14;
+      color: white;
+    }
+
+    .form textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .status {
+      margin-top: 15px;
+      color: #aaa;
       line-height: 1.5;
     }
 
     footer {
-      margin-top: 70px;
-      padding: 30px;
       text-align: center;
-      background: #111;
-      color: #aaa;
-    }
-
-    #status {
-      text-align: center;
-      padding: 10px;
-      color: #555;
+      color: #666;
+      padding: 50px 20px;
     }
   </style>
 </head>
@@ -138,59 +158,110 @@
   <div class="logo">OPERO</div>
 
   <nav>
-    <button onclick="showSection('operators')">Operators</button>
-    <button onclick="showSection('jobs')">Jobs</button>
-    <button onclick="showSection('login')">Login</button>
+    <button onclick="showHome()">Home</button>
+    <button onclick="showOperators()">Operators</button>
+    <button onclick="showJobs()">Jobs</button>
+    <button id="loginNav" onclick="showLogin()">Login</button>
+    <button id="registerNav" onclick="showRegister()">Register</button>
+    <button id="logoutNav" class="hidden" onclick="logout()">Logout</button>
   </nav>
 </header>
 
-<section class="hero">
-  <h1>OPERO</h1>
 
-  <p>
-    Heavy Equipment Operator Network
-  </p>
+<section id="home">
 
-  <div class="buttons">
-    <button class="primary" onclick="showSection('operators')">
-      Find Operators
-    </button>
+  <div class="hero">
 
-    <button class="secondary" onclick="showSection('jobs')">
-      Find Jobs
-    </button>
+    <h1>Heavy Equipment Operator Network</h1>
+
+    <p>
+      Connect operators, companies and construction jobs.
+    </p>
+
+    <div class="buttons">
+      <button onclick="showRegister()">Create Profile</button>
+      <button class="secondary" onclick="showJobs()">Find Jobs</button>
+    </div>
+
   </div>
+
 </section>
 
-<div id="status">
-  Connecting to Opero...
-</div>
 
-<main class="container">
+<section id="mainContent" class="container hidden">
 
-  <section id="operators">
-    <h2 class="section-title">Operators</h2>
+  <div id="content"></div>
 
-    <div id="operatorList" class="cards">
-      Loading operators...
-    </div>
-  </section>
+</section>
 
-  <br><br>
 
-  <section id="jobs">
-    <h2 class="section-title">Latest Jobs</h2>
+<section id="loginSection" class="hidden">
 
-    <div id="jobList" class="cards">
-      Loading jobs...
-    </div>
-  </section>
+  <div class="form">
 
-</main>
+    <h2>Login</h2>
+
+    <input id="loginEmail" type="email" placeholder="Email">
+
+    <input id="loginPassword" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p class="status" id="loginStatus"></p>
+
+  </div>
+
+</section>
+
+
+<section id="registerSection" class="hidden">
+
+  <div class="form">
+
+    <h2>Create Operator Profile</h2>
+
+    <input id="fullName" placeholder="Full name">
+
+    <input id="registerEmail" type="email" placeholder="Email">
+
+    <input id="registerPassword" type="password" placeholder="Password">
+
+    <input id="phone" placeholder="Phone">
+
+    <input id="city" placeholder="City">
+
+    <input id="country" value="Georgia" placeholder="Country">
+
+    <select id="operatorType">
+
+      <option value="">Operator type</option>
+      <option>Tower Crane Operator</option>
+      <option>Mobile Crane Operator</option>
+      <option>Excavator Operator</option>
+      <option>Forklift Operator</option>
+      <option>Loader Operator</option>
+      <option>Bulldozer Operator</option>
+      <option>Other</option>
+
+    </select>
+
+    <input id="experience" type="number" placeholder="Experience (years)">
+
+    <textarea id="about" placeholder="About you / experience"></textarea>
+
+    <button onclick="register()">Create Account</button>
+
+    <p class="status" id="registerStatus"></p>
+
+  </div>
+
+</section>
+
 
 <footer>
-  Opero © 2026 — Heavy Equipment Operator Network
+  © 2026 Opero — Heavy Equipment Operator Network
 </footer>
+
 
 <script>
 
@@ -201,13 +272,245 @@ const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5naGpranJwc3ZtdnBxbnRkYnRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQ5MjMsImV4cCI6MjEwNTgyMDkyM30.uWNx_dXsN_a3-BYmAG15NxBTIJugrCDaq5hkY49_HM0";
 
 const supabaseClient =
-  window.supabase.createClient(
+  supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
 
 
-async function loadOperators() {
+function hideAll() {
+
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("mainContent").classList.add("hidden");
+  document.getElementById("loginSection").classList.add("hidden");
+  document.getElementById("registerSection").classList.add("hidden");
+
+}
+
+
+function showHome() {
+
+  hideAll();
+
+  document.getElementById("home").classList.remove("hidden");
+
+}
+
+
+function showLogin() {
+
+  hideAll();
+
+  document.getElementById("loginSection").classList.remove("hidden");
+
+}
+
+
+function showRegister() {
+
+  hideAll();
+
+  document.getElementById("registerSection").classList.remove("hidden");
+
+}
+
+
+async function register() {
+
+  const fullName =
+    document.getElementById("fullName").value.trim();
+
+  const email =
+    document.getElementById("registerEmail").value.trim();
+
+  const password =
+    document.getElementById("registerPassword").value;
+
+  const phone =
+    document.getElementById("phone").value.trim();
+
+  const city =
+    document.getElementById("city").value.trim();
+
+  const country =
+    document.getElementById("country").value.trim();
+
+  const operatorType =
+    document.getElementById("operatorType").value;
+
+  const experience =
+    document.getElementById("experience").value;
+
+  const about =
+    document.getElementById("about").value.trim();
+
+  const status =
+    document.getElementById("registerStatus");
+
+
+  status.textContent = "Creating account...";
+
+
+  if (!fullName || !email || !password) {
+
+    status.textContent =
+      "Please enter name, email and password.";
+
+    return;
+
+  }
+
+
+  const { data, error } =
+    await supabaseClient.auth.signUp({
+
+      email: email,
+
+      password: password,
+
+      options: {
+        data: {
+          full_name: fullName
+        }
+      }
+
+    });
+
+
+  if (error) {
+
+    status.textContent = error.message;
+
+    return;
+
+  }
+
+
+  if (!data.user) {
+
+    status.textContent =
+      "Registration failed.";
+
+    return;
+
+  }
+
+
+  status.textContent =
+    "Account created. You can now login.";
+
+
+  setTimeout(() => {
+
+    showLogin();
+
+  }, 1500);
+
+}
+
+
+async function login() {
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const status =
+    document.getElementById("loginStatus");
+
+
+  status.textContent = "Logging in...";
+
+
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+
+      email: email,
+
+      password: password
+
+    });
+
+
+  if (error) {
+
+    status.textContent = error.message;
+
+    return;
+
+  }
+
+
+  status.textContent =
+    "Login successful!";
+
+
+  updateAuthUI();
+
+  setTimeout(() => {
+
+    showHome();
+
+  }, 700);
+
+}
+
+
+async function logout() {
+
+  await supabaseClient.auth.signOut();
+
+  updateAuthUI();
+
+  showHome();
+
+}
+
+
+async function updateAuthUI() {
+
+  const { data } =
+    await supabaseClient.auth.getSession();
+
+  const loggedIn =
+    !!data.session;
+
+
+  document
+    .getElementById("loginNav")
+    .classList.toggle("hidden", loggedIn);
+
+
+  document
+    .getElementById("registerNav")
+    .classList.toggle("hidden", loggedIn);
+
+
+  document
+    .getElementById("logoutNav")
+    .classList.toggle("hidden", !loggedIn);
+
+}
+
+
+async function showOperators() {
+
+  hideAll();
+
+  document
+    .getElementById("mainContent")
+    .classList.remove("hidden");
+
+
+  const content =
+    document.getElementById("content");
+
+
+  content.innerHTML =
+    "<h2>Operators</h2><p class='muted'>Loading...</p>";
+
 
   const { data, error } =
     await supabaseClient
@@ -215,52 +518,76 @@ async function loadOperators() {
       .select("*")
       .order("created_at", { ascending: false });
 
-  const list =
-    document.getElementById("operatorList");
 
   if (error) {
-    list.innerHTML =
-      "<p>Could not load operators.</p>";
 
-    console.error(error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML =
-      "<p>No operators registered yet.</p>";
+    content.innerHTML =
+      "<p>Error loading operators.</p>";
 
     return;
+
   }
 
-  list.innerHTML = data.map(operator => `
 
-    <div class="card">
+  if (!data.length) {
 
-      <h3>
-        ${operator.full_name || "Operator"}
-      </h3>
+    content.innerHTML =
+      "<h2>Operators</h2><p class='muted'>No operators yet.</p>";
 
-      <p>
-        ${operator.operator_type || "Heavy Equipment Operator"}
-      </p>
+    return;
 
-      <p>
-        📍 ${operator.city || "Unknown"}
-      </p>
+  }
 
-      <p>
-        Experience:
-        ${operator.experience_years || 0} years
-      </p>
 
-    </div>
+  content.innerHTML =
+    "<h2>Operators</h2>" +
+    data.map(operator => `
 
-  `).join("");
+      <div class="card">
+
+        <h3>${escapeHtml(operator.full_name)}</h3>
+
+        <p class="muted">
+          ${escapeHtml(operator.operator_type || "Operator")}
+        </p>
+
+        <p>
+          ${escapeHtml(operator.city || "")}
+          ${operator.country ? ", " + escapeHtml(operator.country) : ""}
+        </p>
+
+        <p>
+          Experience:
+          ${operator.experience_years || 0} years
+        </p>
+
+        <p>
+          ${escapeHtml(operator.about || "")}
+        </p>
+
+      </div>
+
+    `).join("");
+
 }
 
 
-async function loadJobs() {
+async function showJobs() {
+
+  hideAll();
+
+  document
+    .getElementById("mainContent")
+    .classList.remove("hidden");
+
+
+  const content =
+    document.getElementById("content");
+
+
+  content.innerHTML =
+    "<h2>Jobs</h2><p class='muted'>Loading...</p>";
+
 
   const { data, error } =
     await supabaseClient
@@ -268,74 +595,78 @@ async function loadJobs() {
       .select("*")
       .order("created_at", { ascending: false });
 
-  const list =
-    document.getElementById("jobList");
 
   if (error) {
-    list.innerHTML =
-      "<p>Could not load jobs.</p>";
 
-    console.error(error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML =
-      "<p>No jobs posted yet.</p>";
+    content.innerHTML =
+      "<p>Error loading jobs.</p>";
 
     return;
+
   }
 
-  list.innerHTML = data.map(job => `
 
-    <div class="card">
+  if (!data.length) {
 
-      <h3>
-        ${job.title}
-      </h3>
+    content.innerHTML =
+      "<h2>Jobs</h2><p class='muted'>No jobs available yet.</p>";
 
-      <p>
-        ${job.company || "Company not specified"}
-      </p>
+    return;
 
-      <p>
-        📍 ${job.city || "Unknown"}
-      </p>
-
-      <p>
-        💰 ${job.salary || "Salary not specified"}
-      </p>
-
-    </div>
-
-  `).join("");
-}
+  }
 
 
-function showSection(section) {
+  content.innerHTML =
+    "<h2>Jobs</h2>" +
+    data.map(job => `
 
-  document
-    .getElementById(section)
-    ?.scrollIntoView({
-      behavior: "smooth"
-    });
+      <div class="card">
 
-}
+        <h3>${escapeHtml(job.title)}</h3>
 
+        <p>${escapeHtml(job.company || "")}</p>
 
-async function init() {
+        <p class="muted">
+          ${escapeHtml(job.city || "")},
+          ${escapeHtml(job.country || "")}
+        </p>
 
-  document.getElementById("status").innerText =
-    "Opero is connected to Supabase.";
+        <p>
+          ${escapeHtml(job.description || "")}
+        </p>
 
-  await loadOperators();
+        <p>
+          Salary:
+          ${escapeHtml(job.salary || "Not specified")}
+        </p>
 
-  await loadJobs();
+      </div>
+
+    `).join("");
 
 }
 
 
-init();
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+supabaseClient.auth.onAuthStateChange(() => {
+
+  updateAuthUI();
+
+});
+
+
+updateAuthUI();
 
 </script>
 
