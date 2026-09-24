@@ -211,15 +211,18 @@
 
   <input id="profileCountry" type="text" placeholder="Country">
 
-  <select id="profileOperatorType">
-    <option value="">Select operator type</option>
-    <option value="Tower Crane Operator">Tower Crane Operator</option>
-    <option value="Mobile Crane Operator">Mobile Crane Operator</option>
-    <option value="Excavator Operator">Excavator Operator</option>
-    <option value="Loader Operator">Loader Operator</option>
-    <option value="Forklift Operator">Forklift Operator</option>
-    <option value="Other">Other</option>
-  </select>
+  <div id="operatorTypeProfileField" class="hidden">
+    <label for="profileOperatorType">What equipment do you operate?</label>
+    <select id="profileOperatorType">
+      <option value="">Select operator type</option>
+      <option value="Tower Crane Operator">Tower Crane Operator</option>
+      <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+      <option value="Excavator Operator">Excavator Operator</option>
+      <option value="Loader Operator">Loader Operator</option>
+      <option value="Forklift Operator">Forklift Operator</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
 
   <input id="profileExperience" type="number" placeholder="Experience years">
 
@@ -420,8 +423,8 @@ async function register() {
     phone: phone,
     city: city,
     country: country,
-    operator_type: operatorType,
-    experience_years: experience,
+    operator_type: accountType === "operator" ? operatorType : null,
+    experience_years: accountType === "operator" ? experience : null,
     about: about
   }
 }
@@ -552,8 +555,11 @@ async function showProfile() {
   document.getElementById("profileCountry").value =
     data.country || "Georgia";
 
+  document.getElementById("operatorTypeProfileField").classList.toggle(
+    "hidden", data.account_type !== "operator"
+  );
   document.getElementById("profileOperatorType").value =
-    data.operator_type || "";
+    data.account_type === "operator" ? data.operator_type || "" : "";
 
   document.getElementById("profileExperience").value =
     data.experience_years || "";
@@ -565,43 +571,33 @@ async function showProfile() {
 
 async function saveProfile() {
 
-  const {
-    data: { user }
-  } = await supabaseClient.auth.getUser();
-
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     alert("Please login first");
     return;
   }
 
-  const { error } = await supabaseClient
-    .from("profiles")
-    .update({
-      full_name:
-        document.getElementById("profileName").value.trim(),
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).single();
+  if (profileError || !profile) {
+    alert("Could not load account type. Please reload and try again.");
+    return;
+  }
 
-      phone:
-        document.getElementById("profilePhone").value.trim(),
+  const updates = {
+    full_name: document.getElementById("profileName").value.trim(),
+    phone: document.getElementById("profilePhone").value.trim(),
+    city: document.getElementById("profileCity").value.trim(),
+    country: document.getElementById("profileCountry").value.trim(),
+    experience_years: Number(document.getElementById("profileExperience").value) || null,
+    about: document.getElementById("profileAbout").value.trim()
+  };
+  if (profile.account_type === "operator") {
+    updates.operator_type = document.getElementById("profileOperatorType").value;
+  }
 
-      city:
-        document.getElementById("profileCity").value.trim(),
-
-      country:
-        document.getElementById("profileCountry").value.trim(),
-
-      operator_type:
-        document.getElementById("profileOperatorType").value,
-
-      experience_years:
-        Number(
-          document.getElementById("profileExperience").value
-        ) || null,
-
-      about:
-        document.getElementById("profileAbout").value.trim()
-    })
-    .eq("id", user.id);
-
+  const { error } = await supabaseClient.from("profiles")
+    .update(updates).eq("id", user.id);
   if (error) {
     alert(error.message);
     return;
@@ -683,7 +679,7 @@ async function showMyJobs() {
   document.getElementById("mainContent").classList.remove("hidden");
   content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Loading...</p>";
   const { data: jobs, error } = await supabaseClient.from("jobs")
-    .select("id, title, company, city, country, description, salary")
+    .select("id, title, operator_type, company, city, country, description, salary")
     .eq("created_by", user.id).order("created_at", { ascending: false });
   if (error) {
     content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Could not load your jobs.</p>";
@@ -693,6 +689,7 @@ async function showMyJobs() {
     (jobs?.length ? jobs.map(job => `
       <div class="card">
         <h3>${escapeHtml(job.title)}</h3><p>${escapeHtml(job.company || "")}</p>
+        <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
         <button onclick="editJob(${Number(job.id)})">Edit</button>
@@ -708,6 +705,8 @@ async function editJob(jobId) {
   if (!job) { alert("Job not found or you do not own it."); return; }
   const title = prompt("Job title", job.title || "");
   if (title === null) return;
+  const operatorType = prompt("Operator type sought", job.operator_type || "");
+  if (operatorType === null) return;
   const description = prompt("Description", job.description || "");
   if (description === null) return;
   const company = prompt("Company name", job.company || "");
@@ -719,7 +718,7 @@ async function editJob(jobId) {
   const salary = prompt("Salary", job.salary || "");
   if (salary === null) return;
   const { error } = await supabaseClient.from("jobs").update({
-    title: title.trim(), description: description.trim(), company: company.trim(),
+    title: title.trim(), operator_type: operatorType.trim(), description: description.trim(), company: company.trim(),
     city: city.trim(), country: country.trim(), salary: salary.trim()
   }).eq("id", jobId).eq("created_by", user.id);
   if (error) { alert("Could not update job: " + error.message); return; }
@@ -814,6 +813,7 @@ async function showOperatorProfile(operatorId) {
     .from("profiles")
     .select("full_name, operator_type, city, country, experience_years, about, phone")
     .eq("id", operatorId)
+    .eq("account_type", "operator")
     .single();
 
   if (error || !data) {
@@ -873,6 +873,16 @@ async function showJobs() {
       <h3>Post a job</h3>
       <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
         <input id="jobTitle" type="text" placeholder="Job title" required>
+        <label for="jobOperatorType">What type of operator are you looking for?</label>
+        <select id="jobOperatorType" required>
+          <option value="">Select operator type</option>
+          <option value="Tower Crane Operator">Tower Crane Operator</option>
+          <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+          <option value="Excavator Operator">Excavator Operator</option>
+          <option value="Loader Operator">Loader Operator</option>
+          <option value="Forklift Operator">Forklift Operator</option>
+          <option value="Other">Other</option>
+        </select>
         <input id="jobCompany" type="text" placeholder="Company name">
         <input id="jobCity" type="text" placeholder="City">
         <input id="jobCountry" type="text" placeholder="Country">
@@ -888,7 +898,7 @@ async function showJobs() {
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("id, title, company, city, country, description, salary, created_at")
+    .select("id, title, operator_type, company, city, country, description, salary, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -910,7 +920,7 @@ async function showJobs() {
 function filterJobs(query) {
   const term = String(query || "").trim().toLocaleLowerCase();
   const matches = availableJobs.filter(job =>
-    [job.title, job.company, job.city, job.country, job.description, job.salary]
+    [job.title, job.operator_type, job.company, job.city, job.country, job.description, job.salary]
       .some(value => String(value || "").toLocaleLowerCase().includes(term))
   );
   renderJobs(matches, Boolean(term));
@@ -927,6 +937,7 @@ function renderJobs(jobs, searched = false) {
     <div class="card">
       <h3>${escapeHtml(job.title || "Untitled job")}</h3>
       <p>${escapeHtml(job.company || "")}</p>
+      <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
       <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
       <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
       <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
@@ -958,6 +969,12 @@ async function publishJob() {
     return;
   }
 
+  const operatorType = document.getElementById("jobOperatorType").value;
+  if (!operatorType) {
+    status.textContent = "Please select the type of operator you are looking for.";
+    return;
+  }
+
   status.textContent = "Publishing job...";
   const { error } = await supabaseClient.from("jobs").insert({
     title,
@@ -966,6 +983,7 @@ async function publishJob() {
     country: document.getElementById("jobCountry").value.trim(),
     description: document.getElementById("jobDescription").value.trim(),
     salary: document.getElementById("jobSalary").value.trim(),
+    operator_type: operatorType,
     created_by: user.id
   });
 
