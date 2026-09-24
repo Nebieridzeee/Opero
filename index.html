@@ -114,6 +114,35 @@
       cursor: pointer;
     }
 
+    .unread-badge {
+      display: inline-block;
+      min-width: 19px;
+      padding: 2px 6px;
+      margin-left: 4px;
+      border-radius: 999px;
+      background: #e65f5f;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .notification-card.unread {
+      border-color: #4a8ac7;
+      background: #162433;
+    }
+
+    .notification-card.read {
+      opacity: .78;
+    }
+
+    .notification-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
     .status-badges {
       display: flex;
       flex-wrap: wrap;
@@ -189,8 +218,8 @@
     <button onclick="showHome()">Home</button>
     <button onclick="showOperators()">Operators</button>
     <button onclick="showJobs()">Jobs</button>
+    <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications <span id="applicationsUnreadBadge" class="unread-badge hidden">0</span></button>
     <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
-    <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications</button>
     <button id="loginNav" onclick="showLogin()">Login</button>
     <button id="registerNav" onclick="showRegister()">Register</button>
     <button id="profileNav" onclick="showProfile()">My Profile</button>
@@ -738,6 +767,54 @@ function updateAuthUI(loggedIn) {
   document.getElementById("profileNav").classList.toggle("hidden", !loggedIn);
 }
 
+let notificationRealtimeChannel = null;
+let notificationUserId = null;
+let notificationCountRequest = 0;
+
+async function refreshUnreadNotificationCount(userId = notificationUserId) {
+  const badge = document.getElementById("applicationsUnreadBadge");
+  if (!badge) return;
+  const requestId = ++notificationCountRequest;
+  if (!userId) {
+    badge.textContent = "0";
+    badge.classList.add("hidden");
+    return;
+  }
+  const { count, error } = await supabaseClient.from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("recipient_user_id", userId)
+    .eq("is_read", false);
+  if (requestId !== notificationCountRequest) return;
+  if (error) {
+    badge.classList.add("hidden");
+    console.error("Could not load unread notification count:", error);
+    return;
+  }
+  const unreadCount = count || 0;
+  badge.textContent = String(unreadCount);
+  badge.classList.toggle("hidden", unreadCount === 0);
+}
+
+function configureNotificationUpdates(user) {
+  const nextUserId = user?.id || null;
+  if (notificationRealtimeChannel && notificationUserId !== nextUserId) {
+    supabaseClient.removeChannel(notificationRealtimeChannel);
+    notificationRealtimeChannel = null;
+  }
+  notificationUserId = nextUserId;
+  refreshUnreadNotificationCount(nextUserId);
+  if (!nextUserId || notificationRealtimeChannel || typeof supabaseClient.channel !== "function") return;
+  notificationRealtimeChannel = supabaseClient
+    .channel(`notifications:${nextUserId}`)
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "notifications",
+      filter: `recipient_user_id=eq.${nextUserId}`
+    }, () => refreshUnreadNotificationCount(nextUserId))
+    .subscribe();
+}
+
 let homeCtaRequest = 0;
 
 async function updateHomeCTAs(user) {
@@ -1110,7 +1187,7 @@ async function showOperatorReplacementForm() {
     ${replacementJobFormMarkup("operator")}`;
 }
 
-async function showJobs(category = "all") {
+async function showJobs(category = "all", focusJobId = null) {
 
   currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "all";
   currentJobSearchTerm = "";
@@ -1194,6 +1271,7 @@ async function showJobs(category = "all") {
     <div id="jobResults"></div>
   `;
   renderJobs();
+  if (focusJobId) setTimeout(() => document.getElementById(`job-${Number(focusJobId)}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 0);
 }
 
 function filterJobCategory(category) {
@@ -1230,7 +1308,7 @@ function renderJobs() {
       const startTime = String(job.replacement_start_time || "").slice(0, 5);
       const endTime = String(job.replacement_end_time || "").slice(0, 5);
       return `
-        <div class="card">
+        <div class="card" id="job-${Number(job.id)}">
           <h3>🔄 ${escapeHtml(job.title || "Replacement Needed")}</h3>
           <p>Date: ${escapeHtml(day)}</p>
           <p>Location: ${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
@@ -1244,7 +1322,7 @@ function renderJobs() {
       `;
     }
     return `
-      <div class="card">
+      <div class="card" id="job-${Number(job.id)}">
         <h3>${escapeHtml(job.title || "Untitled job")}</h3>
         <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Company")}</button></p>
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
@@ -1368,7 +1446,45 @@ async function applyToJob(jobId) {
   alert("Application submitted.");
 }
 
-async function showApplications() {
+let currentNotificationCategory = "all";
+
+function filterApplicationsCategory(category) {
+  if (!["all", "job_application", "replacement", "system"].includes(category)) return;
+  currentNotificationCategory = category;
+  showApplications(category);
+}
+
+function formatNotificationTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+}
+
+async function markNotificationRead(notificationId) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+  const { error } = await supabaseClient.from("notifications")
+    .update({ is_read: true }).eq("id", notificationId).eq("recipient_user_id", user.id);
+  if (error) console.error("Could not mark notification read:", error);
+  await refreshUnreadNotificationCount(user.id);
+}
+
+async function openNotificationApplication(notificationId, applicationId) {
+  await markNotificationRead(notificationId);
+  await showApplications("all", applicationId);
+}
+
+async function openNotificationJob(notificationId, jobId, category) {
+  await markNotificationRead(notificationId);
+  await showJobs(category === "replacement" ? "replacement" : "all", jobId);
+}
+
+async function openNotificationProfile(notificationId, profileId) {
+  await markNotificationRead(notificationId);
+  await showPublicProfile(profileId);
+}
+
+async function showApplications(category = "all", focusApplicationId = null) {
+  currentNotificationCategory = ["all", "job_application", "replacement", "system"].includes(category) ? category : "all";
   hideAll();
   const mainContent = document.getElementById("mainContent");
   const content = document.getElementById("content");
@@ -1376,48 +1492,101 @@ async function showApplications() {
   content.innerHTML = "<h2>Applications</h2><p class='muted'>Loading...</p>";
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
-  const { data: profile } = await supabaseClient.from("profiles")
-    .select("account_type").eq("id", user.id).maybeSingle();
-  const accountType = profile?.account_type || "";
-  const companyView = accountType === "company";
-  const query = companyView
-    ? "id, status, message, created_at, applicant_id, job_id, jobs(title), profiles!applications_applicant_id_fkey(full_name)"
-    : "id, status, message, created_at, job_id, jobs(title, company, city, country)";
-  const { data, error } = await supabaseClient.from("applications")
-    .select(query).order("created_at", { ascending: false });
-  if (error) {
-    console.error("Could not load applications:", error);
-    content.innerHTML = "<h2>Applications</h2><p class='muted'>Could not load applications. Check that the database migration and access policies are installed.</p>";
+
+  const [notificationResult, applicationResult] = await Promise.all([
+    supabaseClient.from("notifications").select("*").eq("recipient_user_id", user.id).order("created_at", { ascending: false }),
+    supabaseClient.from("applications").select("id, status, message, created_at, applicant_id, job_id, jobs(title, company, city, country, job_type, created_by), profiles!applications_applicant_id_fkey(full_name)").order("created_at", { ascending: false })
+  ]);
+  const { data: notifications, error: notificationError } = notificationResult;
+  const { data: applications, error: applicationError } = applicationResult;
+  if (notificationError || applicationError) {
+    console.error("Could not load Applications history:", notificationError || applicationError);
+    content.innerHTML = "<h2>Applications</h2><p class='muted'>Could not load your history. Check that the notifications migration and access policies are installed.</p>";
     return;
   }
-  if (!data?.length) {
-    content.innerHTML = `<h2>${companyView ? "Applications to your jobs" : "My Applications"}</h2><p class="muted">${companyView ? "No applications received yet." : "You have not applied to any jobs yet."}</p>`;
-    return;
-  }
-  content.innerHTML = `<h2>${companyView ? "Applications to your jobs" : "My Applications"}</h2>` + data.map(application => `
-    <div class="card">
-      <h3>${escapeHtml(companyView ? application.jobs?.title || "Job" : application.jobs?.title || "Job")}</h3>
-      ${companyView ? `<p>Operator: ${escapeHtml(application.profiles?.full_name || "Operator")}</p>` : `<p>${escapeHtml(application.jobs?.company || "")}${application.jobs?.city ? " · " + escapeHtml(application.jobs.city) : ""}</p>`}
-      <p>${escapeHtml(application.message || "No message")}</p>
-      <p class="muted">Status: ${escapeHtml(application.status || "Pending")}</p>
-      ${companyView ? `<label>Status <select onchange="updateApplicationStatus(${Number(application.id)}, this.value)"><option ${application.status === "Pending" ? "selected" : ""}>Pending</option><option ${application.status === "Reviewed" ? "selected" : ""}>Reviewed</option><option ${application.status === "Accepted" ? "selected" : ""}>Accepted</option><option ${application.status === "Rejected" ? "selected" : ""}>Rejected</option></select></label>` : ""}
-    </div>
-  `).join("");
+
+  const notificationRows = notifications || [];
+  const applicationRows = applications || [];
+  const filteredNotifications = notificationRows.filter(item => currentNotificationCategory === "all" || item.category === currentNotificationCategory);
+  const filteredApplications = applicationRows.filter(item => {
+    const itemCategory = item.jobs?.job_type === "replacement" ? "replacement" : "job_application";
+    return currentNotificationCategory === "all" || currentNotificationCategory === itemCategory;
+  });
+  const appById = new Map(applicationRows.map(application => [String(application.id), application]));
+  const categories = [["all", "All"], ["job_application", "Job Applications"], ["replacement", "Replacement"], ["system", "System"]];
+  const categoryTabs = `<div class="buttons" style="margin:16px 0;">${categories.map(([key, label]) => `<button class="${currentNotificationCategory === key ? "" : "secondary"}" onclick="filterApplicationsCategory('${key}')">${label}</button>`).join("")}</div>`;
+
+  const notificationCards = filteredNotifications.length ? filteredNotifications.map(notification => {
+    const application = notification.related_application_id == null ? null : appById.get(String(notification.related_application_id));
+    const canRespond = application
+      && application.jobs?.created_by === user.id
+      && ["Pending", "Reviewed"].includes(application.status)
+      && ["application_sent", "replacement_request_sent"].includes(notification.event_type);
+    const profileAction = notification.related_profile_id && notification.sender_user_id !== user.id
+      ? `<button class="secondary" onclick="openNotificationProfile(${Number(notification.id)}, '${escapeHtml(notification.related_profile_id)}')">View Profile</button>`
+      : "";
+    const applicationAction = notification.related_application_id
+      ? `<button class="secondary" onclick="openNotificationApplication(${Number(notification.id)}, ${Number(notification.related_application_id)})">View Application</button>`
+      : "";
+    const jobAction = notification.related_job_id
+      ? `<button class="secondary" onclick="openNotificationJob(${Number(notification.id)}, ${Number(notification.related_job_id)}, '${escapeHtml(notification.category)}')">View ${notification.category === "replacement" ? "Replacement" : "Job"}</button>`
+      : "";
+    const responseActions = canRespond
+      ? `<button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${Number(notification.id)})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${Number(notification.id)})">Decline</button>`
+      : "";
+    const markReadAction = !notification.is_read && !profileAction && !applicationAction && !jobAction
+      ? `<button class="secondary" onclick="markNotificationRead(${Number(notification.id)})">Mark read</button>`
+      : "";
+    return `<article class="card notification-card ${notification.is_read ? "read" : "unread"}">
+      <h3>${escapeHtml(notification.title)}</h3><p>${escapeHtml(notification.message)}</p>
+      <p class="muted">${escapeHtml(formatNotificationTime(notification.created_at))}</p>
+      <div class="notification-actions">${profileAction}${applicationAction}${jobAction}${responseActions}${markReadAction}</div>
+    </article>`;
+  }).join("") : `<p class="muted">No ${currentNotificationCategory === "all" ? "history" : "events in this category"} yet.</p>`;
+
+  const applicationCards = filteredApplications.map(application => {
+    const isOwner = application.jobs?.created_by === user.id;
+    const isApplicant = application.applicant_id === user.id;
+    if (!isOwner && !isApplicant) return "";
+    const isReplacement = application.jobs?.job_type === "replacement";
+    const status = application.status || "Pending";
+    const applicantName = application.profiles?.full_name || "Operator";
+    const inboxNotification = notificationRows.find(item =>
+      item.recipient_user_id === user.id
+      && String(item.related_application_id) === String(application.id)
+      && ["application_sent", "replacement_request_sent"].includes(item.event_type)
+      && !item.is_read
+    );
+    const inboxNotificationId = inboxNotification ? Number(inboxNotification.id) : "null";
+    const actions = isOwner && ["Pending", "Reviewed"].includes(status)
+      ? `<div class="notification-actions"><button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${inboxNotificationId})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${inboxNotificationId})">Decline</button><label>Status <select onchange="updateApplicationStatus(${Number(application.id)}, this.value, ${inboxNotificationId})"><option ${status === "Pending" ? "selected" : ""}>Pending</option><option ${status === "Reviewed" ? "selected" : ""}>Reviewed</option></select></label></div>`
+      : "";
+    return `<article class="card" id="application-${Number(application.id)}">
+      <h3>${escapeHtml(application.jobs?.title || "Job")}</h3>
+      <p>${isOwner ? `From: <button class="text-link" onclick="showPublicProfile('${escapeHtml(application.applicant_id)}')">${escapeHtml(applicantName)}</button>` : `To: ${escapeHtml(application.jobs?.company || "Job owner")}`}</p>
+      <p>${escapeHtml(application.message || (isReplacement ? "Replacement request" : "No message"))}</p>
+      <p class="muted">${isReplacement ? "Replacement" : "Job application"} · ${escapeHtml(status)} · ${escapeHtml(formatNotificationTime(application.created_at))}</p>${actions}
+    </article>`;
+  }).join("");
+
+  content.innerHTML = `<h2>Applications & History</h2>${categoryTabs}<h3>Notifications</h3>${notificationCards}<h3 style="margin-top:24px;">Applications and requests</h3>${applicationCards || `<p class="muted">No applications or replacement requests in this category.</p>`}`;
+  await refreshUnreadNotificationCount(user.id);
+  if (focusApplicationId) setTimeout(() => document.getElementById(`application-${Number(focusApplicationId)}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 0);
 }
 
-async function updateApplicationStatus(applicationId, status) {
+async function updateApplicationStatus(applicationId, status, notificationId = null) {
   if (!["Pending", "Reviewed", "Accepted", "Rejected"].includes(status)) return;
   const { error } = await supabaseClient.from("applications")
     .update({ status }).eq("id", applicationId);
   if (error) {
     alert("Could not update application status: " + error.message);
-    await showApplications();
+    await showApplications(currentNotificationCategory);
     return;
   }
-  await showApplications();
+  if (notificationId) await markNotificationRead(notificationId);
+  await refreshUnreadNotificationCount();
+  await showApplications(currentNotificationCategory);
 }
-
-
 function escapeHtml(value) {
 
   return String(value)
@@ -1433,12 +1602,14 @@ function escapeHtml(value) {
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   updateAuthUI(!!session);
   setTimeout(() => updateHomeCTAs(session?.user || null), 0);
+  setTimeout(() => configureNotificationUpdates(session?.user || null), 0);
 });
 
 supabaseClient.auth.getSession().then(({ data }) => {
   const session = data?.session;
   updateAuthUI(!!session);
   updateHomeCTAs(session?.user || null);
+  configureNotificationUpdates(session?.user || null);
   if (session) showDashboard();
 });
 
