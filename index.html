@@ -1062,7 +1062,7 @@ async function showMyJobs() {
   content.innerHTML = `<h2>${heading}</h2><p class="muted">Loading...</p>`;
 
   let jobsQuery = supabaseClient.from("jobs")
-    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, replacement_start_time, replacement_end_time")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date")
     .eq("created_by", user.id).order("created_at", { ascending: false });
   if (profile.account_type === "operator") jobsQuery = jobsQuery.eq("job_type", "replacement");
   const { data: jobs, error } = await jobsQuery;
@@ -1082,7 +1082,7 @@ async function showMyJobs() {
       return `
       <div class="card">
         <h3>${escapeHtml(job.title || "Untitled post")}</h3><p>${escapeHtml(job.company || (replacement ? "Replacement request" : ""))}</p>
-        ${replacement ? `<p class="muted">Dates: ${dateText} · ${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}–${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}</p>` : "<p class='muted'>Regular job</p>"}
+        ${replacement ? `<p class="muted">Dates: ${dateText}</p>` : "<p class='muted'>Regular job</p>"}
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
@@ -1096,14 +1096,10 @@ async function showMyJobs() {
           <label for="jobEditType-${id}">Operator type sought</label>
           <input id="jobEditType-${id}" value="${escapeHtml(job.operator_type || "")}" required>
           ${replacement ? `
-            <label for="jobEditStartDate-${id}">From date</label>
-            <input id="jobEditStartDate-${id}" type="date" value="${dateValue(job.replacement_date)}" required>
-            <label for="jobEditEndDate-${id}">Through date (inclusive)</label>
-            <input id="jobEditEndDate-${id}" type="date" value="${dateValue(job.replacement_end_date || job.replacement_date)}" required>
-            <label for="jobEditStartTime-${id}">Start time</label>
-            <input id="jobEditStartTime-${id}" type="time" value="${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}" required>
-            <label for="jobEditEndTime-${id}">End time</label>
-            <input id="jobEditEndTime-${id}" type="time" value="${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}" required>
+            <label for="jobEditDateRange-${id}">Work dates (select start and end)</label>
+            <input id="jobEditDateRange-${id}" type="text" data-start="jobEditStartDate-${id}" data-end="jobEditEndDate-${id}" value="${dateValue(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${dateValue(job.replacement_end_date)}` : ""}" placeholder="Select start and end dates" readonly required onclick="openDateRangePicker(this)">
+            <input id="jobEditStartDate-${id}" type="hidden" value="${dateValue(job.replacement_date)}">
+            <input id="jobEditEndDate-${id}" type="hidden" value="${dateValue(job.replacement_end_date || job.replacement_date)}">
           ` : ""}
           <label for="jobEditCity-${id}">City</label>
           <input id="jobEditCity-${id}" value="${escapeHtml(job.city || "")}" ${replacement ? "required" : ""}>
@@ -1158,16 +1154,12 @@ async function saveJobEdits(event, jobId) {
   if (job.job_type === "replacement") {
     const startDate = value("StartDate");
     const endDate = value("EndDate");
-    const startTime = value("StartTime");
-    const endTime = value("EndTime");
-    if (!startDate || !endDate || endDate < startDate || !startTime || !endTime || startTime >= endTime) {
-      alert("Enter a valid date range and daily time range.");
+    if (!startDate || !endDate || endDate < startDate) {
+      alert("Select a valid start and end date.");
       return;
     }
     updates.replacement_date = startDate;
     updates.replacement_end_date = endDate;
-    updates.replacement_start_time = startTime;
-    updates.replacement_end_time = endTime;
   }
 
   const { data, error } = await supabaseClient.from("jobs").update(updates)
@@ -1383,6 +1375,68 @@ let currentAccountType = "";
 let currentUserEmployed = null;
 let currentJobCategory = "all";
 let currentJobSearchTerm = "";
+let currentViewingUserId = null;
+let activeApplications = new Set();
+let dateRangePickerState = null;
+
+function openDateRangePicker(input) {
+  const startInput = document.getElementById(input.dataset.start);
+  const endInput = document.getElementById(input.dataset.end);
+  if (!startInput || !endInput) return;
+  dateRangePickerState = { input, startInput, endInput, start: "", month: new Date() };
+  const backdrop = document.createElement("div");
+  backdrop.id = "dateRangePickerBackdrop";
+  backdrop.style.cssText = "position:fixed;inset:0;z-index:10000;background:#0009;display:grid;place-items:center;padding:16px";
+  backdrop.onclick = event => { if (event.target === backdrop) closeDateRangePicker(); };
+  backdrop.innerHTML = `<div style="background:#1c232b;color:white;border:1px solid #46515c;border-radius:14px;padding:18px;width:min(360px,100%);box-shadow:0 12px 40px #0008"><div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="secondary" onclick="moveDateRangeMonth(-1)">‹</button><strong id="dateRangeMonth"></strong><button type="button" class="secondary" onclick="moveDateRangeMonth(1)">›</button></div><p id="dateRangeHint" class="muted" style="text-align:center"></p><div id="dateRangeDays" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center"></div><button type="button" class="secondary" style="margin-top:12px;width:100%" onclick="closeDateRangePicker()">Cancel</button></div>`;
+  document.body.appendChild(backdrop);
+  renderDateRangeMonth();
+}
+
+function closeDateRangePicker() {
+  document.getElementById("dateRangePickerBackdrop")?.remove();
+  dateRangePickerState = null;
+}
+
+function moveDateRangeMonth(delta) {
+  if (!dateRangePickerState) return;
+  dateRangePickerState.month.setMonth(dateRangePickerState.month.getMonth() + delta);
+  renderDateRangeMonth();
+}
+
+function renderDateRangeMonth() {
+  if (!dateRangePickerState) return;
+  const { month, start } = dateRangePickerState;
+  document.getElementById("dateRangeMonth").textContent = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  document.getElementById("dateRangeHint").textContent = start ? "Now select the last day (inclusive)." : "Select the first day.";
+  const grid = document.getElementById("dateRangeDays");
+  const names = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  grid.innerHTML = names.map(name => `<strong class="muted">${name}</strong>`).join("") + Array(offset).fill("<span></span>").join("") + Array.from({ length: count }, (_, index) => {
+    const day = index + 1;
+    const date = new Date(month.getFullYear(), month.getMonth(), day);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const selected = start === iso || dateRangePickerState.endInput.value === iso;
+    return `<button type="button" class="${selected ? "" : "secondary"}" style="padding:8px 2px" onclick="selectDateRangeDay('${iso}')">${day}</button>`;
+  }).join("");
+}
+
+function selectDateRangeDay(iso) {
+  const state = dateRangePickerState;
+  if (!state) return;
+  if (!state.start || state.endInput.value || iso < state.start) {
+    state.start = iso;
+    state.endInput.value = "";
+    renderDateRangeMonth();
+    return;
+  }
+  state.startInput.value = state.start;
+  state.endInput.value = iso;
+  const format = value => new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  state.input.value = `${format(state.start)} – ${format(iso)}`;
+  closeDateRangePicker();
+}
 
 function replacementJobFormMarkup(accountType) {
   return `
@@ -1390,14 +1444,10 @@ function replacementJobFormMarkup(accountType) {
       <h3>🔄 ${accountType === "company" ? "Post a replacement job" : "Need a replacement?"}</h3>
       <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
         <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
-        <label for="replacementDate">From date</label>
-        <input id="replacementDate" type="date" required>
-        <label for="replacementEndDate">Through date (inclusive)</label>
-        <input id="replacementEndDate" type="date" required>
-        <label for="replacementStartTime">Start time</label>
-        <input id="replacementStartTime" type="time" required>
-        <label for="replacementEndTime">End time</label>
-        <input id="replacementEndTime" type="time" required>
+        <label for="replacementDateRange">Work dates (select start and end)</label>
+        <input id="replacementDateRange" type="text" data-start="replacementDate" data-end="replacementEndDate" placeholder="Select start and end dates" readonly required onclick="openDateRangePicker(this)">
+        <input id="replacementDate" type="hidden">
+        <input id="replacementEndDate" type="hidden">
         <input id="replacementCity" type="text" placeholder="Location / city" required>
         <input id="replacementCountry" type="text" value="Georgia" placeholder="Country">
         <label for="replacementOperatorType">Crane / operator type</label>
@@ -1452,6 +1502,7 @@ async function showJobs(category = "all", focusJobId = null) {
     accountProfile = data;
   }
   currentAccountType = accountProfile?.account_type || "";
+  currentViewingUserId = user?.id || null;
   currentUserEmployed = accountProfile?.is_employed ?? null;
 
   const companyForm = currentAccountType === "company" && currentJobCategory !== "replacement" ? `
@@ -1486,7 +1537,7 @@ async function showJobs(category = "all", focusJobId = null) {
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, replacement_start_time, replacement_end_time, created_by, created_at")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, created_by, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -1496,6 +1547,12 @@ async function showJobs(category = "all", focusJobId = null) {
   }
 
   availableJobs = data || [];
+  activeApplications = new Set();
+  if (user) {
+    const { data: applications } = await supabaseClient.from("applications")
+      .select("job_id").eq("applicant_id", user.id).in("status", ["Pending", "Reviewed"]);
+    (applications || []).forEach(application => activeApplications.add(String(application.job_id)));
+  }
   const categoryTabs = `
     <div class="buttons" style="margin:16px 0;">
       <button class="${currentJobCategory === "all" ? "" : "secondary"}" onclick="filterJobCategory('all')">All Jobs</button>
@@ -1537,6 +1594,7 @@ function renderJobs() {
   const results = document.getElementById("jobResults");
   if (!results) return;
   const jobs = availableJobs.filter(job => {
+    if (job.created_by && job.created_by === currentViewingUserId) return false;
     const type = job.job_type || "regular";
     const categoryMatches = currentJobCategory === "all" || type === currentJobCategory;
     const searchMatches = [job.title, job.operator_type, job.company, job.city, job.country, job.description, job.salary]
@@ -1556,19 +1614,16 @@ function renderJobs() {
       const dateRange = job.replacement_date
         ? `${formatJobDate(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${formatJobDate(job.replacement_end_date)} (inclusive)` : ""}`
         : "Date not set";
-      const startTime = String(job.replacement_start_time || "").slice(0, 5);
-      const endTime = String(job.replacement_end_time || "").slice(0, 5);
       return `
         <div class="card" id="job-${Number(job.id)}">
           <h3>🔄 ${escapeHtml(job.title || "Replacement Needed")}</h3>
           <p>Dates: ${escapeHtml(dateRange)}</p>
           <p>Location: ${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
           <p>Crane: ${escapeHtml(job.operator_type || "Not specified")}</p>
-          <p>Time: ${escapeHtml(startTime)}${endTime ? "–" + escapeHtml(endTime) : ""}</p>
           <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
           <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
           <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Operator")}</button></p>
-          ${currentAccountType === "operator" && currentUserEmployed !== true ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
+          ${currentAccountType === "operator" && currentUserEmployed !== true ? (activeApplications.has(String(job.id)) ? `<button disabled>Application sent · awaiting response</button>` : `<button onclick="applyToJob(${Number(job.id)})">Apply</button>`) : ""}
         </div>
       `;
     }
@@ -1580,7 +1635,7 @@ function renderJobs() {
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
         <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
-        ${currentAccountType === "operator" && currentUserEmployed !== true ? `<button onclick="applyToJob(${Number(job.id)})">Apply</button>` : ""}
+        ${currentAccountType === "operator" && currentUserEmployed !== true ? (activeApplications.has(String(job.id)) ? `<button disabled>Application sent · awaiting response</button>` : `<button onclick="applyToJob(${Number(job.id)})">Apply</button>`) : ""}
       </div>
     `;
   }).join("");
@@ -1632,16 +1687,14 @@ async function publishReplacementJob() {
   const title = document.getElementById("replacementTitle").value.trim() || "Replacement Needed";
   const date = document.getElementById("replacementDate").value;
   const endDate = document.getElementById("replacementEndDate").value;
-  const startTime = document.getElementById("replacementStartTime").value;
-  const endTime = document.getElementById("replacementEndTime").value;
   const city = document.getElementById("replacementCity").value.trim();
   const country = document.getElementById("replacementCountry").value.trim() || "Georgia";
   const operatorType = document.getElementById("replacementOperatorType").value;
   const payment = Number(document.getElementById("replacementPayment").value);
   const description = document.getElementById("replacementDescription").value.trim();
 
-  if (!date || !endDate || endDate < date || !startTime || !endTime || startTime >= endTime || !city || !operatorType || !Number.isFinite(payment) || payment < 0) {
-    status.textContent = "Enter a valid date range, daily time range, location, operator type and payment.";
+  if (!date || !endDate || endDate < date || !city || !operatorType || !Number.isFinite(payment) || payment < 0) {
+    status.textContent = "Select valid start and end dates, location, operator type and payment.";
     return;
   }
 
@@ -1651,8 +1704,6 @@ async function publishReplacementJob() {
     job_type: "replacement",
     replacement_date: date,
     replacement_end_date: endDate,
-    replacement_start_time: startTime,
-    replacement_end_time: endTime,
     city,
     country,
     operator_type: operatorType,
@@ -1686,6 +1737,19 @@ async function applyToJob(jobId) {
     alert("Currently employed Operators cannot apply to jobs.");
     return;
   }
+  const selectedJob = availableJobs.find(job => String(job.id) === String(jobId));
+  if (selectedJob?.created_by === user.id) {
+    alert("You cannot apply to a job you posted yourself.");
+    return;
+  }
+  const { data: existing, error: existingError } = await supabaseClient.from("applications")
+    .select("id, status").eq("job_id", jobId).eq("applicant_id", user.id)
+    .in("status", ["Pending", "Reviewed"]).limit(1);
+  if (existingError) { alert("Could not check your previous application: " + existingError.message); return; }
+  if (existing?.length) {
+    alert("You already applied. You can apply again after the job owner responds.");
+    return;
+  }
   const message = prompt("Add a short message to your application (optional):") || "";
   const { error } = await supabaseClient.from("applications").insert({
     job_id: jobId,
@@ -1697,6 +1761,8 @@ async function applyToJob(jobId) {
     return;
   }
   alert("Application submitted.");
+  activeApplications.add(String(jobId));
+  renderJobs();
 }
 
 let currentNotificationCategory = "all";
