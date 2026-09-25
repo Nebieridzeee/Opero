@@ -134,6 +134,80 @@
       background: #25282b;
       border: 2px solid #e5252a;
     }
+    #profileSection {
+      width: min(940px, 100%);
+      margin: 28px auto;
+      padding: 0 20px;
+    }
+    .profile-shell {
+      padding: clamp(18px, 3vw, 30px);
+      border: 1px solid #242c35;
+      border-radius: 16px;
+      background: #10161d;
+    }
+    .profile-shell > h2 { margin-bottom: 6px; }
+    .profile-account-type { margin-bottom: 20px; }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .profile-panel {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid #242c35;
+      border-radius: 12px;
+      background: #121820;
+    }
+    .profile-panel.full { grid-column: 1 / -1; }
+    .profile-panel h3 { margin-bottom: 6px; }
+    .profile-panel > .muted { margin-bottom: 16px; line-height: 1.5; }
+    .profile-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 14px;
+    }
+    .profile-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+      color: #d7dde5;
+      font-size: 14px;
+    }
+    .profile-field.wide { grid-column: 1 / -1; }
+    .profile-field input, .profile-field select, .profile-field textarea {
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      padding: 11px 12px;
+      border: 1px solid #303945;
+      border-radius: 8px;
+      background: #0b0f14;
+      color: white;
+    }
+    .profile-field textarea { min-height: 100px; resize: vertical; }
+    .profile-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      color: #d7dde5;
+    }
+    .profile-checkbox input { width: 18px; height: 18px; accent-color: #e5252a; }
+    .profile-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    #operatorPhoneValue a, #operatorPhoneValue a:visited { color: #fff; }
+    #operatorPhoneValue a:hover { color: #fff; text-decoration: underline; }
+    @media (max-width: 640px) {
+      .profile-grid, .profile-fields { grid-template-columns: minmax(0, 1fr); }
+      .profile-panel.full, .profile-field.wide { grid-column: auto; }
+      .profile-actions { flex-wrap: wrap; }
+    }
 
     button.text-link {
       padding: 0;
@@ -281,93 +355,119 @@
 </section>
 
 <section id="profileSection" class="hidden">
+  <div class="profile-shell">
+    <h2>My Profile</h2>
+    <p class="muted profile-account-type">Account type: <strong id="profileAccountTypeLabel"></strong></p>
+    <div class="profile-grid">
+      <div class="profile-panel full">
+        <h3>Personal details</h3>
+        <div class="profile-fields">
+          <label class="profile-field wide">Full name
+            <input id="profileName" type="text" placeholder="Full name">
+          </label>
+          <div id="companyAddressField" class="profile-field hidden">Company address
+            <input id="profileCompanyAddress" type="text" placeholder="Company address">
+          </div>
+          <div id="companyEmailProfileField" class="profile-field hidden">Company email
+            <input id="profileCompanyEmail" type="email" placeholder="Company email">
+          </div>
+          <label class="profile-field">Phone
+            <input id="profilePhone" type="text" placeholder="Phone">
+          </label>
+          <label class="profile-field">City
+            <input id="profileCity" type="text" placeholder="City">
+          </label>
+          <label class="profile-field">Country
+            <input id="profileCountry" type="text" placeholder="Country">
+          </label>
+        </div>
+      </div>
 
-  <h2>My Profile</h2>
+      <div id="operatorTypeProfileField" class="profile-panel hidden">
+        <h3>Equipment</h3>
+        <label class="profile-field" for="profileOperatorType">What equipment do you operate?
+          <select id="profileOperatorType">
+            <option value="">Select operator type</option>
+            <option value="Tower Crane Operator">Tower Crane Operator</option>
+            <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+            <option value="Excavator Operator">Excavator Operator</option>
+            <option value="Loader Operator">Loader Operator</option>
+            <option value="Forklift Operator">Forklift Operator</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+      </div>
 
-  <p class="muted">Account type: <strong id="profileAccountTypeLabel"></strong></p>
+      <div id="operatorExperienceProfileFields" class="profile-panel hidden">
+        <h3>Experience</h3>
+        <div class="profile-fields">
+          <label class="profile-field wide">Years of experience
+            <input id="profileExperience" type="number" min="0" placeholder="Experience years">
+          </label>
+          <label class="profile-field wide">About you
+            <textarea id="profileAbout" placeholder="About you"></textarea>
+          </label>
+        </div>
+      </div>
 
-  <input id="profileName" type="text" placeholder="Full name">
+      <div id="operatorPublicCardSettings" class="profile-panel full hidden">
+        <h3>Operator card details</h3>
+        <p class="muted">These details appear on your public operator card.</p>
+        <div class="profile-fields">
+          <label class="profile-field">Profile photo
+            <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewOperatorPhoto(this.files?.[0])">
+          </label>
+          <label class="profile-field">Age
+            <input id="profileAge" type="number" min="16" max="100" step="1" placeholder="Age">
+          </label>
+          <label class="profile-field">Tower crane operation
+            <select id="profileCraneControlType">
+              <option value="">Select operation type</option>
+              <option value="Remote control">Remote control</option>
+              <option value="Cabin">Cabin</option>
+              <option value="Both">Both</option>
+            </select>
+          </label>
+          <div class="profile-field">
+            <span>Availability</span>
+            <label class="profile-checkbox">
+              <input id="profileContactAnytime" type="checkbox">
+              Call me anytime
+            </label>
+          </div>
+        </div>
+        <img id="profilePhotoPreview" class="operator-avatar hidden" alt="Profile photo preview">
+      </div>
 
-  <div id="companyAddressField" class="hidden">
-    <input id="profileCompanyAddress" type="text" placeholder="Company address">
-  </div>
+      <div id="operatorAvailabilityFields" class="profile-panel hidden">
+        <h3>Work status</h3>
+        <label class="profile-field" for="profileIsEmployed">Currently employed?
+          <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
+            <option value="">Select yes or no</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </label>
+      </div>
 
-  <div id="companyEmailProfileField" class="hidden">
-    <input id="profileCompanyEmail" type="email" placeholder="Company email">
-  </div>
-
-  <input id="profilePhone" type="text" placeholder="Phone">
-
-  <input id="profileCity" type="text" placeholder="City">
-
-  <input id="profileCountry" type="text" placeholder="Country">
-
-  <div id="operatorTypeProfileField" class="hidden">
-    <label for="profileOperatorType">What equipment do you operate?</label>
-    <select id="profileOperatorType">
-      <option value="">Select operator type</option>
-      <option value="Tower Crane Operator">Tower Crane Operator</option>
-      <option value="Mobile Crane Operator">Mobile Crane Operator</option>
-      <option value="Excavator Operator">Excavator Operator</option>
-      <option value="Loader Operator">Loader Operator</option>
-      <option value="Forklift Operator">Forklift Operator</option>
-      <option value="Other">Other</option>
-    </select>
-  </div>
-
-  <div id="operatorPublicCardSettings" class="card hidden">
-    <h3>Operator card details</h3>
-    <p class="muted">These details help employers understand your experience and availability.</p>
-    <label for="profilePhoto">Profile photo</label>
-    <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewOperatorPhoto(this.files?.[0])">
-    <img id="profilePhotoPreview" class="operator-avatar hidden" alt="Profile photo preview">
-    <label for="profileAge">Age</label>
-    <input id="profileAge" type="number" min="16" max="100" step="1" placeholder="Age">
-    <label for="profileCraneControlType">Tower crane operation</label>
-    <select id="profileCraneControlType">
-      <option value="">Select operation type</option>
-      <option value="Remote control">Remote control</option>
-      <option value="Cabin">Cabin</option>
-      <option value="Both">Both</option>
-    </select>
-    <label style="display:flex;align-items:center;gap:10px;margin-top:12px;">
-      <input id="profileContactAnytime" type="checkbox" style="width:auto;">
-      Call me anytime
-    </label>
-  </div>
-
-  <div id="operatorAvailabilityFields" class="hidden">
-    <label for="profileIsEmployed">Currently employed?</label>
-    <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
-      <option value="">Select yes or no</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
-
-  </div>
-
-  <div id="operatorAvailabilityCalendar" class="card hidden">
-    <h3>Mark your busy days</h3>
-    <p class="muted">Choose dates when you are unavailable for replacement work.</p>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-      <button type="button" class="secondary" onclick="moveAvailabilityMonth(-1)">Previous</button>
-      <strong id="availabilityMonthLabel"></strong>
-      <button type="button" class="secondary" onclick="moveAvailabilityMonth(1)">Next</button>
+      <div id="operatorAvailabilityCalendar" class="profile-panel full hidden">
+        <h3>Mark your busy days</h3>
+        <p class="muted">Choose dates when you are unavailable for replacement work.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <button type="button" class="secondary" onclick="moveAvailabilityMonth(-1)">Previous</button>
+          <strong id="availabilityMonthLabel"></strong>
+          <button type="button" class="secondary" onclick="moveAvailabilityMonth(1)">Next</button>
+        </div>
+        <div id="availabilityCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-top:12px;"></div>
+        <button type="button" onclick="saveAvailabilityMonth()">Save busy days</button>
+        <p class="status" id="availabilityCalendarStatus"></p>
+      </div>
     </div>
-    <div id="availabilityCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-top:12px;"></div>
-    <button type="button" onclick="saveAvailabilityMonth()">Save busy days</button>
-    <p class="status" id="availabilityCalendarStatus"></p>
+    <div class="profile-actions">
+      <button onclick="saveProfile()">Save Profile</button>
+      <p id="profileStatus" class="status"></p>
+    </div>
   </div>
-
-  <div id="operatorExperienceProfileFields" class="hidden">
-    <input id="profileExperience" type="number" placeholder="Experience years">
-    <textarea id="profileAbout" placeholder="About you"></textarea>
-  </div>
-
-  <button onclick="saveProfile()">Save Profile</button>
-
-  <p id="profileStatus"></p>
-
 </section>
 
 
@@ -1464,7 +1564,7 @@ async function showOperators() {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("id, full_name, operator_type, crane_control_type, age, photo_url, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
+    .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
     .eq("is_employed", false)
     .order("created_at", { ascending: false });
