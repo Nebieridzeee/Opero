@@ -109,6 +109,32 @@
       color: #9299a3;
     }
 
+    .operator-card {
+      cursor: pointer;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+    .operator-card:hover, .operator-card:focus-visible {
+      border-color: #e5252a;
+      transform: translateY(-1px);
+      outline: none;
+    }
+    .operator-avatar {
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #25282b;
+      border: 2px solid #e5252a;
+    }
+    .operator-profile-photo {
+      width: min(220px, 60vw);
+      height: min(220px, 60vw);
+      border-radius: 16px;
+      object-fit: cover;
+      background: #25282b;
+      border: 2px solid #e5252a;
+    }
+
     button.text-link {
       padding: 0;
       border: 0;
@@ -287,6 +313,27 @@
       <option value="Forklift Operator">Forklift Operator</option>
       <option value="Other">Other</option>
     </select>
+  </div>
+
+  <div id="operatorPublicCardSettings" class="card hidden">
+    <h3>Operator card details</h3>
+    <p class="muted">These details help employers understand your experience and availability.</p>
+    <label for="profilePhoto">Profile photo</label>
+    <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewOperatorPhoto(this.files?.[0])">
+    <img id="profilePhotoPreview" class="operator-avatar hidden" alt="Profile photo preview">
+    <label for="profileAge">Age</label>
+    <input id="profileAge" type="number" min="16" max="100" step="1" placeholder="Age">
+    <label for="profileCraneControlType">Tower crane operation</label>
+    <select id="profileCraneControlType">
+      <option value="">Select operation type</option>
+      <option value="Remote control">Remote control</option>
+      <option value="Cabin">Cabin</option>
+      <option value="Both">Both</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:10px;margin-top:12px;">
+      <input id="profileContactAnytime" type="checkbox" style="width:auto;">
+      Call me anytime
+    </label>
   </div>
 
   <div id="operatorAvailabilityFields" class="hidden">
@@ -819,6 +866,12 @@ async function showProfile() {
   document.getElementById("companyAddressField").classList.toggle("hidden", data.account_type !== "company");
   document.getElementById("companyEmailProfileField").classList.toggle("hidden", data.account_type !== "company");
   document.getElementById("operatorExperienceProfileFields").classList.toggle("hidden", data.account_type !== "operator");
+  document.getElementById("operatorPublicCardSettings").classList.toggle("hidden", data.account_type !== "operator");
+  document.getElementById("profileAge").value = data.age ?? "";
+  document.getElementById("profileCraneControlType").value = data.crane_control_type || "";
+  document.getElementById("profileContactAnytime").checked = data.contact_anytime === true;
+  document.getElementById("profilePhoto").value = "";
+  setOperatorPhotoPreview(data.photo_url || "");
   document.getElementById("profileCompanyAddress").value = data.company_address || "";
   document.getElementById("profileCompanyEmail").value = data.company_email || "";
 
@@ -852,6 +905,22 @@ async function showProfile() {
     data.about || "";
 }
 
+function setOperatorPhotoPreview(url) {
+  const preview = document.getElementById("profilePhotoPreview");
+  if (!preview) return;
+  preview.src = url || "";
+  preview.classList.toggle("hidden", !url);
+}
+
+function previewOperatorPhoto(file) {
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
+    document.getElementById("profilePhoto").value = "";
+    return;
+  }
+  setOperatorPhotoPreview(URL.createObjectURL(file));
+}
 
 function booleanToChoice(value) {
   return value === true ? "yes" : value === false ? "no" : "";
@@ -1025,8 +1094,34 @@ async function saveProfile() {
   if (profile.account_type === "operator") {
     const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
     if (employed === null) { alert("Please select whether you are currently employed."); return; }
+    const ageValue = document.getElementById("profileAge").value.trim();
+    const age = ageValue === "" ? null : Number(ageValue);
+    if (age !== null && (!Number.isInteger(age) || age < 16 || age > 100)) {
+      alert("Enter an age from 16 to 100.");
+      return;
+    }
     updates.operator_type = document.getElementById("profileOperatorType").value;
     updates.is_employed = employed;
+    updates.age = age;
+    updates.crane_control_type = document.getElementById("profileCraneControlType").value || null;
+    updates.contact_anytime = document.getElementById("profileContactAnytime").checked;
+
+    const photoFile = document.getElementById("profilePhoto").files?.[0];
+    if (photoFile) {
+      const { data: upload, error: uploadError } = await supabaseClient.storage
+        .from("operator-photos")
+        .upload(user.id + "/avatar", photoFile, {
+          upsert: true,
+          contentType: photoFile.type,
+          cacheControl: "3600"
+        });
+      if (uploadError) {
+        alert("Could not upload profile photo: " + uploadError.message);
+        return;
+      }
+      const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
+      updates.photo_url = publicUrl.publicUrl + "?v=" + Date.now();
+    }
   }
 
   const { error } = await supabaseClient.from("profiles")
@@ -1044,6 +1139,10 @@ async function saveProfile() {
 
   alert("Profile updated successfully!");
   if (profile.account_type === "operator") {
+    if (updates.photo_url) {
+      setOperatorPhotoPreview(updates.photo_url);
+      document.getElementById("profilePhoto").value = "";
+    }
     savedProfileEmploymentStatus = updates.is_employed;
     await toggleReplacementProfileFields();
   }
@@ -1365,7 +1464,7 @@ async function showOperators() {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("id, full_name, operator_type, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
+    .select("id, full_name, operator_type, crane_control_type, age, photo_url, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
     .eq("is_employed", false)
     .order("created_at", { ascending: false });
@@ -1404,16 +1503,33 @@ function renderOperators(operators, searched = false) {
     return;
   }
   results.innerHTML = operators.map(operator => `
-    <div class="card">
-      <h3 onclick="showOperatorProfile('${escapeHtml(operator.id)}')" style="cursor:pointer;">${escapeHtml(operator.full_name || "Operator")}</h3>
-      <p class="muted">${escapeHtml(operator.operator_type || "Operator")}</p>
+    <article class="card operator-card" role="button" tabindex="0"
+      aria-label="View ${escapeHtml(operator.full_name || "operator")}'s profile"
+      onclick="showOperatorProfile('${escapeHtml(operator.id)}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOperatorProfile('${escapeHtml(operator.id)}')}">
+      <div style="display:flex;align-items:center;gap:16px;">
+        ${operatorPhotoMarkup(operator)}
+        <div>
+          <h3>${escapeHtml(operator.full_name || "Operator")}</h3>
+          <p class="muted">${escapeHtml(operator.operator_type || "Operator")}${operator.crane_control_type ? " · " + escapeHtml(operator.crane_control_type) : ""}</p>
+          <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years${operator.age ? " · Age " + escapeHtml(operator.age) : ""}</p>
+        </div>
+      </div>
       <p>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
-      <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years</p>
       ${renderOperatorStatuses(operator)}
-      <button class="secondary" type="button" aria-label="View busy days calendar" title="View busy days calendar" onclick="showOperatorBusyCalendar('${escapeHtml(operator.id)}')">📅</button>
-      <p>${escapeHtml(operator.about || "")}</p>
-    </div>
+      ${operator.contact_anytime ? `<p class="status-badge">Call me anytime</p>` : ""}
+      <p class="muted">Open profile · Check free days 📅</p>
+    </article>
   `).join("");
+}
+
+function operatorPhotoMarkup(operator, large = false) {
+  const className = large ? "operator-profile-photo" : "operator-avatar";
+  if (operator.photo_url) {
+    return '<img class="' + className + '" src="' + escapeHtml(operator.photo_url) + '" alt="' + escapeHtml(operator.full_name || "Operator") + '">';
+  }
+  const initial = escapeHtml((operator.full_name || "O").trim().charAt(0).toUpperCase());
+  return '<div class="' + className + '" aria-hidden="true" style="display:grid;place-items:center;font-size:28px;">' + initial + '</div>';
 }
 
 function renderOperatorStatuses(operator) {
@@ -1444,7 +1560,7 @@ async function showOperatorProfile(operatorId) {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("full_name, operator_type, city, country, experience_years, about, phone")
+    .select("full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, phone")
     .eq("id", operatorId)
     .eq("account_type", "operator")
     .single();
@@ -1466,18 +1582,25 @@ async function showOperatorProfile(operatorId) {
   const about = escapeHtml(data.about || "No description provided.");
   const phone = String(data.phone || "").trim();
   const phoneLink = phone.replace(/[^+\d]/g, "");
+  const age = data.age ? escapeHtml(data.age) : "";
   const contactMarkup = phoneLink
-    ? `<p>Phone: ${escapeHtml(phone)}</p><a href="tel:${escapeHtml(phoneLink)}" style="display:inline-block; background:white; color:black; text-decoration:none; padding:10px 16px; border-radius:8px; font-weight:bold;">Contact operator</a>`
+    ? `<button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">Show phone number</button><p id="operatorPhoneValue" class="hidden"><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>`
     : "<p class=\"muted\">No phone number provided.</p>";
+  const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
 
   content.innerHTML = `
     <button class="secondary" onclick="showOperators()">Back to Operators</button>
     <div class="card" style="margin-top: 15px;">
+      ${operatorPhotoMarkup(cardProfile, true)}
       <h2>${name}</h2>
       <p class="muted">${operatorType}</p>
+      ${data.crane_control_type ? `<p>Crane operation: ${escapeHtml(data.crane_control_type)}</p>` : ""}
+      ${age ? `<p>Age: ${age}</p>` : ""}
       <p>${location || "Location not specified"}</p>
       <p>Experience: ${experience} years</p>
-      <button class="secondary" type="button" onclick="showOperatorBusyCalendar('${escapeHtml(operatorId)}')">📅 View busy days</button>
+      ${data.contact_anytime ? "<p class=\"status-badge\">Call me anytime</p>" : ""}
+      <p class="muted">Check free days</p>
+      <button class="secondary" type="button" onclick="showOperatorBusyCalendar('${escapeHtml(operatorId)}')">📅 View calendar</button>
       ${contactMarkup}
       <p style="white-space: pre-wrap; margin-top: 15px;">${about}</p>
     </div>
