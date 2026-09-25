@@ -53,6 +53,15 @@
     nav button:hover {
       color: white;
     }
+    nav button:hover:not(:disabled), nav button:focus-visible:not(:disabled), nav button:active:not(:disabled) {
+      outline: 1px solid #fff;
+      outline-offset: 1px;
+      border: 1px solid #fff;
+      border-radius: 7px;
+      background: transparent;
+      color: #fff;
+      box-shadow: none;
+    }
 
     .hero {
       text-align: center;
@@ -470,6 +479,11 @@
     .replacement-toggle-icon { color: #e5252a; font-size: 23px; line-height: 1; }
     .replacement-job-entry .card { margin-top: 12px; }
     #jobSearch { width: 100%; box-sizing: border-box; margin: 16px 0; }
+    .registration-image-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .registration-image-preview { display:block; width:120px; height:88px; margin-top:10px; border:1px solid #303945; border-radius:8px; object-fit:cover; }
+    .operator-certificate { margin:16px 0; }
+    .operator-certificate img { display:block; width:118px; max-height:84px; object-fit:contain; padding:4px; border:1px solid #303945; border-radius:8px; background:#fff; cursor:zoom-in; transition:width .18s ease, max-height .18s ease; }
+    .operator-certificate img.is-expanded { width:min(100%, 480px); max-height:70vh; height:auto; cursor:zoom-out; }
 
     @media (min-width: 641px) and (max-width: 1024px) {
       .container { width: min(100% - 40px, 960px); }
@@ -480,6 +494,7 @@
       header { min-width: 0; flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
       .logo { font-size: 21px; }
       nav { width: 100%; max-width: 100%; gap: 4px; overflow-x: auto; }
+      nav { justify-content: flex-end; margin-left: auto; }
       nav button { flex: 0 0 auto; min-height: 40px; margin: 0; padding: 8px 10px; white-space: nowrap; }
       nav #logoutNav { position: static; transform: none; }
       #profileSection, .container { width: 100%; max-width: 100%; padding-left: 14px; padding-right: 14px; }
@@ -493,6 +508,7 @@
       .profile-overview, .profile-summary { flex-wrap: wrap; }
       .profile-overview > *, .profile-summary > * { min-width: 0; }
       .replacement-form-toggle { min-height: 54px; padding: 12px 14px; }
+      .registration-image-actions button { flex:1 1 130px; }
       #jobSearch { margin: 14px 0; }
       #operatorAvailabilityCalendar, #availabilityCalendarGrid { max-width: 100%; box-sizing: border-box; overflow-x: auto; }
       img { max-width: 100%; }
@@ -594,7 +610,7 @@
             <input id="profileCompanyEmail" type="email" placeholder="Company email">
           </div>
           <label id="operatorPhotoProfileField" class="profile-field">Profile photo
-            <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewOperatorPhoto(this.files?.[0])">
+            <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onchange="previewOperatorPhoto(this.files?.[0])">
           </label>
         </div>
         <img id="profilePhotoPreview" class="profile-photo-preview hidden" alt="New profile photo preview">
@@ -627,6 +643,9 @@
           <label class="profile-field">Years of experience
             <input id="profileExperience" type="number" min="0" placeholder="Experience years">
           </label>
+          <label class="profile-field">Crane certificate photo
+            <input id="profileCertificatePhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onchange="previewProfileCertificate(this.files?.[0])">
+          </label>
           <label id="operatorAvailabilityFields" class="profile-field">Currently employed?
             <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
               <option value="">Select yes or no</option>
@@ -642,6 +661,7 @@
             Call me anytime
           </label>
         </div>
+        <img id="profileCertificatePreview" class="profile-photo-preview hidden" alt="Crane certificate preview">
         <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save operator card</button>
       </div>
 
@@ -729,7 +749,7 @@
     <input id="country" placeholder="Country" autocomplete="country-name">
 
     <div class="operator-registration-field">
-      <input id="experience" type="number" min="0" placeholder="Experience (years)">
+      <input id="experience" type="number" min="0" placeholder="Experience (years)" required>
       <label for="operatorType">What type of equipment do you operate?</label>
       <select id="operatorType">
         <option value="">Select equipment type</option>
@@ -746,7 +766,23 @@
         <option>Backhoe Loader Operator</option>
         <option>Other</option>
       </select>
-      <textarea id="about" placeholder="About you / experience"></textarea>
+      <p>Profile photo (required)</p>
+      <div class="registration-image-actions">
+        <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoCamera').click()">Take photo</button>
+        <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoUpload').click()">Upload photo</button>
+      </div>
+      <input id="registrationProfilePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="setRegistrationPhoto('profile', this.files?.[0])">
+      <input id="registrationProfilePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('profile', this.files?.[0])">
+      <img id="registrationProfilePhotoPreview" class="registration-image-preview hidden" alt="Selected profile photo preview">
+
+      <p>Tower crane certificate photo (required)</p>
+      <div class="registration-image-actions">
+        <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoCamera').click()">Take photo</button>
+        <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoUpload').click()">Upload photo</button>
+      </div>
+      <input id="registrationCertificatePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
+      <input id="registrationCertificatePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
+      <img id="registrationCertificatePhotoPreview" class="registration-image-preview hidden" alt="Selected certificate photo preview">
     </div>
 
     <button onclick="register()">Create Account</button>
@@ -908,6 +944,43 @@ function setRegistrationAccountType(accountType) {
 }
 
 
+let registrationOperatorPhotos = { profile: null, certificate: null };
+let pendingOperatorRegistrationPhotos = null;
+
+function setRegistrationPhoto(kind, file) {
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
+    return;
+  }
+  registrationOperatorPhotos[kind] = file;
+  const preview = document.getElementById(kind === "profile" ? "registrationProfilePhotoPreview" : "registrationCertificatePhotoPreview");
+  if (preview) {
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove("hidden");
+  }
+}
+
+async function uploadOperatorRegistrationPhotos(userId, photos) {
+  const updates = {};
+  for (const [kind, column, path] of [
+    ["profile", "photo_url", "avatar"],
+    ["certificate", "certificate_url", "certificate"]
+  ]) {
+    const file = photos?.[kind];
+    if (!file) continue;
+    const { data: upload, error } = await supabaseClient.storage.from("operator-photos")
+      .upload(`${userId}/${path}`, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
+    if (error) throw new Error(`Could not upload ${kind === "profile" ? "profile" : "certificate"} photo: ${error.message}`);
+    const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
+    updates[column] = `${publicUrl.publicUrl}?v=${Date.now()}`;
+  }
+  if (Object.keys(updates).length) {
+    const { error } = await supabaseClient.from("profiles").update(updates).eq("id", userId);
+    if (error) throw new Error(`Photos uploaded, but profile could not be updated: ${error.message}`);
+  }
+}
+
 async function register() {
 
   const email =
@@ -942,9 +1015,6 @@ async function register() {
 
   const experience =
     document.getElementById("experience").value;
-
-  const about =
-    document.getElementById("about").value.trim();
 
   const isEmployed = isCompany ? null : choiceToBoolean(document.getElementById("registerIsEmployed").value);
 
@@ -988,8 +1058,18 @@ async function register() {
     return;
   }
 
+  if (!isCompany && !experience.trim()) {
+    status.textContent = "Please enter your years of experience.";
+    return;
+  }
+
+  if (!isCompany && (!registrationOperatorPhotos.profile || !registrationOperatorPhotos.certificate)) {
+    status.textContent = "Please add both a profile photo and a tower crane certificate photo.";
+    return;
+  }
+
   const parsedExperience = experience === "" ? null : Number(experience);
-  if (!isCompany && parsedExperience !== null && (!Number.isInteger(parsedExperience) || parsedExperience < 0)) {
+  if (!isCompany && (!Number.isInteger(parsedExperience) || parsedExperience < 0)) {
     status.textContent = "Experience must be a whole number of zero or more.";
 
     return;
@@ -1001,6 +1081,7 @@ async function register() {
   // user's identifier in the UI/profile, and use a deterministic private email
   // alias for Supabase password authentication instead.
   const authEmail = phoneToAuthEmail(authPhone);
+  pendingOperatorRegistrationPhotos = isCompany ? null : { ...registrationOperatorPhotos };
   const { data, error } = await supabaseClient.auth.signUp({
       email: authEmail,
       password,
@@ -1018,8 +1099,7 @@ async function register() {
     is_employed: isCompany ? null : isEmployed,
     looking_for_permanent_job: isCompany ? null : false,
     needs_replacement: isCompany ? null : isEmployed === true,
-    available_for_replacement: isCompany ? null : isEmployed === false,
-    about: isCompany ? null : about
+    available_for_replacement: isCompany ? null : isEmployed === false
   }
 }
 
@@ -1046,6 +1126,18 @@ async function register() {
 
 
   if (data.session) {
+    if (pendingOperatorRegistrationPhotos) {
+      try {
+        await uploadOperatorRegistrationPhotos(data.user.id, pendingOperatorRegistrationPhotos);
+        pendingOperatorRegistrationPhotos = null;
+      } catch (uploadError) {
+        status.textContent = `Account created, but ${uploadError.message} Please retry after logging in.`;
+        alert(status.textContent);
+        updateAuthUI(true);
+        await showProfile();
+        return;
+      }
+    }
     status.textContent = "Account created. You can now continue.";
     updateAuthUI(true);
     await updateHomeCTAs(data.user);
@@ -1118,6 +1210,19 @@ async function login() {
   status.textContent =
     "Login successful!";
 
+  if (pendingOperatorRegistrationPhotos) {
+    try {
+      await uploadOperatorRegistrationPhotos(data.user.id, pendingOperatorRegistrationPhotos);
+      pendingOperatorRegistrationPhotos = null;
+    } catch (uploadError) {
+      status.textContent = uploadError.message;
+      alert(uploadError.message);
+      updateAuthUI(true);
+      await showProfile();
+      return;
+    }
+  }
+
 
   updateAuthUI(true);
   await updateHomeCTAs(data.user);
@@ -1187,6 +1292,8 @@ async function showProfile() {
   document.getElementById("profileContactAnytime").checked = data.contact_anytime === true;
   document.getElementById("profilePhoto").value = "";
   setOperatorPhotoPreview(data.photo_url || "");
+  document.getElementById("profileCertificatePhoto").value = "";
+  setCertificatePreview(data.certificate_url || "");
   document.getElementById("profileCompanyAddress").value = data.company_address || "";
   document.getElementById("profileCompanyEmail").value = data.company_email || "";
 
@@ -1241,6 +1348,23 @@ function previewOperatorPhoto(file) {
     return;
   }
   setOperatorPhotoPreview(URL.createObjectURL(file));
+}
+
+function setCertificatePreview(url) {
+  const preview = document.getElementById("profileCertificatePreview");
+  if (!preview) return;
+  preview.src = url || "";
+  preview.classList.toggle("hidden", !url);
+}
+
+function previewProfileCertificate(file) {
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
+    document.getElementById("profileCertificatePhoto").value = "";
+    return;
+  }
+  setCertificatePreview(URL.createObjectURL(file));
 }
 
 function booleanToChoice(value) {
@@ -1443,6 +1567,23 @@ async function saveProfile() {
       const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
       updates.photo_url = publicUrl.publicUrl + "?v=" + Date.now();
     }
+
+    const certificateFile = document.getElementById("profileCertificatePhoto").files?.[0];
+    if (certificateFile) {
+      const { data: upload, error: uploadError } = await supabaseClient.storage
+        .from("operator-photos")
+        .upload(user.id + "/certificate", certificateFile, {
+          upsert: true,
+          contentType: certificateFile.type,
+          cacheControl: "3600"
+        });
+      if (uploadError) {
+        alert("Could not upload certificate photo: " + uploadError.message);
+        return;
+      }
+      const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
+      updates.certificate_url = publicUrl.publicUrl + "?v=" + Date.now();
+    }
   }
 
   const { error } = await supabaseClient.from("profiles")
@@ -1470,6 +1611,10 @@ async function saveProfile() {
     if (updates.photo_url) {
       setOperatorPhotoPreview(updates.photo_url);
       document.getElementById("profilePhoto").value = "";
+    }
+    if (updates.certificate_url) {
+      setCertificatePreview(updates.certificate_url);
+      document.getElementById("profileCertificatePhoto").value = "";
     }
     savedProfileEmploymentStatus = updates.is_employed;
     await toggleReplacementProfileFields();
@@ -1889,7 +2034,7 @@ async function showOperatorProfile(operatorId) {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, phone")
+    .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone")
     .eq("id", operatorId)
     .eq("account_type", "operator")
     .single();
@@ -1916,12 +2061,18 @@ async function showOperatorProfile(operatorId) {
     ? `<button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">Show phone number</button><p id="operatorPhoneValue" class="hidden"><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>`
     : "<p class=\"muted\">No phone number provided.</p>";
   const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
+  const certificateMarkup = data.certificate_url ? `
+    <figure class="operator-certificate">
+      <figcaption class="muted" style="margin-bottom:6px;">Crane certificate · tap to enlarge</figcaption>
+      <img src="${escapeHtml(data.certificate_url)}" alt="${name}'s crane certificate" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
+    </figure>` : "";
 
   content.innerHTML = `
     <button class="secondary" onclick="showOperators()">Back to Operators</button>
     <div class="card" style="margin-top: 15px;">
       ${operatorPhotoMarkup(cardProfile, true)}
       <h2>${name}</h2>
+      ${certificateMarkup}
       <p class="muted">${operatorType}</p>
       ${data.crane_control_type ? `<p>Crane operation: ${escapeHtml(data.crane_control_type)}</p>` : ""}
       ${age ? `<p>Age: ${age}</p>` : ""}
@@ -1934,6 +2085,11 @@ async function showOperatorProfile(operatorId) {
       <p style="white-space: pre-wrap; margin-top: 15px;">${about}</p>
     </div>
   `;
+}
+
+function toggleCertificatePhoto(image) {
+  const expanded = image.classList.toggle("is-expanded");
+  image.setAttribute("aria-expanded", String(expanded));
 }
 
 async function showCompanyProfile(companyId) {
