@@ -1024,6 +1024,7 @@ async function showDashboard() {
     <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Operator")}.</p>
     <div class="card"><h3>Profile completion: ${completion}%</h3><p>Complete your profile so companies can learn about your experience.</p><button onclick="showProfile()">My profile</button></div>
     <div class="card"><h3>Browse jobs</h3><button onclick="showJobs()">Find jobs</button></div>
+    <div class="card"><h3>My replacement requests</h3><p>Manage replacement posts you have published.</p><button onclick="showMyJobs()">View my posts</button></div>
     <div class="card"><h3>Need a replacement?</h3><p>Post the dates and details for an operator to cover your shift.</p><button onclick="showOperatorReplacementForm()">Need a Replacement</button></div>
     <div class="card"><h3>My applications</h3><button onclick="showApplications()">View applications</button></div>
     <div class="card"><h3>Discover operators</h3><button onclick="showOperators()">Open operator directory</button></div>
@@ -1033,64 +1034,81 @@ async function showDashboard() {
 async function showMyJobs() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
-  const { data: profile } = await supabaseClient.from("profiles")
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
-  if (profile?.account_type !== "company") { showDashboard(); return; }
+  if (profileError || !["company", "operator"].includes(profile?.account_type)) {
+    showDashboard();
+    return;
+  }
+
   saveAppView("myJobs");
   hideAll();
   const content = document.getElementById("content");
   document.getElementById("mainContent").classList.remove("hidden");
-  content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Loading...</p>";
-  const { data: jobs, error } = await supabaseClient.from("jobs")
+  const heading = profile.account_type === "operator" ? "My Replacement Requests" : "My Jobs";
+  content.innerHTML = `<h2>${heading}</h2><p class="muted">Loading...</p>`;
+
+  let jobsQuery = supabaseClient.from("jobs")
     .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time")
     .eq("created_by", user.id).order("created_at", { ascending: false });
+  if (profile.account_type === "operator") jobsQuery = jobsQuery.eq("job_type", "replacement");
+  const { data: jobs, error } = await jobsQuery;
   if (error) {
-    content.innerHTML = "<h2>My Jobs</h2><p class='muted'>Could not load your jobs.</p>";
+    content.innerHTML = `<h2>${heading}</h2><p class="muted">Could not load your posts: ${escapeHtml(error.message)}</p><button onclick="showDashboard()">Back to Dashboard</button>`;
     return;
   }
-  content.innerHTML = "<h2>My Jobs</h2><button onclick=\"showDashboard()\">Back to Dashboard</button>" +
+
+  content.innerHTML = `<h2>${heading}</h2><button onclick="showDashboard()">Back to Dashboard</button>` +
     (jobs?.length ? jobs.map(job => `
       <div class="card">
-        <h3>${escapeHtml(job.title)}</h3><p>${escapeHtml(job.company || "")}</p>
+        <h3>${escapeHtml(job.title || "Untitled post")}</h3><p>${escapeHtml(job.company || (job.job_type === "replacement" ? "Replacement request" : ""))}</p>
         ${job.job_type === "replacement" ? `<p class="muted">Replacement · ${escapeHtml(job.replacement_date || "Date not set")} · ${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}–${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}</p>` : "<p class='muted'>Regular job</p>"}
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
         <button onclick="editJob(${Number(job.id)})">Edit</button>
         <button class="secondary" onclick="deleteJob(${Number(job.id)})">Delete</button>
-      </div>`).join("") : "<p class=\"muted\">You have not posted any jobs yet.</p>");
+      </div>`).join("") : `<p class="muted">You have not posted any ${profile.account_type === "operator" ? "replacement requests" : "jobs"} yet.</p>`);
 }
 
 async function editJob(jobId) {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
-  const { data: job } = await supabaseClient.from("jobs").select("*")
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profileError || !["company", "operator"].includes(profile?.account_type)) {
+    alert("You are not allowed to manage this post.");
+    return;
+  }
+  const { data: job, error: jobError } = await supabaseClient.from("jobs").select("*")
     .eq("id", jobId).eq("created_by", user.id).maybeSingle();
-  if (!job) { alert("Job not found or you do not own it."); return; }
+  if (jobError || !job || (profile.account_type === "operator" && job.job_type !== "replacement")) {
+    alert("Job not found or you do not have permission to edit it.");
+    return;
+  }
+
   const title = prompt("Job title", job.title || "");
   if (title === null) return;
   const operatorType = prompt("Operator type sought", job.operator_type || "");
   if (operatorType === null) return;
   const description = prompt("Description", job.description || "");
   if (description === null) return;
-  const company = prompt("Company name", job.company || "");
-  if (company === null) return;
+  let company = job.company || "";
+  if (profile.account_type === "company") {
+    company = prompt("Company name", company);
+    if (company === null) return;
+  }
   const city = prompt("City", job.city || "");
   if (city === null) return;
   const country = prompt("Country", job.country || "Georgia");
   if (country === null) return;
   const salary = prompt("Salary", job.salary || "");
   if (salary === null) return;
+
   const updates = {
-    title: title.trim(), operator_type: operatorType.trim(), description: description.trim(), company: company.trim(),
-    city: city.trim(), country: country.trim(), salary: salary.trim()
+    title: title.trim(), operator_type: operatorType.trim(), description: description.trim(),
+    company: company.trim() || null, city: city.trim(), country: country.trim(), salary: salary.trim()
   };
-  if (profile.account_type === "company") {
-    updates.company_address = document.getElementById("profileCompanyAddress").value.trim();
-    updates.experience_years = null;
-    updates.about = null;
-    updates.operator_type = null;
-  }
   if (job.job_type === "replacement") {
     const replacementDate = prompt("Replacement date (YYYY-MM-DD)", job.replacement_date || "");
     if (replacementDate === null) return;
@@ -1106,9 +1124,11 @@ async function editJob(jobId) {
     updates.replacement_start_time = replacementStartTime;
     updates.replacement_end_time = replacementEndTime;
   }
-  const { error } = await supabaseClient.from("jobs").update(updates)
-    .eq("id", jobId).eq("created_by", user.id);
+
+  const { data, error } = await supabaseClient.from("jobs").update(updates)
+    .eq("id", jobId).eq("created_by", user.id).select("id").maybeSingle();
   if (error) { alert("Could not update job: " + error.message); return; }
+  if (!data) { alert("The database did not allow this update. Apply the Opero job-management migration in Supabase, then try again."); return; }
   await showMyJobs();
 }
 
@@ -1116,12 +1136,19 @@ async function deleteJob(jobId) {
   if (!confirm("Delete this job? This cannot be undone.")) return;
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
-  const { error } = await supabaseClient.from("jobs").delete()
-    .eq("id", jobId).eq("created_by", user.id);
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profileError || !["company", "operator"].includes(profile?.account_type)) {
+    alert("You are not allowed to manage this post.");
+    return;
+  }
+  let deleteQuery = supabaseClient.from("jobs").delete().eq("id", jobId).eq("created_by", user.id);
+  if (profile.account_type === "operator") deleteQuery = deleteQuery.eq("job_type", "replacement");
+  const { data, error } = await deleteQuery.select("id").maybeSingle();
   if (error) { alert("Could not delete job: " + error.message); return; }
+  if (!data) { alert("The database did not allow this deletion. Apply the Opero job-management migration in Supabase, then try again."); return; }
   await showMyJobs();
 }
-
 let operatorDirectory = [];
 
 async function showOperators() {
