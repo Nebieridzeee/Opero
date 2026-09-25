@@ -647,9 +647,13 @@ async function register() {
   }
 
 
-  const signupCredentials = { phone: authPhone, password };
+  // Supabase phone/password signup requires an SMS provider. Keep phone as the
+  // user's identifier in the UI/profile, and use a deterministic private email
+  // alias for Supabase password authentication instead.
+  const authEmail = phoneToAuthEmail(authPhone);
   const { data, error } = await supabaseClient.auth.signUp({
-      ...signupCredentials,
+      email: authEmail,
+      password,
       options: {
   data: {
     full_name: fullName,
@@ -692,7 +696,7 @@ async function register() {
 
 
   if (data.session) {
-    status.textContent = "Account created. You can now continue without phone confirmation.";
+    status.textContent = "Account created. You can now continue.";
     updateAuthUI(true);
     await updateHomeCTAs(data.user);
     await showDashboard();
@@ -720,6 +724,12 @@ function normalizePhoneNumber(value, country = "") {
   return "";
 }
 
+function phoneToAuthEmail(phone) {
+  // Phone numbers are normalized before reaching this function, so each
+  // number maps to one stable Supabase identity without exposing an email UI.
+  return String(phone).replace(/\D/g, "") + "@phone.opero.invalid";
+}
+
 
 async function login() {
 
@@ -737,11 +747,12 @@ async function login() {
   const phoneWithCountryCode = identifier.startsWith("+") || phoneDigits.startsWith("995")
     ? identifier
     : `+995${phoneDigits}`;
-  const credentials = { phone: normalizePhoneNumber(phoneWithCountryCode, "Georgia"), password };
-  if (!credentials.phone) {
+  const normalizedPhone = normalizePhoneNumber(phoneWithCountryCode, "Georgia");
+  if (!normalizedPhone) {
     status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
     return;
   }
+  const credentials = { email: phoneToAuthEmail(normalizedPhone), password };
   const { data, error } = await supabaseClient.auth.signInWithPassword(credentials);
 
 
