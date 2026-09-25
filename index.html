@@ -266,6 +266,10 @@
     <input id="profileCompanyAddress" type="text" placeholder="Company address">
   </div>
 
+  <div id="companyEmailProfileField" class="hidden">
+    <input id="profileCompanyEmail" type="email" placeholder="Company email">
+  </div>
+
   <input id="profilePhone" type="text" placeholder="Phone">
 
   <input id="profileCity" type="text" placeholder="City">
@@ -330,8 +334,6 @@
       <span style="padding:12px 14px;border:1px solid #303945;border-radius:8px;background:#121820;color:white;">+995</span>
       <input id="loginPhone" type="tel" inputmode="numeric" placeholder="Phone number" autocomplete="tel" style="flex:1;">
     </div>
-    <input id="loginEmail" class="hidden" type="email" placeholder="Email" autocomplete="username">
-    <button id="loginMethodToggle" class="text-link" type="button" onclick="toggleLoginMethod()">Use email instead</button>
 
     <input id="loginPassword" type="password" placeholder="Password">
 
@@ -522,10 +524,7 @@ function showLogin() {
 
   saveAppView("login");
   hideAll();
-  loginMethod = "phone";
   document.getElementById("loginPhoneRow").classList.remove("hidden");
-  document.getElementById("loginEmail").classList.add("hidden");
-  document.getElementById("loginMethodToggle").textContent = "Use email instead";
 
   document.getElementById("loginSection").classList.remove("hidden");
 
@@ -555,19 +554,7 @@ function setRegistrationAccountType(accountType) {
   });
   document.getElementById("companyRegistrationFields").classList.toggle("hidden", !isCompany);
   document.getElementById("registrationEmailField").classList.toggle("hidden", !isCompany);
-  document.getElementById("registrationPhonePrefix").classList.toggle("hidden", isCompany);
-  document.getElementById("phone").placeholder = isCompany ? "Phone" : "5XX XX XX XX";
-}
-
-let loginMethod = "phone";
-
-function toggleLoginMethod() {
-  loginMethod = loginMethod === "phone" ? "email" : "phone";
-  document.getElementById("loginPhoneRow").classList.toggle("hidden", loginMethod !== "phone");
-  document.getElementById("loginEmail").classList.toggle("hidden", loginMethod !== "email");
-  document.getElementById("loginMethodToggle").textContent = loginMethod === "phone"
-    ? "Use email instead"
-    : "Use phone number instead";
+  document.getElementById("phone").placeholder = "5XX XX XX XX";
 }
 
 
@@ -622,12 +609,16 @@ async function register() {
   const phoneWithCountryCode = phone.trim().startsWith("+") || phoneDigits.startsWith("995")
     ? phone
     : `+995${phoneDigits}`;
-  const authPhone = isCompany ? phone : normalizePhoneNumber(phoneWithCountryCode, country);
-  if (!isCompany && !authPhone) {
+  const authPhone = normalizePhoneNumber(phoneWithCountryCode, country);
+  if (!authPhone) {
     status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
     return;
   }
-  if (!fullName || (!isCompany && !authPhone) || (isCompany && !email) || !password || !passwordConfirm || !phone || !city || !country || (isCompany && !companyAddress)) {
+  if (isCompany && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    status.textContent = "Enter a valid company email address.";
+    return;
+  }
+  if (!fullName || (isCompany && !email) || !password || !passwordConfirm || !phone || !city || !country || (isCompany && !companyAddress)) {
     status.textContent = "Please complete all required fields.";
     return;
   }
@@ -656,17 +647,18 @@ async function register() {
   }
 
 
-  const signupCredentials = isCompany ? { email, password } : { phone: authPhone, password };
+  const signupCredentials = { phone: authPhone, password };
   const { data, error } = await supabaseClient.auth.signUp({
       ...signupCredentials,
       options: {
   data: {
     full_name: fullName,
     account_type: accountType,
-    phone: isCompany ? phone : authPhone,
+    phone: authPhone,
     city: city,
     country: country,
     company_address: isCompany ? companyAddress : null,
+    company_email: isCompany ? email : null,
     operator_type: isCompany ? null : operatorType || null,
     experience_years: isCompany ? null : parsedExperience,
     is_employed: isCompany ? null : isEmployed,
@@ -699,11 +691,8 @@ async function register() {
   }
 
 
-  if (isCompany) {
-    status.textContent = "Account created. You can now login.";
-    setTimeout(() => showLogin(), 1500);
-  } else if (data.session) {
-    status.textContent = "Account created. Your phone number does not need confirmation.";
+  if (data.session) {
+    status.textContent = "Account created. You can now continue without phone confirmation.";
     updateAuthUI(true);
     await updateHomeCTAs(data.user);
     await showDashboard();
@@ -743,18 +732,14 @@ async function login() {
 
   status.textContent = "Logging in...";
 
-  const identifier = loginMethod === "phone"
-    ? document.getElementById("loginPhone").value.trim()
-    : document.getElementById("loginEmail").value.trim();
+  const identifier = document.getElementById("loginPhone").value.trim();
   const phoneDigits = identifier.replace(/\D/g, "");
   const phoneWithCountryCode = identifier.startsWith("+") || phoneDigits.startsWith("995")
     ? identifier
     : `+995${phoneDigits}`;
-  const credentials = loginMethod === "email"
-    ? { email: identifier, password }
-    : { phone: normalizePhoneNumber(phoneWithCountryCode, "Georgia"), password };
-  if (!credentials.email && !credentials.phone) {
-    status.textContent = loginMethod === "email" ? "Enter the company email address." : "Enter a valid 9-digit Georgian mobile number beginning with 5.";
+  const credentials = { phone: normalizePhoneNumber(phoneWithCountryCode, "Georgia"), password };
+  if (!credentials.phone) {
+    status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
     return;
   }
   const { data, error } = await supabaseClient.auth.signInWithPassword(credentials);
@@ -821,8 +806,10 @@ async function showProfile() {
 
   document.getElementById("profileName").placeholder = data.account_type === "company" ? "Company name" : "Full name";
   document.getElementById("companyAddressField").classList.toggle("hidden", data.account_type !== "company");
+  document.getElementById("companyEmailProfileField").classList.toggle("hidden", data.account_type !== "company");
   document.getElementById("operatorExperienceProfileFields").classList.toggle("hidden", data.account_type !== "operator");
   document.getElementById("profileCompanyAddress").value = data.company_address || "";
+  document.getElementById("profileCompanyEmail").value = data.company_email || "";
 
   document.getElementById("profilePhone").value =
     data.phone || "";
@@ -1020,6 +1007,10 @@ async function saveProfile() {
     experience_years: Number(document.getElementById("profileExperience").value) || null,
     about: document.getElementById("profileAbout").value.trim()
   };
+  if (profile.account_type === "company") {
+    updates.company_address = document.getElementById("profileCompanyAddress").value.trim();
+    updates.company_email = document.getElementById("profileCompanyEmail").value.trim();
+  }
   if (profile.account_type === "operator") {
     const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
     if (employed === null) { alert("Please select whether you are currently employed."); return; }
