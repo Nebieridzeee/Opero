@@ -359,26 +359,8 @@
     </div>
     <input id="accountType" type="hidden" value="operator">
 
-    <div id="operatorRegistrationFields">
+    <div class="operator-registration-field">
       <input id="fullName" placeholder="Full name" autocomplete="name">
-      <select id="operatorType">
-        <option value="">Operator type</option>
-        <option>Tower Crane Operator</option>
-        <option>Mobile Crane Operator</option>
-        <option>Excavator Operator</option>
-        <option>Forklift Operator</option>
-        <option>Loader Operator</option>
-        <option>Bulldozer Operator</option>
-        <option>Other</option>
-      </select>
-      <label for="registerIsEmployed">Currently employed?</label>
-      <select id="registerIsEmployed">
-        <option value="">Select yes or no</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
-      <input id="experience" type="number" min="0" placeholder="Experience (years)">
-      <textarea id="about" placeholder="About you / experience"></textarea>
     </div>
 
     <div id="companyRegistrationFields" class="hidden">
@@ -386,16 +368,43 @@
       <input id="companyAddress" placeholder="Company address" autocomplete="street-address">
     </div>
 
-    <input id="registerEmail" type="email" placeholder="Email">
-
+    <input id="registerEmail" type="email" placeholder="Email" autocomplete="email">
     <input id="registerPassword" type="password" placeholder="Password" autocomplete="new-password">
     <input id="registerPasswordConfirm" type="password" placeholder="Repeat password" autocomplete="new-password">
-
     <input id="phone" type="tel" placeholder="Phone" autocomplete="tel">
 
-    <input id="city" placeholder="City" autocomplete="address-level2">
+    <div class="operator-registration-field">
+      <label for="registerIsEmployed">Are you currently employed?</label>
+      <select id="registerIsEmployed">
+        <option value="">Select yes or no</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
 
+    <input id="city" placeholder="City" autocomplete="address-level2">
     <input id="country" placeholder="Country" autocomplete="country-name">
+
+    <div class="operator-registration-field">
+      <input id="experience" type="number" min="0" placeholder="Experience (years)">
+      <label for="operatorType">What type of equipment do you operate?</label>
+      <select id="operatorType">
+        <option value="">Select equipment type</option>
+        <option>Tower Crane Operator</option>
+        <option>Mobile Crane Operator</option>
+        <option>Excavator Operator</option>
+        <option>Forklift Operator</option>
+        <option>Loader Operator</option>
+        <option>Bulldozer Operator</option>
+        <option>Telehandler Operator</option>
+        <option>Road Roller Operator</option>
+        <option>Motor Grader Operator</option>
+        <option>Concrete Pump Operator</option>
+        <option>Backhoe Loader Operator</option>
+        <option>Other</option>
+      </select>
+      <textarea id="about" placeholder="About you / experience"></textarea>
+    </div>
 
     <button onclick="register()">Create Account</button>
 
@@ -471,7 +480,9 @@ function setRegistrationAccountType(accountType) {
   document.getElementById("companyAccountChoice").classList.toggle("secondary", !isCompany);
   document.getElementById("operatorAccountChoice").setAttribute("aria-pressed", String(!isCompany));
   document.getElementById("companyAccountChoice").setAttribute("aria-pressed", String(isCompany));
-  document.getElementById("operatorRegistrationFields").classList.toggle("hidden", isCompany);
+  document.querySelectorAll(".operator-registration-field").forEach(field => {
+    field.classList.toggle("hidden", isCompany);
+  });
   document.getElementById("companyRegistrationFields").classList.toggle("hidden", !isCompany);
 }
 
@@ -535,6 +546,11 @@ async function register() {
 
   if (!isCompany && isEmployed === null) {
     status.textContent = "Please select whether you are currently employed.";
+    return;
+  }
+
+  if (!isCompany && !operatorType) {
+    status.textContent = "Please select the equipment type you operate.";
     return;
   }
 
