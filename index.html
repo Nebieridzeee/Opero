@@ -217,7 +217,7 @@
 <body>
 
 <header>
-  <button class="logo" type="button" onclick="showHome()" aria-label="Opero home">OPERO</button>
+  <button class="logo" type="button" onclick="goHomeAndRefresh()" aria-label="Opero home">OPERO</button>
 
   <nav>
     <button id="operatorsNav" class="hidden" onclick="showOperators()">Operators</button>
@@ -439,6 +439,52 @@ const supabaseClient =
     SUPABASE_ANON_KEY
   );
 
+const OPERO_HISTORY_KEY = "operoHistory";
+let restoringAppHistory = false;
+
+if (!window.history.state?.[OPERO_HISTORY_KEY]) {
+  window.history.replaceState({ [OPERO_HISTORY_KEY]: true, view: "home", args: [] }, "", window.location.href);
+}
+
+function saveAppView(view, args = []) {
+  if (restoringAppHistory) return;
+  window.history.pushState({ [OPERO_HISTORY_KEY]: true, view, args }, "", window.location.href);
+}
+
+function goHomeAndRefresh() {
+  try { sessionStorage.setItem("operoReturnHome", "1"); } catch (_) {}
+  window.history.replaceState({ [OPERO_HISTORY_KEY]: true, view: "home", args: [] }, "", window.location.href);
+  window.location.reload();
+}
+
+window.addEventListener("popstate", event => {
+  const state = event.state;
+  if (!state?.[OPERO_HISTORY_KEY]) return;
+
+  const args = Array.isArray(state.args) ? state.args : [];
+  const routes = {
+    home: () => showHome(),
+    login: () => showLogin(),
+    register: () => showRegister(),
+    profile: () => showProfile(),
+    dashboard: () => showDashboard(),
+    myJobs: () => showMyJobs(),
+    operators: () => showOperators(),
+    operatorProfile: () => showOperatorProfile(args[0]),
+    companyProfile: () => showCompanyProfile(args[0]),
+    replacementForm: () => showOperatorReplacementForm(),
+    jobs: () => showJobs(args[0], args[1]),
+    applications: () => showApplications(args[0], args[1])
+  };
+  const restore = routes[state.view];
+  if (!restore) return;
+
+  restoringAppHistory = true;
+  Promise.resolve().then(restore).catch(error => console.error("Could not restore page:", error)).finally(() => {
+    restoringAppHistory = false;
+  });
+});
+
 
 function hideAll() {
 
@@ -452,6 +498,7 @@ function hideAll() {
 
 function showHome() {
 
+  saveAppView("home");
   hideAll();
 
   document.getElementById("home").classList.remove("hidden");
@@ -461,6 +508,7 @@ function showHome() {
 
 function showLogin() {
 
+  saveAppView("login");
   hideAll();
 
   document.getElementById("loginSection").classList.remove("hidden");
@@ -470,6 +518,7 @@ function showLogin() {
 
 function showRegister() {
 
+  saveAppView("register");
   hideAll();
 
   document.getElementById("registerSection").classList.remove("hidden");
@@ -673,6 +722,7 @@ async function login() {
 }
 
 async function showProfile() {
+  saveAppView("profile");
   hideAll();
 
   const profileSection = document.getElementById("profileSection");
@@ -939,6 +989,7 @@ async function updateHomeCTAs(user) {
 async function showDashboard() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
+  saveAppView("dashboard");
   hideAll();
   const mainContent = document.getElementById("mainContent");
   const content = document.getElementById("content");
@@ -985,6 +1036,7 @@ async function showMyJobs() {
   const { data: profile } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
   if (profile?.account_type !== "company") { showDashboard(); return; }
+  saveAppView("myJobs");
   hideAll();
   const content = document.getElementById("content");
   document.getElementById("mainContent").classList.remove("hidden");
@@ -1074,6 +1126,7 @@ let operatorDirectory = [];
 
 async function showOperators() {
 
+  saveAppView("operators");
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   const content = document.getElementById("content");
@@ -1140,6 +1193,7 @@ function renderOperatorStatuses(operator) {
 
 async function showOperatorProfile(operatorId) {
 
+  saveAppView("operatorProfile", [operatorId]);
   hideAll();
 
   const mainContent = document.getElementById("mainContent");
@@ -1197,6 +1251,7 @@ async function showOperatorProfile(operatorId) {
 }
 
 async function showCompanyProfile(companyId) {
+  saveAppView("companyProfile", [companyId]);
   hideAll();
   const content = document.getElementById("content");
   document.getElementById("mainContent").classList.remove("hidden");
@@ -1283,6 +1338,7 @@ async function showOperatorReplacementForm() {
     .select("account_type").eq("id", user.id).maybeSingle();
   if (profile?.account_type !== "operator") { showDashboard(); return; }
   currentAccountType = "operator";
+  saveAppView("replacementForm");
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   document.getElementById("content").innerHTML = `
@@ -1295,6 +1351,7 @@ async function showJobs(category = "all", focusJobId = null) {
 
   currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "all";
   currentJobSearchTerm = "";
+  saveAppView("jobs", [currentJobCategory, focusJobId]);
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   const content = document.getElementById("content");
@@ -1589,6 +1646,7 @@ async function openNotificationProfile(notificationId, profileId) {
 
 async function showApplications(category = "all", focusApplicationId = null) {
   currentNotificationCategory = ["all", "job_application", "replacement", "system"].includes(category) ? category : "all";
+  saveAppView("applications", [currentNotificationCategory, focusApplicationId]);
   hideAll();
   const mainContent = document.getElementById("mainContent");
   const content = document.getElementById("content");
@@ -1708,7 +1766,15 @@ supabaseClient.auth.getSession().then(({ data }) => {
   updateAuthUI(!!session);
   updateHomeCTAs(session?.user || null);
   configureNotificationUpdates(session?.user || null);
-  if (session) showDashboard();
+  let returnToHome = false;
+  try {
+    returnToHome = sessionStorage.getItem("operoReturnHome") === "1";
+    sessionStorage.removeItem("operoReturnHome");
+  } catch (_) {}
+  restoringAppHistory = true;
+  Promise.resolve(returnToHome || !session ? showHome() : showDashboard()).finally(() => {
+    restoringAppHistory = false;
+  });
 });
 
 </script>
