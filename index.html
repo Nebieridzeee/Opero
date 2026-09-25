@@ -446,21 +446,27 @@ if (!window.history.state?.[OPERO_HISTORY_KEY]) {
   window.history.replaceState({ [OPERO_HISTORY_KEY]: true, view: "home", args: [] }, "", window.location.href);
 }
 
+function persistAppView(state) {
+  try { sessionStorage.setItem("operoLastView", JSON.stringify(state)); } catch (_) {}
+}
+
 function saveAppView(view, args = []) {
   if (restoringAppHistory) return;
-  window.history.pushState({ [OPERO_HISTORY_KEY]: true, view, args }, "", window.location.href);
+  const state = { [OPERO_HISTORY_KEY]: true, view, args };
+  window.history.pushState(state, "", window.location.href);
+  persistAppView(state);
 }
 
 function goHomeAndRefresh() {
+  const state = { [OPERO_HISTORY_KEY]: true, view: "home", args: [] };
   try { sessionStorage.setItem("operoReturnHome", "1"); } catch (_) {}
-  window.history.replaceState({ [OPERO_HISTORY_KEY]: true, view: "home", args: [] }, "", window.location.href);
+  persistAppView(state);
+  window.history.replaceState(state, "", window.location.href);
   window.location.reload();
 }
 
-window.addEventListener("popstate", event => {
-  const state = event.state;
-  if (!state?.[OPERO_HISTORY_KEY]) return;
-
+function restoreAppView(state) {
+  if (!state?.[OPERO_HISTORY_KEY]) return Promise.resolve();
   const args = Array.isArray(state.args) ? state.args : [];
   const routes = {
     home: () => showHome(),
@@ -477,12 +483,19 @@ window.addEventListener("popstate", event => {
     applications: () => showApplications(args[0], args[1])
   };
   const restore = routes[state.view];
-  if (!restore) return;
+  if (!restore) return Promise.resolve();
 
+  persistAppView(state);
   restoringAppHistory = true;
-  Promise.resolve().then(restore).catch(error => console.error("Could not restore page:", error)).finally(() => {
+  return Promise.resolve().then(restore).catch(error => {
+    console.error("Could not restore page:", error);
+  }).finally(() => {
     restoringAppHistory = false;
   });
+}
+
+window.addEventListener("popstate", event => {
+  restoreAppView(event.state);
 });
 
 
@@ -1788,20 +1801,41 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   setTimeout(() => configureNotificationUpdates(session?.user || null), 0);
 });
 
-supabaseClient.auth.getSession().then(({ data }) => {
+supabaseClient.auth.getSession().then(async ({ data }) => {
   const session = data?.session;
   updateAuthUI(!!session);
   updateHomeCTAs(session?.user || null);
   configureNotificationUpdates(session?.user || null);
+
   let returnToHome = false;
+  let savedView = null;
   try {
     returnToHome = sessionStorage.getItem("operoReturnHome") === "1";
     sessionStorage.removeItem("operoReturnHome");
+    savedView = JSON.parse(sessionStorage.getItem("operoLastView") || "null");
   } catch (_) {}
-  restoringAppHistory = true;
-  Promise.resolve(returnToHome || !session ? showHome() : showDashboard()).finally(() => {
-    restoringAppHistory = false;
-  });
+
+  const navigationType = performance.getEntriesByType("navigation")[0]?.type;
+  let state = window.history.state;
+  if (returnToHome) {
+    state = { [OPERO_HISTORY_KEY]: true, view: "home", args: [] };
+    window.history.replaceState(state, "", window.location.href);
+  } else if (["reload", "back_forward"].includes(navigationType)) {
+    if (!state?.[OPERO_HISTORY_KEY] && savedView?.view) state = { ...savedView, [OPERO_HISTORY_KEY]: true };
+    if (state?.view === "home" && savedView?.view && savedView.view !== "home") {
+      state = { ...savedView, [OPERO_HISTORY_KEY]: true };
+      window.history.replaceState(state, "", window.location.href);
+    }
+  } else {
+    state = { [OPERO_HISTORY_KEY]: true, view: session ? "dashboard" : "home", args: [] };
+    window.history.replaceState(state, "", window.location.href);
+  }
+
+  if (!state?.[OPERO_HISTORY_KEY] || !state.view) {
+    state = { [OPERO_HISTORY_KEY]: true, view: session ? "dashboard" : "home", args: [] };
+    window.history.replaceState(state, "", window.location.href);
+  }
+  await restoreAppView(state);
 });
 
 </script>
