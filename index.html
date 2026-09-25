@@ -445,6 +445,14 @@
       box-shadow: none;
       transform: none;
     }
+    .logo:hover:not(:disabled), .logo:focus-visible:not(:disabled), .logo:active:not(:disabled) {
+      outline: none;
+      border: 0;
+      background: none;
+      color: #fff;
+      box-shadow: none;
+      transform: none;
+    }
     button.secondary:hover:not(:disabled), button.secondary:focus-visible:not(:disabled), button.secondary:active:not(:disabled),
     .buttons button.secondary:hover:not(:disabled) {
       outline: 1px solid #e5252a;
@@ -479,8 +487,9 @@
     .replacement-toggle-icon { color: #e5252a; font-size: 23px; line-height: 1; }
     .replacement-job-entry .card { margin-top: 12px; }
     #jobSearch { width: 100%; box-sizing: border-box; margin: 16px 0; }
-    .registration-image-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-    .registration-image-preview { display:block; width:120px; height:88px; margin-top:10px; border:1px solid #303945; border-radius:8px; object-fit:cover; }
+    .registration-image-actions { display:flex; flex-wrap:wrap; gap:7px; margin:6px 0 12px; }
+    .registration-image-actions button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:36px; padding:7px 11px; font-size:13px; }
+    .registration-image-actions svg { width:17px; height:17px; flex:0 0 17px; }
     .operator-certificate { margin:16px 0; }
     .operator-certificate img { display:block; width:118px; max-height:84px; object-fit:contain; padding:4px; border:1px solid #303945; border-radius:8px; background:#fff; cursor:zoom-in; transition:width .18s ease, max-height .18s ease; }
     .operator-certificate img.is-expanded { width:min(100%, 480px); max-height:70vh; height:auto; cursor:zoom-out; }
@@ -508,7 +517,7 @@
       .profile-overview, .profile-summary { flex-wrap: wrap; }
       .profile-overview > *, .profile-summary > * { min-width: 0; }
       .replacement-form-toggle { min-height: 54px; padding: 12px 14px; }
-      .registration-image-actions button { flex:1 1 130px; }
+      .registration-image-actions button { flex:0 1 auto; }
       #jobSearch { margin: 14px 0; }
       #operatorAvailabilityCalendar, #availabilityCalendarGrid { max-width: 100%; box-sizing: border-box; overflow-x: auto; }
       img { max-width: 100%; }
@@ -768,21 +777,18 @@
       </select>
       <p>Profile photo (required)</p>
       <div class="registration-image-actions">
-        <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoCamera').click()">Take photo</button>
-        <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoUpload').click()">Upload photo</button>
+        <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoCamera').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-3.4 2.9-5.2 6.5-5.2s5.9 1.8 6.5 5.2"/></svg>Take photo</button>
+        <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoUpload').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c.6-3.4 2.9-5.2 6.5-5.2s5.9 1.8 6.5 5.2"/></svg>Upload photo</button>
       </div>
       <input id="registrationProfilePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="setRegistrationPhoto('profile', this.files?.[0])">
       <input id="registrationProfilePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('profile', this.files?.[0])">
-      <img id="registrationProfilePhotoPreview" class="registration-image-preview hidden" alt="Selected profile photo preview">
-
       <p>Tower crane certificate photo (required)</p>
       <div class="registration-image-actions">
-        <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoCamera').click()">Take photo</button>
-        <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoUpload').click()">Upload photo</button>
+        <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoCamera').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>Take photo</button>
+        <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoUpload').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>Upload photo</button>
       </div>
       <input id="registrationCertificatePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
       <input id="registrationCertificatePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
-      <img id="registrationCertificatePhotoPreview" class="registration-image-preview hidden" alt="Selected certificate photo preview">
     </div>
 
     <button onclick="register()">Create Account</button>
@@ -954,11 +960,6 @@ function setRegistrationPhoto(kind, file) {
     return;
   }
   registrationOperatorPhotos[kind] = file;
-  const preview = document.getElementById(kind === "profile" ? "registrationProfilePhotoPreview" : "registrationCertificatePhotoPreview");
-  if (preview) {
-    preview.src = URL.createObjectURL(file);
-    preview.classList.remove("hidden");
-  }
 }
 
 async function uploadOperatorRegistrationPhotos(userId, photos) {
