@@ -162,6 +162,102 @@
     .profile-panel.full { grid-column: 1 / -1; }
     .profile-panel h3 { margin-bottom: 6px; }
     .profile-panel > .muted { margin-bottom: 16px; line-height: 1.5; }
+    .profile-overview {
+      display: flex;
+      align-items: flex-start;
+      gap: 22px;
+    }
+    .profile-overview-photo {
+      display: grid;
+      flex: 0 0 116px;
+      width: 116px;
+      height: 116px;
+      overflow: hidden;
+      place-items: center;
+      border: 1px solid var(--opero-border);
+      border-radius: 14px;
+      background: #eef0f2;
+      color: var(--opero-red);
+      font-size: 36px;
+      font-weight: 700;
+    }
+    .profile-overview-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .profile-overview-details { flex: 1; min-width: 0; }
+    .profile-overview-heading, .profile-panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .profile-overview-heading h3 { margin: 0; font-size: 22px; }
+    .profile-overview-heading .muted { margin: 2px 0 0; font-size: 13px; }
+    .profile-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .profile-info-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #f7f8f9;
+    }
+    .profile-info-cell span { color: var(--opero-muted); font-size: 11px; }
+    .profile-info-cell strong {
+      overflow-wrap: anywhere;
+      color: var(--opero-ink);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .profile-panel-heading { margin-bottom: 16px; }
+    .profile-panel-heading h3 { margin-bottom: 2px; }
+    .profile-panel-heading .muted { margin: 0; font-size: 13px; }
+    .profile-photo-preview {
+      display: block;
+      width: 72px;
+      height: 72px;
+      margin-top: 12px;
+      border: 1px solid var(--opero-border);
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .availability-calendar-card {
+      grid-column: 1;
+      width: 100%;
+      max-width: 390px;
+      padding: 16px;
+    }
+    .availability-calendar-card > .muted { margin: 4px 0 12px; font-size: 13px; }
+    .availability-calendar-card > div:first-of-type { gap: 8px !important; }
+    .availability-calendar-card > div:first-of-type button {
+      min-height: 34px;
+      padding: 5px 9px;
+      font-size: 12px;
+    }
+    #availabilityCalendarGrid {
+      max-width: 340px;
+      margin: 10px auto 12px !important;
+      gap: 3px !important;
+    }
+    #availabilityCalendarGrid strong { font-size: 11px; }
+    #availabilityCalendarGrid button {
+      width: 100%;
+      min-width: 0;
+      min-height: 31px;
+      height: 31px;
+      padding: 0 !important;
+      border-radius: 7px;
+      font-size: 12px;
+    }
     .profile-fields {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -207,6 +303,14 @@
       .profile-grid, .profile-fields { grid-template-columns: minmax(0, 1fr); }
       .profile-panel.full, .profile-field.wide { grid-column: auto; }
       .profile-actions { flex-wrap: wrap; }
+      .profile-overview { gap: 12px; padding: 14px; }
+      .profile-overview-photo { flex-basis: 78px; width: 78px; height: 78px; border-radius: 11px; font-size: 26px; }
+      .profile-overview-heading { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+      .profile-overview-heading h3 { font-size: 18px; }
+      .profile-info-grid { gap: 6px; }
+      .profile-info-cell { padding: 7px; }
+      .profile-info-cell strong { font-size: 12px; }
+      .availability-calendar-card { grid-column: auto; max-width: 360px; }
     }
 
     button.text-link {
@@ -618,18 +722,40 @@
     <h2>My Profile</h2>
     <p class="muted profile-account-type">Account type: <strong id="profileAccountTypeLabel"></strong></p>
     <div class="profile-grid">
-      <div class="profile-panel full">
-        <h3>Personal details</h3>
+      <div id="operatorProfileOverview" class="profile-panel profile-overview full hidden">
+        <div class="profile-overview-photo">
+          <img id="profileSummaryPhoto" class="hidden" alt="Profile photo">
+          <div id="profileSummaryInitial" aria-hidden="true"></div>
+        </div>
+        <div class="profile-overview-details">
+          <div class="profile-overview-heading">
+            <div>
+              <h3 id="profileSummaryName"></h3>
+              <p class="muted">Professional operator profile</p>
+            </div>
+            <button type="button" class="secondary" onclick="togglePersonalProfileEditor()">Edit profile</button>
+          </div>
+          <div class="profile-info-grid">
+            <div class="profile-info-cell"><span>Age</span><strong id="profileSummaryAge"></strong></div>
+            <div class="profile-info-cell"><span>Phone</span><strong id="profileSummaryPhone"></strong></div>
+            <div class="profile-info-cell"><span>City</span><strong id="profileSummaryCity"></strong></div>
+            <div class="profile-info-cell"><span>Country</span><strong id="profileSummaryCountry"></strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="profilePersonalEditor" class="profile-panel full hidden">
+        <div class="profile-panel-heading">
+          <div><h3 id="personalEditorTitle">Edit personal information</h3><p class="muted">Update your contact details and profile photo.</p></div>
+          <button id="closePersonalEditor" type="button" class="text-link" onclick="togglePersonalProfileEditor()">Close</button>
+        </div>
         <div class="profile-fields">
-          <label class="profile-field wide">Full name
+          <label class="profile-field">Full name
             <input id="profileName" type="text" placeholder="Full name">
           </label>
-          <div id="companyAddressField" class="profile-field hidden">Company address
-            <input id="profileCompanyAddress" type="text" placeholder="Company address">
-          </div>
-          <div id="companyEmailProfileField" class="profile-field hidden">Company email
-            <input id="profileCompanyEmail" type="email" placeholder="Company email">
-          </div>
+          <label id="profileAgeField" class="profile-field">Age
+            <input id="profileAge" type="number" min="16" max="100" step="1" placeholder="Age">
+          </label>
           <label class="profile-field">Phone
             <input id="profilePhone" type="text" placeholder="Phone">
           </label>
@@ -639,45 +765,34 @@
           <label class="profile-field">Country
             <input id="profileCountry" type="text" placeholder="Country">
           </label>
-        </div>
-      </div>
-
-      <div id="operatorTypeProfileField" class="profile-panel hidden">
-        <h3>Equipment</h3>
-        <label class="profile-field" for="profileOperatorType">What equipment do you operate?
-          <select id="profileOperatorType">
-            <option value="">Select operator type</option>
-            <option value="Tower Crane Operator">Tower Crane Operator</option>
-            <option value="Mobile Crane Operator">Mobile Crane Operator</option>
-            <option value="Excavator Operator">Excavator Operator</option>
-            <option value="Loader Operator">Loader Operator</option>
-            <option value="Forklift Operator">Forklift Operator</option>
-            <option value="Other">Other</option>
-          </select>
-        </label>
-      </div>
-
-      <div id="operatorExperienceProfileFields" class="profile-panel hidden">
-        <h3>Experience</h3>
-        <div class="profile-fields">
-          <label class="profile-field wide">Years of experience
-            <input id="profileExperience" type="number" min="0" placeholder="Experience years">
-          </label>
-          <label class="profile-field wide">About you
-            <textarea id="profileAbout" placeholder="About you"></textarea>
-          </label>
-        </div>
-      </div>
-
-      <div id="operatorPublicCardSettings" class="profile-panel full hidden">
-        <h3>Operator card details</h3>
-        <p class="muted">These details appear on your public operator card.</p>
-        <div class="profile-fields">
-          <label class="profile-field">Profile photo
+          <div id="companyAddressField" class="profile-field hidden">Company address
+            <input id="profileCompanyAddress" type="text" placeholder="Company address">
+          </div>
+          <div id="companyEmailProfileField" class="profile-field hidden">Company email
+            <input id="profileCompanyEmail" type="email" placeholder="Company email">
+          </div>
+          <label id="operatorPhotoProfileField" class="profile-field">Profile photo
             <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewOperatorPhoto(this.files?.[0])">
           </label>
-          <label class="profile-field">Age
-            <input id="profileAge" type="number" min="16" max="100" step="1" placeholder="Age">
+        </div>
+        <img id="profilePhotoPreview" class="profile-photo-preview hidden" alt="New profile photo preview">
+        <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save profile</button>
+      </div>
+
+      <div id="operatorCardDetails" class="profile-panel full hidden">
+        <h3>Operator card information</h3>
+        <p class="muted">This is the professional information people see on your operator card.</p>
+        <div class="profile-fields">
+          <label id="operatorTypeProfileField" class="profile-field">Equipment type
+            <select id="profileOperatorType">
+              <option value="">Select operator type</option>
+              <option value="Tower Crane Operator">Tower Crane Operator</option>
+              <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+              <option value="Excavator Operator">Excavator Operator</option>
+              <option value="Loader Operator">Loader Operator</option>
+              <option value="Forklift Operator">Forklift Operator</option>
+              <option value="Other">Other</option>
+            </select>
           </label>
           <label class="profile-field">Tower crane operation
             <select id="profileCraneControlType">
@@ -687,29 +802,28 @@
               <option value="Both">Both</option>
             </select>
           </label>
-          <div class="profile-field">
-            <span>Availability</span>
-            <label class="profile-checkbox">
-              <input id="profileContactAnytime" type="checkbox">
-              Call me anytime
-            </label>
-          </div>
+          <label class="profile-field">Years of experience
+            <input id="profileExperience" type="number" min="0" placeholder="Experience years">
+          </label>
+          <label id="operatorAvailabilityFields" class="profile-field">Currently employed?
+            <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
+              <option value="">Select yes or no</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+          <label class="profile-field wide">About you
+            <textarea id="profileAbout" placeholder="About you"></textarea>
+          </label>
+          <label class="profile-checkbox wide">
+            <input id="profileContactAnytime" type="checkbox">
+            Call me anytime
+          </label>
         </div>
-        <img id="profilePhotoPreview" class="operator-avatar hidden" alt="Profile photo preview">
+        <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save operator card</button>
       </div>
 
-      <div id="operatorAvailabilityFields" class="profile-panel hidden">
-        <h3>Work status</h3>
-        <label class="profile-field" for="profileIsEmployed">Currently employed?
-          <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
-            <option value="">Select yes or no</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </label>
-      </div>
-
-      <div id="operatorAvailabilityCalendar" class="profile-panel full hidden">
+      <div id="operatorAvailabilityCalendar" class="profile-panel availability-calendar-card hidden">
         <h3>Mark your busy days</h3>
         <p class="muted">Choose dates when you are unavailable for replacement work.</p>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
@@ -718,13 +832,9 @@
           <button type="button" class="secondary" onclick="moveAvailabilityMonth(1)">Next</button>
         </div>
         <div id="availabilityCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-top:12px;"></div>
-        <button type="button" onclick="saveAvailabilityMonth()">Save busy days</button>
+        <button class="secondary" type="button" onclick="saveAvailabilityMonth()">Save busy days</button>
         <p class="status" id="availabilityCalendarStatus"></p>
       </div>
-    </div>
-    <div class="profile-actions">
-      <button onclick="saveProfile()">Save Profile</button>
-      <p id="profileStatus" class="status"></p>
     </div>
   </div>
 </section>
@@ -1230,15 +1340,27 @@ async function showProfile() {
   document.getElementById("profileAccountTypeLabel").textContent =
     data.account_type === "company" ? "Company" : "Operator";
 
+  const isOperator = data.account_type === "operator";
+  document.getElementById("operatorProfileOverview").classList.toggle("hidden", !isOperator);
+  document.getElementById("operatorCardDetails").classList.toggle("hidden", !isOperator);
+  document.getElementById("profilePersonalEditor").classList.toggle("hidden", isOperator);
+  document.getElementById("personalEditorTitle").textContent = isOperator ? "Edit personal information" : "Company details";
+  document.getElementById("closePersonalEditor").classList.toggle("hidden", !isOperator);
+  document.getElementById("profileAgeField").classList.toggle("hidden", !isOperator);
+  document.getElementById("operatorPhotoProfileField").classList.toggle("hidden", !isOperator);
   document.getElementById("profileName").value =
     data.full_name || "";
 
   document.getElementById("profileName").placeholder = data.account_type === "company" ? "Company name" : "Full name";
   document.getElementById("companyAddressField").classList.toggle("hidden", data.account_type !== "company");
   document.getElementById("companyEmailProfileField").classList.toggle("hidden", data.account_type !== "company");
-  document.getElementById("operatorExperienceProfileFields").classList.toggle("hidden", data.account_type !== "operator");
-  document.getElementById("operatorPublicCardSettings").classList.toggle("hidden", data.account_type !== "operator");
   document.getElementById("profileAge").value = data.age ?? "";
+  document.getElementById("profileSummaryName").textContent = data.full_name || "Operator";
+  document.getElementById("profileSummaryAge").textContent = data.age ? data.age + " years" : "—";
+  document.getElementById("profileSummaryPhone").textContent = data.phone || "—";
+  document.getElementById("profileSummaryCity").textContent = data.city || "—";
+  document.getElementById("profileSummaryCountry").textContent = data.country || "—";
+  document.getElementById("profileSummaryInitial").textContent = (data.full_name || "O").trim().charAt(0).toUpperCase();
   document.getElementById("profileCraneControlType").value = data.crane_control_type || "";
   document.getElementById("profileContactAnytime").checked = data.contact_anytime === true;
   document.getElementById("profilePhoto").value = "";
@@ -1255,14 +1377,8 @@ async function showProfile() {
   document.getElementById("profileCountry").value =
     data.country || "Georgia";
 
-  document.getElementById("operatorTypeProfileField").classList.toggle(
-    "hidden", data.account_type !== "operator"
-  );
   document.getElementById("profileOperatorType").value =
     data.account_type === "operator" ? data.operator_type || "" : "";
-  document.getElementById("operatorAvailabilityFields").classList.toggle(
-    "hidden", data.account_type !== "operator"
-  );
   document.getElementById("profileIsEmployed").value = booleanToChoice(data.is_employed);
   savedProfileEmploymentStatus = data.is_employed;
   toggleReplacementProfileFields();
@@ -1278,9 +1394,21 @@ async function showProfile() {
 
 function setOperatorPhotoPreview(url) {
   const preview = document.getElementById("profilePhotoPreview");
-  if (!preview) return;
-  preview.src = url || "";
-  preview.classList.toggle("hidden", !url);
+  const summaryPhoto = document.getElementById("profileSummaryPhoto");
+  const summaryInitial = document.getElementById("profileSummaryInitial");
+  if (preview) {
+    preview.src = url || "";
+    preview.classList.toggle("hidden", !url);
+  }
+  if (summaryPhoto && summaryInitial) {
+    summaryPhoto.src = url || "";
+    summaryPhoto.classList.toggle("hidden", !url);
+    summaryInitial.classList.toggle("hidden", Boolean(url));
+  }
+}
+
+function togglePersonalProfileEditor() {
+  document.getElementById("profilePersonalEditor")?.classList.toggle("hidden");
 }
 
 function previewOperatorPhoto(file) {
@@ -1510,6 +1638,13 @@ async function saveProfile() {
 
   alert("Profile updated successfully!");
   if (profile.account_type === "operator") {
+    document.getElementById("profileSummaryName").textContent = updates.full_name || "Operator";
+    document.getElementById("profileSummaryAge").textContent = updates.age ? updates.age + " years" : "—";
+    document.getElementById("profileSummaryPhone").textContent = updates.phone || "—";
+    document.getElementById("profileSummaryCity").textContent = updates.city || "—";
+    document.getElementById("profileSummaryCountry").textContent = updates.country || "—";
+    document.getElementById("profileSummaryInitial").textContent = (updates.full_name || "O").trim().charAt(0).toUpperCase();
+    document.getElementById("profilePersonalEditor").classList.add("hidden");
     if (updates.photo_url) {
       setOperatorPhotoPreview(updates.photo_url);
       document.getElementById("profilePhoto").value = "";
