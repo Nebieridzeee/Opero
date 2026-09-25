@@ -1062,7 +1062,7 @@ async function showMyJobs() {
   content.innerHTML = `<h2>${heading}</h2><p class="muted">Loading...</p>`;
 
   let jobsQuery = supabaseClient.from("jobs")
-    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, replacement_start_time, replacement_end_time")
     .eq("created_by", user.id).order("created_at", { ascending: false });
   if (profile.account_type === "operator") jobsQuery = jobsQuery.eq("job_type", "replacement");
   const { data: jobs, error } = await jobsQuery;
@@ -1071,80 +1071,111 @@ async function showMyJobs() {
     return;
   }
 
+  const dateValue = value => escapeHtml(value || "");
   content.innerHTML = `<h2>${heading}</h2><button onclick="showDashboard()">Back to Dashboard</button>` +
-    (jobs?.length ? jobs.map(job => `
+    (jobs?.length ? jobs.map(job => {
+      const id = Number(job.id);
+      const replacement = job.job_type === "replacement";
+      const dateText = replacement
+        ? `${escapeHtml(job.replacement_date || "Date not set")}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${escapeHtml(job.replacement_end_date)} (inclusive)` : ""}`
+        : "";
+      return `
       <div class="card">
-        <h3>${escapeHtml(job.title || "Untitled post")}</h3><p>${escapeHtml(job.company || (job.job_type === "replacement" ? "Replacement request" : ""))}</p>
-        ${job.job_type === "replacement" ? `<p class="muted">Replacement · ${escapeHtml(job.replacement_date || "Date not set")} · ${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}–${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}</p>` : "<p class='muted'>Regular job</p>"}
+        <h3>${escapeHtml(job.title || "Untitled post")}</h3><p>${escapeHtml(job.company || (replacement ? "Replacement request" : ""))}</p>
+        ${replacement ? `<p class="muted">Dates: ${dateText} · ${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}–${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}</p>` : "<p class='muted'>Regular job</p>"}
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
-        <button onclick="editJob(${Number(job.id)})">Edit</button>
-        <button class="secondary" onclick="deleteJob(${Number(job.id)})">Delete</button>
-      </div>`).join("") : `<p class="muted">You have not posted any ${profile.account_type === "operator" ? "replacement requests" : "jobs"} yet.</p>`);
+        <button type="button" onclick="toggleJobEdit(${id})">Edit</button>
+        <button class="secondary" type="button" onclick="deleteJob(${id})">Delete</button>
+        <form id="jobEditForm-${id}" class="form hidden" style="margin:16px 0 0; padding:16px;" onsubmit="saveJobEdits(event, ${id})">
+          <h3>Edit ${replacement ? "replacement request" : "job vacancy"}</h3>
+          <label for="jobEditTitle-${id}">Job title</label>
+          <input id="jobEditTitle-${id}" value="${escapeHtml(job.title || "")}" required>
+          ${profile.account_type === "company" ? `<label for="jobEditCompany-${id}">Company name</label><input id="jobEditCompany-${id}" value="${escapeHtml(job.company || "")}">` : ""}
+          <label for="jobEditType-${id}">Operator type sought</label>
+          <input id="jobEditType-${id}" value="${escapeHtml(job.operator_type || "")}" required>
+          ${replacement ? `
+            <label for="jobEditStartDate-${id}">From date</label>
+            <input id="jobEditStartDate-${id}" type="date" value="${dateValue(job.replacement_date)}" required>
+            <label for="jobEditEndDate-${id}">Through date (inclusive)</label>
+            <input id="jobEditEndDate-${id}" type="date" value="${dateValue(job.replacement_end_date || job.replacement_date)}" required>
+            <label for="jobEditStartTime-${id}">Start time</label>
+            <input id="jobEditStartTime-${id}" type="time" value="${escapeHtml(String(job.replacement_start_time || "").slice(0, 5))}" required>
+            <label for="jobEditEndTime-${id}">End time</label>
+            <input id="jobEditEndTime-${id}" type="time" value="${escapeHtml(String(job.replacement_end_time || "").slice(0, 5))}" required>
+          ` : ""}
+          <label for="jobEditCity-${id}">City</label>
+          <input id="jobEditCity-${id}" value="${escapeHtml(job.city || "")}" ${replacement ? "required" : ""}>
+          <label for="jobEditCountry-${id}">Country</label>
+          <input id="jobEditCountry-${id}" value="${escapeHtml(job.country || "")}">
+          <label for="jobEditSalary-${id}">Payment / salary</label>
+          <input id="jobEditSalary-${id}" value="${escapeHtml(job.salary || "")}" ${replacement ? "required" : ""}>
+          <label for="jobEditDescription-${id}">Description and conditions</label>
+          <textarea id="jobEditDescription-${id}">${escapeHtml(job.description || "")}</textarea>
+          <button type="submit">Save changes</button>
+          <button class="secondary" type="button" onclick="toggleJobEdit(${id})">Cancel</button>
+        </form>
+      </div>`;
+    }).join("") : `<p class="muted">You have not posted any ${profile.account_type === "operator" ? "replacement requests" : "jobs"} yet.</p>`);
 }
 
-async function editJob(jobId) {
+function toggleJobEdit(jobId) {
+  document.getElementById(`jobEditForm-${Number(jobId)}`)?.classList.toggle("hidden");
+}
+
+async function saveJobEdits(event, jobId) {
+  event.preventDefault();
+  const id = Number(jobId);
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
   const { data: profile, error: profileError } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
-  if (profileError || !["company", "operator"].includes(profile?.account_type)) {
-    alert("You are not allowed to manage this post.");
-    return;
-  }
-  const { data: job, error: jobError } = await supabaseClient.from("jobs").select("*")
-    .eq("id", jobId).eq("created_by", user.id).maybeSingle();
-  if (jobError || !job || (profile.account_type === "operator" && job.job_type !== "replacement")) {
+  const { data: job, error: jobError } = await supabaseClient.from("jobs").select("id, job_type")
+    .eq("id", id).eq("created_by", user.id).maybeSingle();
+  if (profileError || jobError || !job || !["company", "operator"].includes(profile?.account_type)
+      || (profile.account_type === "operator" && job.job_type !== "replacement")) {
     alert("Job not found or you do not have permission to edit it.");
     return;
   }
 
-  const title = prompt("Job title", job.title || "");
-  if (title === null) return;
-  const operatorType = prompt("Operator type sought", job.operator_type || "");
-  if (operatorType === null) return;
-  const description = prompt("Description", job.description || "");
-  if (description === null) return;
-  let company = job.company || "";
-  if (profile.account_type === "company") {
-    company = prompt("Company name", company);
-    if (company === null) return;
-  }
-  const city = prompt("City", job.city || "");
-  if (city === null) return;
-  const country = prompt("Country", job.country || "Georgia");
-  if (country === null) return;
-  const salary = prompt("Salary", job.salary || "");
-  if (salary === null) return;
-
+  const value = suffix => document.getElementById(`jobEdit${suffix}-${id}`).value.trim();
   const updates = {
-    title: title.trim(), operator_type: operatorType.trim(), description: description.trim(),
-    company: company.trim() || null, city: city.trim(), country: country.trim(), salary: salary.trim()
+    title: value("Title"),
+    operator_type: value("Type"),
+    city: value("City"),
+    country: value("Country"),
+    salary: value("Salary"),
+    description: value("Description")
   };
+  const companyField = document.getElementById(`jobEditCompany-${id}`);
+  if (companyField) updates.company = companyField.value.trim() || null;
+
+  if (!updates.title || !updates.operator_type || (job.job_type === "replacement" && (!updates.city || !updates.salary))) {
+    alert("Please complete the title and operator type; replacement requests also need a city and payment.");
+    return;
+  }
   if (job.job_type === "replacement") {
-    const replacementDate = prompt("Replacement date (YYYY-MM-DD)", job.replacement_date || "");
-    if (replacementDate === null) return;
-    const replacementStartTime = prompt("Start time (HH:MM)", String(job.replacement_start_time || "").slice(0, 5));
-    if (replacementStartTime === null) return;
-    const replacementEndTime = prompt("End time (HH:MM)", String(job.replacement_end_time || "").slice(0, 5));
-    if (replacementEndTime === null) return;
-    if (!replacementDate || !replacementStartTime || !replacementEndTime || replacementStartTime >= replacementEndTime) {
-      alert("Please enter a valid replacement date and time range.");
+    const startDate = value("StartDate");
+    const endDate = value("EndDate");
+    const startTime = value("StartTime");
+    const endTime = value("EndTime");
+    if (!startDate || !endDate || endDate < startDate || !startTime || !endTime || startTime >= endTime) {
+      alert("Enter a valid date range and daily time range.");
       return;
     }
-    updates.replacement_date = replacementDate;
-    updates.replacement_start_time = replacementStartTime;
-    updates.replacement_end_time = replacementEndTime;
+    updates.replacement_date = startDate;
+    updates.replacement_end_date = endDate;
+    updates.replacement_start_time = startTime;
+    updates.replacement_end_time = endTime;
   }
 
   const { data, error } = await supabaseClient.from("jobs").update(updates)
-    .eq("id", jobId).eq("created_by", user.id).select("id").maybeSingle();
+    .eq("id", id).eq("created_by", user.id).select("id").maybeSingle();
   if (error) { alert("Could not update job: " + error.message); return; }
   if (!data) { alert("The database did not allow this update. Apply the Opero job-management migration in Supabase, then try again."); return; }
   await showMyJobs();
 }
-
 async function deleteJob(jobId) {
   if (!confirm("Delete this job? This cannot be undone.")) return;
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -1359,8 +1390,10 @@ function replacementJobFormMarkup(accountType) {
       <h3>🔄 ${accountType === "company" ? "Post a replacement job" : "Need a replacement?"}</h3>
       <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
         <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
-        <label for="replacementDate">Date</label>
+        <label for="replacementDate">From date</label>
         <input id="replacementDate" type="date" required>
+        <label for="replacementEndDate">Through date (inclusive)</label>
+        <input id="replacementEndDate" type="date" required>
         <label for="replacementStartTime">Start time</label>
         <input id="replacementStartTime" type="time" required>
         <label for="replacementEndTime">End time</label>
@@ -1453,7 +1486,7 @@ async function showJobs(category = "all", focusJobId = null) {
 
   const { data, error } = await supabaseClient
     .from("jobs")
-    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_start_time, replacement_end_time, created_by, created_at")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, replacement_start_time, replacement_end_time, created_by, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -1517,15 +1550,18 @@ function renderJobs() {
   results.innerHTML = jobs.map(job => {
     const isReplacement = job.job_type === "replacement";
     if (isReplacement) {
-      const day = job.replacement_date
-        ? new Date(`${job.replacement_date}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+      const formatJobDate = value => value
+        ? new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
+        : "Date not set";
+      const dateRange = job.replacement_date
+        ? `${formatJobDate(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${formatJobDate(job.replacement_end_date)} (inclusive)` : ""}`
         : "Date not set";
       const startTime = String(job.replacement_start_time || "").slice(0, 5);
       const endTime = String(job.replacement_end_time || "").slice(0, 5);
       return `
         <div class="card" id="job-${Number(job.id)}">
           <h3>🔄 ${escapeHtml(job.title || "Replacement Needed")}</h3>
-          <p>Date: ${escapeHtml(day)}</p>
+          <p>Dates: ${escapeHtml(dateRange)}</p>
           <p>Location: ${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
           <p>Crane: ${escapeHtml(job.operator_type || "Not specified")}</p>
           <p>Time: ${escapeHtml(startTime)}${endTime ? "–" + escapeHtml(endTime) : ""}</p>
@@ -1595,6 +1631,7 @@ async function publishReplacementJob() {
 
   const title = document.getElementById("replacementTitle").value.trim() || "Replacement Needed";
   const date = document.getElementById("replacementDate").value;
+  const endDate = document.getElementById("replacementEndDate").value;
   const startTime = document.getElementById("replacementStartTime").value;
   const endTime = document.getElementById("replacementEndTime").value;
   const city = document.getElementById("replacementCity").value.trim();
@@ -1603,8 +1640,8 @@ async function publishReplacementJob() {
   const payment = Number(document.getElementById("replacementPayment").value);
   const description = document.getElementById("replacementDescription").value.trim();
 
-  if (!date || !startTime || !endTime || startTime >= endTime || !city || !operatorType || !Number.isFinite(payment) || payment < 0) {
-    status.textContent = "Enter a date, valid time range, location, operator type and payment.";
+  if (!date || !endDate || endDate < date || !startTime || !endTime || startTime >= endTime || !city || !operatorType || !Number.isFinite(payment) || payment < 0) {
+    status.textContent = "Enter a valid date range, daily time range, location, operator type and payment.";
     return;
   }
 
@@ -1613,6 +1650,7 @@ async function publishReplacementJob() {
     title,
     job_type: "replacement",
     replacement_date: date,
+    replacement_end_date: endDate,
     replacement_start_time: startTime,
     replacement_end_time: endTime,
     city,
