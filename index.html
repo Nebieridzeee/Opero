@@ -548,18 +548,26 @@
       cursor: pointer;
       transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
     }
-    button:hover:not(:disabled) { border-color: var(--opero-red-dark); background: var(--opero-red-dark); }
-    button:active:not(:disabled) { transform: translateY(1px); }
+    button:hover:not(:disabled), button:focus-visible:not(:disabled),
+    button:active:not(:disabled) {
+      border-color: var(--opero-red);
+      background: #fff;
+      color: var(--opero-red);
+      box-shadow: 0 0 0 2px rgb(229 37 42 / 14%);
+      transform: none;
+    }
     button:disabled { opacity: .55; cursor: not-allowed; }
     button.secondary, .buttons button.secondary {
       border-color: var(--opero-border);
       background: #fff;
       color: var(--opero-ink);
     }
-    button.secondary:hover:not(:disabled), .buttons button.secondary:hover:not(:disabled) {
-      border-color: #c5cbd0;
-      background: #f7f8f9;
-      color: var(--opero-dark);
+    button.secondary:hover:not(:disabled), .buttons button.secondary:hover:not(:disabled),
+    button.secondary:focus-visible:not(:disabled), button.secondary:active:not(:disabled) {
+      border-color: var(--opero-red);
+      background: #fff;
+      color: var(--opero-red);
+      box-shadow: 0 0 0 2px rgb(229 37 42 / 14%);
     }
     button.text-link {
       min-height: auto;
@@ -673,6 +681,59 @@
       .card { padding: 17px; }
       .profile-shell { padding: 0; }
       .profile-actions { align-items: flex-start; }
+    }
+
+    .replacement-job-entry { margin: 16px 0 20px; }
+    .replacement-form-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 58px;
+      padding: 14px 18px;
+      border: 1px solid var(--opero-border);
+      border-left: 4px solid var(--opero-red);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--opero-dark);
+      text-align: left;
+      box-shadow: 0 3px 12px rgb(21 23 25 / 4%);
+    }
+    .replacement-toggle-icon { color: var(--opero-red); font-size: 23px; line-height: 1; }
+    .replacement-job-entry .card { margin-top: 12px; }
+    #jobSearch { width: 100%; box-sizing: border-box; margin: 16px 0; }
+
+    @media (min-width: 701px) and (max-width: 1024px) {
+      .container { width: min(100% - 40px, 960px); padding-left: 20px; padding-right: 20px; }
+      .card { padding: 18px; }
+    }
+    @media (max-width: 700px) {
+      body { overflow-x: hidden; padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+      header { min-width: 0; }
+      header .logo { max-width: 130px; overflow: hidden; }
+      .container, #mainContent.container { width: 100%; max-width: 100%; box-sizing: border-box; padding: 22px 14px 34px; }
+      #mainContent, #content, .card, .profile-panel, .profile-shell { min-width: 0; max-width: 100%; box-sizing: border-box; }
+      #mainContent h2, #profileSection h2 { font-size: clamp(23px, 7vw, 29px); }
+      .hero { padding: 42px 18px 38px; }
+      .hero h1 { font-size: clamp(30px, 9vw, 44px); }
+      .card { padding: 15px; border-radius: 13px; }
+      .form { width: 100%; max-width: none; box-sizing: border-box; margin: 18px 0; padding: 18px 15px; }
+      .form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea,
+      #content input:not([type="checkbox"]):not([type="radio"]), #content select, #content textarea {
+        width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box;
+      }
+      .buttons { width: 100%; gap: 8px; }
+      .buttons button { flex: 1 1 130px; min-width: 0; white-space: normal; }
+      nav { box-sizing: border-box; }
+      nav button { overflow: hidden; text-overflow: ellipsis; }
+      .profile-overview, .profile-summary { flex-wrap: wrap; }
+      .profile-overview > *, .profile-summary > * { min-width: 0; }
+      .replacement-form-toggle { min-height: 56px; padding: 13px 14px; }
+      .replacement-job-entry .card { padding: 14px; }
+      #jobSearch { margin: 14px 0; }
+      #operatorAvailabilityCalendar, #availabilityCalendarGrid { max-width: 100%; box-sizing: border-box; overflow-x: auto; }
+      img { max-width: 100%; }
     }
   </style>
 </head>
@@ -2323,7 +2384,13 @@ async function showJobs(category = "all", focusJobId = null) {
   ` : "";
 
   const replacementForm = ["company", "operator"].includes(currentAccountType) && currentJobCategory === "replacement"
-    ? replacementJobFormMarkup(currentAccountType)
+    ? `<div class="replacement-job-entry">
+        <button type="button" class="secondary replacement-form-toggle" aria-expanded="false" aria-controls="replacementJobFormContainer" onclick="toggleReplacementJobForm(this)">
+          <span>${currentAccountType === "company" ? "Post a replacement job" : "Need a replacement?"}</span>
+          <span class="replacement-toggle-icon" aria-hidden="true">＋</span>
+        </button>
+        <div id="replacementJobFormContainer" class="hidden">${replacementJobFormMarkup(currentAccountType)}</div>
+      </div>`
     : "";
 
   const { data, error } = await supabaseClient
@@ -2386,6 +2453,15 @@ function filterJobCategory(category) {
   if (!["all", "regular", "replacement"].includes(category)) return;
   currentJobCategory = category;
   showJobs(category);
+}
+
+function toggleReplacementJobForm(button) {
+  const form = document.getElementById("replacementJobFormContainer");
+  if (!form || !button) return;
+  const expanded = form.classList.toggle("hidden") === false;
+  button.setAttribute("aria-expanded", String(expanded));
+  const icon = button.querySelector(".replacement-toggle-icon");
+  if (icon) icon.textContent = expanded ? "−" : "＋";
 }
 
 function filterJobs(query) {
