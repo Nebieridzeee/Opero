@@ -140,22 +140,54 @@
     }
 
     .operator-card {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      padding: 16px;
+      border-radius: 14px;
       cursor: pointer;
-      transition: border-color .15s ease, transform .15s ease;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
     }
     .operator-card:hover, .operator-card:focus-visible {
       border-color: #e5252a;
+      background:#151c24;
       transform: translateY(-1px);
       outline: none;
     }
+    .operator-card-main { display:flex; align-items:center; gap:13px; min-width:0; }
     .operator-avatar {
-      width: 82px;
-      height: 82px;
-      border-radius: 50%;
+      flex:0 0 68px;
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
       object-fit: cover;
-      background: #25282b;
-      border: 2px solid #e5252a;
+      background: #1b222c;
+      border: 1px solid #39424d;
     }
+    .operator-card-copy { min-width:0; flex:1; }
+    .operator-card-copy h3 { margin:0 0 4px; color:#fff; font-size:17px; line-height:1.3; overflow-wrap:anywhere; }
+    .operator-card-type { margin:0 0 5px; color:#b7c0ca; font-size:13px; line-height:1.4; }
+    .operator-card-experience { margin:0; color:#e3e7eb; font-size:13px; line-height:1.4; }
+    .operator-card-location { margin:0; color:#aeb7c1; font-size:13px; }
+    .operator-card .status-badges { margin:0; }
+    .operator-card-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; padding-top:9px; border-top:1px solid #28313b; color:#c2c9d1; font-size:12px; }
+    .operator-card-footer .calendar-hint { flex:0 0 auto; color:#f1f3f5; }
+    #operatorResults, #jobResults { display:grid; gap:12px; }
+    #operatorResults > .card, #jobResults > .card { margin:0; }
+    .job-card { display:grid; gap:12px; padding:16px; border-radius:14px; }
+    .job-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; min-width:0; padding:0; border:0; background:transparent; }
+    .job-card-title-wrap { min-width:0; }
+    .job-card-kind { display:inline-flex; margin-bottom:5px; padding:3px 8px; border:1px solid #39424d; border-radius:999px; color:#cbd1d8; font-size:11px; line-height:1.3; }
+    .job-card h3 { margin:0; color:#fff; font-size:17px; line-height:1.35; overflow-wrap:anywhere; }
+    .job-card-company { margin:4px 0 0; color:#aeb7c1; font-size:12px; }
+    .job-card-calendar { flex:0 0 38px; width:38px; min-width:38px; height:38px; padding:0; border:1px solid #39424d; border-radius:9px; background:#1b222c; color:#fff; }
+    .job-card-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .job-card-fact { min-width:0; padding:8px 10px; border:1px solid #28313b; border-radius:9px; background:#0e141a; }
+    .job-card-fact-label { display:block; margin-bottom:3px; color:#929eaa; font-size:11px; }
+    .job-card-fact-value { display:block; color:#edf0f3; font-size:13px; line-height:1.4; overflow-wrap:anywhere; }
+    .job-card-description { margin:0; color:#d4d9df; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .job-card-footer { display:flex; align-items:center; gap:5px; padding:8px 0 0; border-top:1px solid #28313b; color:#929eaa; font-size:12px; text-align:left; }
+    .job-card-footer .text-link { color:#f1f3f5; }
     .operator-profile-photo {
       width: min(220px, 60vw);
       height: min(220px, 60vw);
@@ -736,23 +768,23 @@
 
 <section id="loginSection" class="hidden">
 
-  <div class="form">
+  <form class="form" id="loginForm" onsubmit="login(event)">
 
-    <h2>Login</h2>
+    <h2>შესვლა</h2>
 
-    <div id="loginPhoneRow" style="display:flex;align-items:center;gap:8px;">
-      <span style="padding:12px 14px;border:1px solid #303945;border-radius:8px;background:#121820;color:white;">+995</span>
-      <input id="loginPhone" type="tel" inputmode="numeric" placeholder="Phone number" autocomplete="tel" style="flex:1;">
+    <div id="loginPhoneRow" class="registration-phone-row">
+      <span>+995</span>
+      <input id="loginPhone" type="tel" inputmode="numeric" placeholder="ტელეფონის ნომერი" autocomplete="tel-national" required>
     </div>
 
-    <input id="loginPassword" type="password" placeholder="Password">
+    <input id="loginPassword" type="password" placeholder="პაროლი" autocomplete="current-password" required>
 
-    <button onclick="login()">Login</button>
+    <button type="submit">შესვლა</button>
 
     <p class="status" id="loginStatus"></p>
-    <p class="muted">Need an account? <button class="text-link" type="button" onclick="showRegister()">Register</button></p>
+    <p class="muted">არ გაქვს ანგარიში? <button class="text-link" type="button" onclick="showRegister()">რეგისტრაცია</button></p>
 
-  </div>
+  </form>
 
 </section>
 
@@ -799,8 +831,8 @@
         </select>
       </label>
       <div id="registrationCraneControlField" class="registration-field hidden">
-        <span class="registration-question">ამწის კოშკურაზე მუშაობა</span>
-        <span class="muted" style="font-size:12px;font-weight:400;">მონიშნე ერთი ან ორივე</span>
+        <span class="registration-question">ამწე კოშკურაზე მუშაობა</span>
+        <span class="muted" style="font-size:12px;font-weight:400;">მონიშნე კაბინიდან ან ქვემოდან პულტით მუშაობა — შეიძლება ორივე</span>
         <div class="registration-choice-row">
           <label class="registration-choice"><input id="registrationCabinControl" type="checkbox" value="Cabin"> კაბინიდან</label>
           <label class="registration-choice"><input id="registrationRemoteControl" type="checkbox" value="Remote control"> ქვემოდან პულტით</label>
@@ -1213,7 +1245,8 @@ function phoneToAuthEmail(phone) {
 }
 
 
-async function login() {
+async function login(event) {
+  event?.preventDefault();
 
   const password =
     document.getElementById("loginPassword").value;
@@ -1983,21 +2016,21 @@ function renderOperators(operators, searched = false) {
   }
   results.innerHTML = operators.map(operator => `
     <article class="card operator-card" role="button" tabindex="0"
-          aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
+      aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
       onclick="showOperatorProfile('${escapeHtml(operator.id)}')"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOperatorProfile('${escapeHtml(operator.id)}')}">
-      <div style="display:flex;align-items:center;gap:16px;">
+      <div class="operator-card-main">
         ${operatorPhotoMarkup(operator)}
-        <div>
+        <div class="operator-card-copy">
           <h3 data-user-content>${escapeHtml(operator.full_name || "ოპერატორი")}</h3>
-          <p class="muted">${escapeHtml(operator.operator_type || "Operator")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
-          <p>გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>
+          <p class="operator-card-type">${escapeHtml(operator.operator_type || "ოპერატორი")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
+          <p class="operator-card-experience">გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>
         </div>
       </div>
-      <p data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
+      <p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       ${renderOperatorStatuses(operator)}
-      ${operator.contact_anytime ? `<p class="status-badge">Call me anytime</p>` : ""}
-      <p class="muted">Open profile · Check free days 📅</p>
+      ${operator.contact_anytime ? `<span class="status-badge">დარეკვა ნებისმიერ დროს</span>` : ""}
+      <div class="operator-card-footer"><span>პროფილის ნახვა</span><span class="calendar-hint">📅 თავისუფალი დღეები</span></div>
     </article>
   `).join("");
 }
@@ -2020,10 +2053,10 @@ function craneControlTypeLabel(value) {
 
 function renderOperatorStatuses(operator) {
   const badges = [];
-  if (operator.is_employed === false) badges.push("⚪ Not currently employed");
-  if (operator.is_employed === false && operator.available_for_replacement === true) badges.push("🔄 Looking for replacement shifts");
+  if (operator.is_employed === false) badges.push({ label: "⚪ ამჟამად არ არის დასაქმებული", looking: false });
+  if (operator.is_employed === false && operator.available_for_replacement === true) badges.push({ label: "🔄 ეძებს შემცვლელის სამუშაოს", looking: true });
   if (!badges.length) return "";
-  return `<div class="status-badges">${badges.map(label => `<span class="status-badge ${label.includes("Looking") ? "status-badge-looking" : ""}">${label}</span>`).join("")}</div>`;
+  return `<div class="status-badges">${badges.map(({ label, looking }) => `<span class="status-badge ${looking ? "status-badge-looking" : ""}">${label}</span>`).join("")}</div>`;
 }
 
 async function showOperatorProfile(operatorId) {
@@ -2423,27 +2456,32 @@ function renderJobs() {
         ? `${formatJobDate(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${formatJobDate(job.replacement_end_date)} (ჩათვლით)` : ""}`
         : "თარიღი მითითებული არ არის";
       return `
-        <div class="card" id="job-${Number(job.id)}">
-          <h3>🔄 <span data-user-content>${escapeHtml(job.title || "შემცვლელი საჭიროა")}</span></h3>
-          <p>Dates: ${escapeHtml(dateRange)}</p>
-          ${job.created_by_type === "operator" ? `<button class="secondary" type="button" aria-label="ვაკანსიის ავტორის დაკავებული დღეების კალენდრის ნახვა" title="დაკავებული დღეების კალენდრის ნახვა" onclick="showOperatorBusyCalendar('${escapeHtml(job.created_by || "")}')">📅</button>` : ""}
-          <p>Location: <span data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</span></p>
-          <p>Crane: ${escapeHtml(job.operator_type || "Not specified")}</p>
-          <p>Payment: <span data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</span></p>
-          <p data-user-content style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-          <p class="muted">Posted by: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "ოპერატორი")}</button></p>
-        </div>
+        <article class="card job-card job-card-replacement" id="job-${Number(job.id)}">
+          <header class="job-card-header">
+            <div class="job-card-title-wrap"><span class="job-card-kind">შემცვლელის ვაკანსია</span><h3>🔄 <span data-user-content>${escapeHtml(job.title || "შემცვლელი საჭიროა")}</span></h3></div>
+            ${job.created_by_type === "operator" ? `<button class="job-card-calendar" type="button" aria-label="ვაკანსიის ავტორის დაკავებული დღეების კალენდრის ნახვა" title="დაკავებული დღეების კალენდრის ნახვა" onclick="showOperatorBusyCalendar('${escapeHtml(job.created_by || "")}')">📅</button>` : ""}
+          </header>
+          <div class="job-card-facts">
+            <div class="job-card-fact"><span class="job-card-fact-label">სამუშაო დღეები</span><strong class="job-card-fact-value">${escapeHtml(dateRange)}</strong></div>
+            <div class="job-card-fact"><span class="job-card-fact-label">ტექნიკა</span><strong class="job-card-fact-value">${escapeHtml(job.operator_type || "მითითებული არ არის")}</strong></div>
+            <div class="job-card-fact"><span class="job-card-fact-label">ადგილმდებარეობა</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</strong></div>
+            <div class="job-card-fact"><span class="job-card-fact-label">ანაზღაურება</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</strong></div>
+          </div>
+          ${job.description ? `<p class="job-card-description" data-user-content>${escapeHtml(job.description)}</p>` : ""}
+          <footer class="job-card-footer">გამოაქვეყნა <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "ოპერატორი")}</button></footer>
+        </article>
       `;
     }
     return `
-      <div class="card" id="job-${Number(job.id)}">
-        <h3 data-user-content>${escapeHtml(job.title || "უსათაურო ვაკანსია")}</h3>
-        <p class="muted">Posted by: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "კომპანია")}</button></p>
-        <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
-        <p class="muted" data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
-        <p data-user-content style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-        <p>Salary: <span data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</span></p>
-      </div>
+      <article class="card job-card" id="job-${Number(job.id)}">
+        <header class="job-card-header"><div class="job-card-title-wrap"><span class="job-card-kind">მუდმივი ვაკანსია</span><h3 data-user-content>${escapeHtml(job.title || "უსათაურო ვაკანსია")}</h3><p class="job-card-company">კომპანია: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "კომპანია")}</button></p></div></header>
+        <div class="job-card-facts">
+          <div class="job-card-fact"><span class="job-card-fact-label">ეძებენ</span><strong class="job-card-fact-value">${escapeHtml(job.operator_type || "მითითებული არ არის")}</strong></div>
+          <div class="job-card-fact"><span class="job-card-fact-label">ადგილმდებარეობა</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</strong></div>
+          <div class="job-card-fact"><span class="job-card-fact-label">ანაზღაურება</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</strong></div>
+        </div>
+        ${job.description ? `<p class="job-card-description" data-user-content>${escapeHtml(job.description)}</p>` : ""}
+      </article>
     `;
   }).join("");
 }
