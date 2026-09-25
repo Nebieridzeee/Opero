@@ -293,30 +293,19 @@
       <option value="no">No</option>
     </select>
 
-    <label for="profileLookingPermanent">Looking for a permanent job?</label>
-    <select id="profileLookingPermanent">
-      <option value="">Select yes or no</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
+  </div>
 
-    <div id="needsReplacementField" class="hidden">
-      <label for="profileNeedsReplacement">Needs a replacement sometimes?</label>
-      <select id="profileNeedsReplacement">
-        <option value="">Select yes or no</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
+  <div id="operatorAvailabilityCalendar" class="card hidden">
+    <h3>Mark your free days</h3>
+    <p class="muted">Choose dates when you are available for replacement work.</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <button type="button" class="secondary" onclick="moveAvailabilityMonth(-1)">Previous</button>
+      <strong id="availabilityMonthLabel"></strong>
+      <button type="button" class="secondary" onclick="moveAvailabilityMonth(1)">Next</button>
     </div>
-
-    <div id="availableReplacementField" class="hidden">
-      <label for="profileAvailableReplacement">Available to work as a replacement?</label>
-      <select id="profileAvailableReplacement">
-        <option value="">Select yes or no</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-      </select>
-    </div>
+    <div id="availabilityCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-top:12px;"></div>
+    <button type="button" onclick="saveAvailabilityMonth()">Save free days</button>
+    <p class="status" id="availabilityCalendarStatus"></p>
   </div>
 
   <div id="operatorExperienceProfileFields" class="hidden">
@@ -649,8 +638,8 @@ async function register() {
     experience_years: isCompany ? null : parsedExperience,
     is_employed: isCompany ? null : isEmployed,
     looking_for_permanent_job: isCompany ? null : false,
-    needs_replacement: null,
-    available_for_replacement: null,
+    needs_replacement: isCompany ? null : isEmployed === true,
+    available_for_replacement: isCompany ? null : isEmployed === false,
     about: isCompany ? null : about
   }
 }
@@ -768,8 +757,6 @@ async function showProfile() {
     return;
   }
 
-  await repairEmploymentStatus(user.id, data);
-
   document.getElementById("profileAccountTypeLabel").textContent =
     data.account_type === "company" ? "Company" : "Operator";
 
@@ -799,10 +786,10 @@ async function showProfile() {
     "hidden", data.account_type !== "operator"
   );
   document.getElementById("profileIsEmployed").value = booleanToChoice(data.is_employed);
-  document.getElementById("profileLookingPermanent").value = booleanToChoice(data.looking_for_permanent_job);
-  document.getElementById("profileNeedsReplacement").value = booleanToChoice(data.needs_replacement);
-  document.getElementById("profileAvailableReplacement").value = booleanToChoice(data.available_for_replacement);
+  savedProfileEmploymentStatus = data.is_employed;
   toggleReplacementProfileFields();
+  const calendar = document.getElementById("operatorAvailabilityCalendar");
+  calendar.classList.toggle("hidden", data.account_type !== "operator" || data.is_employed !== false);
 
   document.getElementById("profileExperience").value =
     data.experience_years || "";
@@ -820,26 +807,88 @@ function choiceToBoolean(value) {
   return value === "yes" ? true : value === "no" ? false : null;
 }
 
-async function repairEmploymentStatus(userId, profile) {
-  if (profile?.account_type !== "operator" || profile.is_employed !== true || profile.looking_for_permanent_job !== true) return;
-  const { error } = await supabaseClient.from("profiles")
-    .update({ looking_for_permanent_job: false })
-    .eq("id", userId)
-    .eq("is_employed", true)
-    .eq("looking_for_permanent_job", true);
-  if (error) console.error("Could not correct employment status:", error);
-  profile.looking_for_permanent_job = false;
+async function toggleReplacementProfileFields() {
+  const employed = document.getElementById("profileIsEmployed")?.value;
+  const calendar = document.getElementById("operatorAvailabilityCalendar");
+  const showCalendar = employed === "no" && savedProfileEmploymentStatus === false;
+  if (calendar) calendar.classList.toggle("hidden", !showCalendar);
+  if (showCalendar) {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) await loadAvailabilityMonth(user.id);
+  }
 }
 
-function toggleReplacementProfileFields() {
-  const employed = document.getElementById("profileIsEmployed")?.value;
-  const permanentJob = document.getElementById("profileLookingPermanent");
-  if (permanentJob) {
-    permanentJob.disabled = employed === "yes";
-    if (employed === "yes") permanentJob.value = "no";
+let availabilityMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let availabilityDateSet = new Set();
+let availabilityUserId = null;
+let savedProfileEmploymentStatus = null;
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+async function loadAvailabilityMonth(userId) {
+  availabilityUserId = userId;
+  const monthStart = localDateKey(availabilityMonth);
+  const monthEnd = localDateKey(new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0));
+  const { data, error } = await supabaseClient.from("operator_availability")
+    .select("available_date").eq("operator_id", userId)
+    .gte("available_date", monthStart).lte("available_date", monthEnd);
+  if (error) {
+    document.getElementById("availabilityCalendarStatus").textContent = "Could not load availability: " + error.message;
+    return;
   }
-  document.getElementById("needsReplacementField")?.classList.toggle("hidden", employed !== "yes");
-  document.getElementById("availableReplacementField")?.classList.toggle("hidden", employed !== "no");
+  availabilityDateSet = new Set((data || []).map(item => String(item.available_date).slice(0, 10)));
+  renderAvailabilityCalendar();
+}
+
+function moveAvailabilityMonth(offset) {
+  availabilityMonth = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + offset, 1);
+  if (availabilityUserId) loadAvailabilityMonth(availabilityUserId);
+}
+
+function renderAvailabilityCalendar() {
+  const label = document.getElementById("availabilityMonthLabel");
+  const grid = document.getElementById("availabilityCalendarGrid");
+  if (!label || !grid) return;
+  label.textContent = availabilityMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const offset = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth(), 1).getDay();
+  const count = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0).getDate();
+  const today = localDateKey(new Date());
+  grid.innerHTML = weekdays.map(day => `<strong class="muted">${day}</strong>`).join("")
+    + Array(offset).fill("<span></span>").join("")
+    + Array.from({ length: count }, (_, index) => {
+      const date = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth(), index + 1);
+      const key = localDateKey(date);
+      const available = availabilityDateSet.has(key);
+      return `<button type="button" ${key < today ? "disabled" : ""} aria-pressed="${available}" title="${available ? "Free for replacement work" : "Mark as a free day"}" style="padding:9px 2px;${available ? "background:#1c9b67;color:white;border-color:#1c9b67;" : ""}" onclick="toggleAvailabilityDate('${key}')">${index + 1}</button>`;
+    }).join("");
+}
+
+function toggleAvailabilityDate(date) {
+  if (availabilityDateSet.has(date)) availabilityDateSet.delete(date);
+  else availabilityDateSet.add(date);
+  renderAvailabilityCalendar();
+}
+
+async function saveAvailabilityMonth() {
+  if (!availabilityUserId) return;
+  const status = document.getElementById("availabilityCalendarStatus");
+  const monthStart = localDateKey(availabilityMonth);
+  const monthEnd = localDateKey(new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0));
+  status.textContent = "Saving free days...";
+  const { error: deleteError } = await supabaseClient.from("operator_availability")
+    .delete().eq("operator_id", availabilityUserId)
+    .gte("available_date", monthStart).lte("available_date", monthEnd);
+  if (deleteError) { status.textContent = "Could not save free days: " + deleteError.message; return; }
+  const dates = [...availabilityDateSet].filter(date => date >= monthStart && date <= monthEnd)
+    .map(available_date => ({ operator_id: availabilityUserId, available_date }));
+  if (dates.length) {
+    const { error } = await supabaseClient.from("operator_availability").insert(dates);
+    if (error) { status.textContent = "Could not save free days: " + error.message; return; }
+  }
+  status.textContent = "Free days saved.";
 }
 
 async function saveProfile() {
@@ -867,17 +916,9 @@ async function saveProfile() {
   };
   if (profile.account_type === "operator") {
     const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
+    if (employed === null) { alert("Please select whether you are currently employed."); return; }
     updates.operator_type = document.getElementById("profileOperatorType").value;
     updates.is_employed = employed;
-    updates.looking_for_permanent_job = employed === true
-      ? false
-      : choiceToBoolean(document.getElementById("profileLookingPermanent").value);
-    updates.needs_replacement = employed === true
-      ? choiceToBoolean(document.getElementById("profileNeedsReplacement").value)
-      : null;
-    updates.available_for_replacement = employed === false
-      ? choiceToBoolean(document.getElementById("profileAvailableReplacement").value)
-      : null;
   }
 
   const { error } = await supabaseClient.from("profiles")
@@ -887,7 +928,17 @@ async function saveProfile() {
     return;
   }
 
+  if (profile.account_type === "operator" && updates.is_employed === true) {
+    const { error: availabilityError } = await supabaseClient.from("operator_availability")
+      .delete().eq("operator_id", user.id);
+    if (availabilityError) console.error("Could not clear availability dates:", availabilityError);
+  }
+
   alert("Profile updated successfully!");
+  if (profile.account_type === "operator") {
+    savedProfileEmploymentStatus = updates.is_employed;
+    await toggleReplacementProfileFields();
+  }
 }
 
 async function logout() {
@@ -1210,6 +1261,23 @@ async function showOperators() {
   }
 
   operatorDirectory = data || [];
+  if (operatorDirectory.length) {
+    const today = new Date();
+    const availabilityStart = localDateKey(today);
+    const availabilityEnd = localDateKey(new Date(today.getFullYear(), today.getMonth() + 6, today.getDate()));
+    const { data: dates, error: availabilityError } = await supabaseClient.from("operator_availability")
+      .select("operator_id, available_date")
+      .in("operator_id", operatorDirectory.map(operator => operator.id))
+      .gte("available_date", availabilityStart).lte("available_date", availabilityEnd)
+      .order("available_date", { ascending: true });
+    if (availabilityError) console.error("Could not load operator free days:", availabilityError);
+    const byOperator = new Map();
+    (dates || []).forEach(item => {
+      if (!byOperator.has(item.operator_id)) byOperator.set(item.operator_id, []);
+      byOperator.get(item.operator_id).push(item.available_date);
+    });
+    operatorDirectory.forEach(operator => { operator.available_dates = byOperator.get(operator.id) || []; });
+  }
   canPostReplacementFromOperatorDirectory = false;
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (user) {
@@ -1254,6 +1322,7 @@ function renderOperators(operators, searched = false) {
       <p>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years</p>
       ${renderOperatorStatuses(operator)}
+      ${operator.available_dates?.length ? `<p class="muted">Free days: ${operator.available_dates.slice(0, 6).map(date => escapeHtml(new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short" }))).join(", ")}${operator.available_dates.length > 6 ? " …" : ""}</p>` : ""}
       <p>${escapeHtml(operator.about || "")}</p>
     </div>
   `).join("");
@@ -1262,8 +1331,7 @@ function renderOperators(operators, searched = false) {
 function renderOperatorStatuses(operator) {
   const badges = [];
   if (operator.is_employed === false) badges.push("⚪ Not currently employed");
-  if (operator.is_employed === false && operator.looking_for_permanent_job === true) badges.push("🔎 Looking for permanent job");
-  if (operator.is_employed === false && operator.available_for_replacement === true) badges.push("🔄 Available for replacement");
+  if (operator.is_employed === false && operator.available_for_replacement === true) badges.push("🔄 Looking for replacement shifts");
   if (!badges.length) return "";
   return `<div class="status-badges">${badges.map(label => `<span class="status-badge">${label}</span>`).join("")}</div>`;
 }
