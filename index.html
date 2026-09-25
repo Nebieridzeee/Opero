@@ -90,8 +90,10 @@
     .home-hero-photo > img { display:block; width:100%; height:100%; object-fit:cover; object-position:center 52%; filter:blur(.6px) brightness(.9); transform:scale(1.015); }
     .home-hero-overlay { position:absolute; z-index:1; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; }
     .home-hero-overlay { font-family:"Noto Sans Georgian", Inter, ui-sans-serif, system-ui, sans-serif; }
-    #home .hero h1 { max-width:760px; margin:0; color:#fff; font-size:clamp(30px, 4vw, 42px); line-height:1.12; text-shadow:0 2px 14px rgb(0 0 0 / 24%); }
-    #home .hero p { max-width:680px; margin:0; color:#f1f3f5; line-height:1.6; text-shadow:0 2px 10px rgb(0 0 0 / 35%); }
+    #home .hero h1 { max-width:760px; margin:0; color:#fff; font-family:"Bahnschrift", "Manrope", "Arial Black", Inter, ui-sans-serif, system-ui, sans-serif; font-size:clamp(48px, 6vw, 60px); font-weight:800; line-height:1; letter-spacing:.7px; text-shadow:0 2px 14px rgb(0 0 0 / 24%); }
+    #home .home-brand-o { color:#e5252a; }
+    #home .home-brand-rest { font-size:.84em; }
+    #home .hero p { max-width:680px; margin:0; color:#cbd1d8; font-family:"Noto Sans Georgian", sans-serif; font-size:clamp(15px, 1.6vw, 18px); font-weight:400; line-height:1.6; text-shadow:0 2px 10px rgb(0 0 0 / 35%); }
     .home-hero-overlay h1, .home-hero-overlay p, #homeCtas .home-cta-button { font-family:"Noto Sans Georgian", Inter, ui-sans-serif, system-ui, sans-serif; }
     #homeCtas { display:flex; justify-content:center; gap:10px; }
     #homeCtas .home-cta-button { min-width:150px; min-height:46px; margin:0; padding:11px 20px; }
@@ -531,7 +533,7 @@
       .home-hero-photo { height: clamp(285px, 82vw, 360px); border-radius: 12px; }
       .home-hero-overlay { gap:10px; padding:16px; }
       .hero h1 { font-size: clamp(30px, 9vw, 42px); }
-      #home .hero h1 { max-width: 100%; font-size: clamp(21px, 6.2vw, 28px); line-height:1.25; overflow-wrap:anywhere; }
+      #home .hero h1 { max-width: 100%; font-size: clamp(42px, 12vw, 50px); line-height:1; overflow-wrap:normal; }
       #home .hero p { max-width: 100%; font-size: clamp(13px, 3.8vw, 15px); line-height:1.5; margin: 0; }
       #homeCtas { gap:8px; }
       #homeCtas { width:100%; }
@@ -575,8 +577,8 @@
     <figure class="home-hero-photo">
       <img src="https://images.unsplash.com/photo-1638873662638-77062e9788d4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=85&amp;w=1800" alt="Wide view of tower cranes with long horizontal booms above a construction site" fetchpriority="high">
       <figcaption class="home-hero-overlay">
-        <h1>Build better teams. Move work forward.</h1>
-        <p>A trusted network connecting construction operators, companies and new opportunities.</p>
+        <h1 aria-label="Opero"><span class="home-brand-o">O</span><span class="home-brand-rest">PERO</span></h1>
+        <p>სამშენებლო სფეროს შესაძლებლობები ერთ სივრცეში</p>
         <div class="buttons" id="homeCtas" aria-live="polite">
           <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
           <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
