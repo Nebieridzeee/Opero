@@ -1163,6 +1163,7 @@ async function deleteJob(jobId) {
   await showMyJobs();
 }
 let operatorDirectory = [];
+let canPostReplacementFromOperatorDirectory = false;
 
 async function showOperators() {
 
@@ -1186,8 +1187,21 @@ async function showOperators() {
   }
 
   operatorDirectory = data || [];
+  canPostReplacementFromOperatorDirectory = false;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (user) {
+    const { data: ownProfile } = await supabaseClient.from("profiles")
+      .select("account_type, is_employed").eq("id", user.id).maybeSingle();
+    canPostReplacementFromOperatorDirectory =
+      ownProfile?.account_type === "operator" && ownProfile.is_employed === true;
+  }
+
+  const replacementButton = canPostReplacementFromOperatorDirectory
+    ? `<button onclick="showOperatorReplacementForm()">Need a Replacement</button>`
+    : "";
   content.innerHTML = `
     <h2>Operators</h2>
+    ${replacementButton}
     <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
     <div id="operatorResults"></div>
   `;
@@ -1207,7 +1221,7 @@ function renderOperators(operators, searched = false) {
   const results = document.getElementById("operatorResults");
   if (!results) return;
   if (!operators.length) {
-    results.innerHTML = `<p class="muted">${searched ? "No operators match your search." : "No operators yet."}</p>`;
+    results.innerHTML = `<p class="muted">${searched ? "No operators match your search." : "No operators are currently available."}</p>`;
     return;
   }
   results.innerHTML = operators.map(operator => `
