@@ -31,9 +31,14 @@
     }
 
     .logo {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: white;
       font-size: 24px;
       font-weight: 800;
       letter-spacing: 1px;
+      cursor: pointer;
     }
 
     nav button {
@@ -212,17 +217,15 @@
 <body>
 
 <header>
-  <div class="logo">OPERO</div>
+  <button class="logo" type="button" onclick="showHome()" aria-label="Opero home">OPERO</button>
 
   <nav>
-    <button onclick="showHome()">Home</button>
-    <button onclick="showOperators()">Operators</button>
-    <button onclick="showJobs()">Jobs</button>
+    <button id="operatorsNav" class="hidden" onclick="showOperators()">Operators</button>
+    <button id="jobsNav" class="hidden" onclick="showJobs()">Jobs</button>
     <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications <span id="applicationsUnreadBadge" class="unread-badge hidden">0</span></button>
     <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
     <button id="loginNav" onclick="showLogin()">Login</button>
-    <button id="registerNav" onclick="showRegister()">Register</button>
-    <button id="profileNav" onclick="showProfile()">My Profile</button>
+    <button id="profileNav" class="hidden" onclick="showProfile()">My Profile</button>
     <button id="logoutNav" class="hidden" onclick="logout()">Logout</button>
   </nav>
 </header>
@@ -341,6 +344,7 @@
     <button onclick="login()">Login</button>
 
     <p class="status" id="loginStatus"></p>
+    <p class="muted">Need an account? <button class="text-link" type="button" onclick="showRegister()">Register</button></p>
 
   </div>
 
@@ -409,6 +413,7 @@
     <button onclick="register()">Create Account</button>
 
     <p class="status" id="registerStatus"></p>
+    <p class="muted">Already have an account? <button class="text-link" type="button" onclick="showLogin()">Login</button></p>
 
   </div>
 
@@ -836,7 +841,8 @@ async function logout() {
 
 function updateAuthUI(loggedIn) {
   document.getElementById("loginNav").classList.toggle("hidden", loggedIn);
-  document.getElementById("registerNav").classList.toggle("hidden", loggedIn);
+  document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("jobsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("applicationsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("dashboardNav").classList.toggle("hidden", !loggedIn);
@@ -899,10 +905,7 @@ async function updateHomeCTAs(user) {
   const requestId = ++homeCtaRequest;
 
   if (!user) {
-    ctas.innerHTML = `
-      <button onclick="showRegister()">Create Profile</button>
-      <button class="secondary" onclick="showJobs()">Find Jobs</button>
-    `;
+    ctas.innerHTML = "";
     return;
   }
 
