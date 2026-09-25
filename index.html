@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -599,16 +599,16 @@
         <div class="profile-overview-details">
           <div class="profile-overview-heading">
             <div>
-              <h3 id="profileSummaryName"></h3>
+              <h3 id="profileSummaryName" data-user-content></h3>
               <p class="muted">Professional operator profile</p>
             </div>
             <button type="button" class="secondary" onclick="togglePersonalProfileEditor()">Edit profile</button>
           </div>
           <div class="profile-info-grid">
             <div class="profile-info-cell"><span>Age</span><strong id="profileSummaryAge"></strong></div>
-            <div class="profile-info-cell"><span>Phone</span><strong id="profileSummaryPhone"></strong></div>
-            <div class="profile-info-cell"><span>City</span><strong id="profileSummaryCity"></strong></div>
-            <div class="profile-info-cell"><span>Country</span><strong id="profileSummaryCountry"></strong></div>
+            <div class="profile-info-cell"><span>Phone</span><strong id="profileSummaryPhone" data-user-content></strong></div>
+            <div class="profile-info-cell"><span>City</span><strong id="profileSummaryCity" data-user-content></strong></div>
+            <div class="profile-info-cell"><span>Country</span><strong id="profileSummaryCountry" data-user-content></strong></div>
           </div>
         </div>
       </div>
@@ -781,18 +781,18 @@
       <label for="operatorType">What type of equipment do you operate?</label>
       <select id="operatorType">
         <option value="">Select equipment type</option>
-        <option>Tower Crane Operator</option>
-        <option>Mobile Crane Operator</option>
-        <option>Excavator Operator</option>
-        <option>Forklift Operator</option>
-        <option>Loader Operator</option>
-        <option>Bulldozer Operator</option>
-        <option>Telehandler Operator</option>
-        <option>Road Roller Operator</option>
-        <option>Motor Grader Operator</option>
-        <option>Concrete Pump Operator</option>
-        <option>Backhoe Loader Operator</option>
-        <option>Other</option>
+        <option value="Tower Crane Operator">Tower Crane Operator</option>
+        <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+        <option value="Excavator Operator">Excavator Operator</option>
+        <option value="Forklift Operator">Forklift Operator</option>
+        <option value="Loader Operator">Loader Operator</option>
+        <option value="Bulldozer Operator">Bulldozer Operator</option>
+        <option value="Telehandler Operator">Telehandler Operator</option>
+        <option value="Road Roller Operator">Road Roller Operator</option>
+        <option value="Motor Grader Operator">Motor Grader Operator</option>
+        <option value="Concrete Pump Operator">Concrete Pump Operator</option>
+        <option value="Backhoe Loader Operator">Backhoe Loader Operator</option>
+        <option value="Other">Other</option>
       </select>
       <label for="registrationCraneControlType">How do you operate the crane?</label>
       <select id="registrationCraneControlType" required>
@@ -1325,7 +1325,7 @@ async function showProfile() {
   document.getElementById("companyEmailProfileField").classList.toggle("hidden", data.account_type !== "company");
   document.getElementById("profileAge").value = data.age ?? "";
   document.getElementById("profileSummaryName").textContent = data.full_name || "Operator";
-  document.getElementById("profileSummaryAge").textContent = data.age ? data.age + " years" : "—";
+  document.getElementById("profileSummaryAge").textContent = data.age ? data.age + " წელი" : "—";
   document.getElementById("profileSummaryPhone").textContent = data.phone || "—";
   document.getElementById("profileSummaryCity").textContent = data.city || "—";
   document.getElementById("profileSummaryCountry").textContent = data.country || "—";
@@ -1454,9 +1454,9 @@ function movePublicBusyCalendar(offset) {
 function renderPublicBusyCalendar() {
   if (!publicBusyCalendar) return;
   const { month, busyDates } = publicBusyCalendar;
-  document.getElementById("publicBusyCalendarMonth").textContent = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  document.getElementById("publicBusyCalendarMonth").textContent = month.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
   const grid = document.getElementById("publicBusyCalendarGrid");
-  const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const weekdays = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
   const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   grid.innerHTML = weekdays.map(day => `<strong class="muted">${day}</strong>`).join("")
@@ -1492,8 +1492,8 @@ function renderAvailabilityCalendar() {
   const label = document.getElementById("availabilityMonthLabel");
   const grid = document.getElementById("availabilityCalendarGrid");
   if (!label || !grid) return;
-  label.textContent = availabilityMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  label.textContent = availabilityMonth.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  const weekdays = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
   const offset = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth(), 1).getDay();
   const count = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0).getDate();
   const today = localDateKey(new Date());
@@ -1609,7 +1609,7 @@ async function saveProfile() {
   alert("Profile updated successfully!");
   if (profile.account_type === "operator") {
     document.getElementById("profileSummaryName").textContent = updates.full_name || "Operator";
-    document.getElementById("profileSummaryAge").textContent = updates.age ? updates.age + " years" : "—";
+    document.getElementById("profileSummaryAge").textContent = updates.age ? updates.age + " წელი" : "—";
     document.getElementById("profileSummaryPhone").textContent = updates.phone || "—";
     document.getElementById("profileSummaryCity").textContent = updates.city || "—";
     document.getElementById("profileSummaryCountry").textContent = updates.country || "—";
@@ -1768,7 +1768,7 @@ async function showDashboard() {
   if (profile.account_type === "company") {
     content.innerHTML = `
       <h2>Company Dashboard</h2>
-      <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Company member")}.</p>
+      <p class="muted">Welcome, <span data-user-content>${escapeHtml(profile.full_name || "კომპანიის წარმომადგენელი")}</span>.</p>
       <div class="card"><h3>Post a job</h3><p>Publish an opening for operators.</p><button onclick="showJobs()">Create a job</button></div>
       <div class="card"><h3>My jobs</h3><p>Manage jobs posted by this account.</p><button onclick="showMyJobs()">View my jobs</button></div>
       <div class="card"><h3>Applications</h3><p>Review applicants and update their status.</p><button onclick="showApplications()">View applications</button></div>
@@ -1782,7 +1782,7 @@ async function showDashboard() {
   const completion = Math.round(fields.filter(value => value !== null && value !== undefined && String(value).trim() !== "").length / fields.length * 100);
   content.innerHTML = `
     <h2>Operator Dashboard</h2>
-    <p class="muted">Welcome, ${escapeHtml(profile.full_name || "Operator")}.</p>
+    <p class="muted">Welcome, <span data-user-content>${escapeHtml(profile.full_name || "ოპერატორი")}</span>.</p>
     <div class="card"><h3>Profile completion: ${completion}%</h3><p>Complete your profile so companies can learn about your experience.</p><button onclick="showProfile()">My profile</button></div>
     <div class="card"><h3>Browse jobs</h3><button onclick="showJobs()">Find jobs</button></div>
     <div class="card"><h3>My replacement requests</h3><p>Manage replacement posts you have published.</p><button onclick="showMyJobs()">View my posts</button></div>
@@ -1825,19 +1825,19 @@ async function showMyJobs() {
       const id = Number(job.id);
       const replacement = job.job_type === "replacement";
       const dateText = replacement
-        ? `${escapeHtml(job.replacement_date || "Date not set")}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${escapeHtml(job.replacement_end_date)} (inclusive)` : ""}`
+        ? `${escapeHtml(job.replacement_date || "თარიღი მითითებული არ არის")}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${escapeHtml(job.replacement_end_date)} (ჩათვლით)` : ""}`
         : "";
       return `
       <div class="card">
-        <h3>${escapeHtml(job.title || "Untitled post")}</h3><p>${escapeHtml(job.company || (replacement ? "Replacement request" : ""))}</p>
+        <h3 data-user-content>${escapeHtml(job.title || "უსათაურო განცხადება")}</h3><p data-user-content>${escapeHtml(job.company || (replacement ? "შემცვლელის მოთხოვნა" : ""))}</p>
         ${replacement ? `<p class="muted">Dates: ${dateText}</p>` : "<p class='muted'>Regular job</p>"}
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
-        <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
-        <p>${escapeHtml(job.description || "")}</p><p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
+        <p class="muted"><span data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</span></p>
+        <p data-user-content>${escapeHtml(job.description || "")}</p><p>Salary: <span data-user-content>${escapeHtml(job.salary || "Not specified")}</span></p>
         <button type="button" onclick="toggleJobEdit(${id})">Edit</button>
         <button class="secondary" type="button" onclick="deleteJob(${id})">Delete</button>
         <form id="jobEditForm-${id}" class="form hidden" style="margin:16px 0 0; padding:16px;" onsubmit="saveJobEdits(event, ${id})">
-          <h3>Edit ${replacement ? "replacement request" : "job vacancy"}</h3>
+          <h3>${replacement ? "შემცვლელის მოთხოვნის რედაქტირება" : "ვაკანსიის რედაქტირება"}</h3>
           <label for="jobEditTitle-${id}">Job title</label>
           <input id="jobEditTitle-${id}" value="${escapeHtml(job.title || "")}" required>
           ${profile.account_type === "company" ? `<label for="jobEditCompany-${id}">Company name</label><input id="jobEditCompany-${id}" value="${escapeHtml(job.company || "")}">` : ""}
@@ -1861,7 +1861,7 @@ async function showMyJobs() {
           <button class="secondary" type="button" onclick="toggleJobEdit(${id})">Cancel</button>
         </form>
       </div>`;
-    }).join("") : `<p class="muted">You have not posted any ${profile.account_type === "operator" ? "replacement requests" : "jobs"} yet.</p>`);
+    }).join("") : `<p class="muted">${profile.account_type === "operator" ? "შემცვლელის მოთხოვნები ჯერ არ გამოგიქვეყნებიათ." : "ვაკანსიები ჯერ არ გამოგიქვეყნებიათ."}</p>`);
 }
 
 function toggleJobEdit(jobId) {
@@ -1985,18 +1985,18 @@ function renderOperators(operators, searched = false) {
   }
   results.innerHTML = operators.map(operator => `
     <article class="card operator-card" role="button" tabindex="0"
-      aria-label="View ${escapeHtml(operator.full_name || "operator")}'s profile"
+          aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
       onclick="showOperatorProfile('${escapeHtml(operator.id)}')"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOperatorProfile('${escapeHtml(operator.id)}')}">
       <div style="display:flex;align-items:center;gap:16px;">
         ${operatorPhotoMarkup(operator)}
         <div>
-          <h3>${escapeHtml(operator.full_name || "Operator")}</h3>
+          <h3 data-user-content>${escapeHtml(operator.full_name || "ოპერატორი")}</h3>
           <p class="muted">${escapeHtml(operator.operator_type || "Operator")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
-          <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years${operator.age ? " · Age " + escapeHtml(operator.age) : ""}</p>
+          <p>გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>
         </div>
       </div>
-      <p>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
+      <p data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       ${renderOperatorStatuses(operator)}
       ${operator.contact_anytime ? `<p class="status-badge">Call me anytime</p>` : ""}
       <p class="muted">Open profile · Check free days 📅</p>
@@ -2007,7 +2007,7 @@ function renderOperators(operators, searched = false) {
 function operatorPhotoMarkup(operator, large = false) {
   const className = large ? "operator-profile-photo" : "operator-avatar";
   if (operator.photo_url) {
-    return '<img class="' + className + '" src="' + escapeHtml(operator.photo_url) + '" alt="' + escapeHtml(operator.full_name || "Operator") + '">';
+    return '<img translate="no" class="' + className + '" src="' + escapeHtml(operator.photo_url) + '" alt="ოპერატორის ფოტო">';
   }
   const initial = escapeHtml((operator.full_name || "O").trim().charAt(0).toUpperCase());
   return '<div class="' + className + '" aria-hidden="true" style="display:grid;place-items:center;font-size:28px;">' + initial + '</div>';
@@ -2067,31 +2067,31 @@ async function showOperatorProfile(operatorId) {
   const country = escapeHtml(data.country || "");
   const location = [city, country].filter(Boolean).join(", ");
   const experience = escapeHtml(data.experience_years ?? 0);
-  const about = escapeHtml(data.about || "No description provided.");
+  const about = data.about ? `<span data-user-content>${escapeHtml(data.about)}</span>` : "აღწერა მითითებული არ არის.";
   const phone = String(data.phone || "").trim();
   const phoneLink = phone.replace(/[^+\d]/g, "");
   const age = data.age ? escapeHtml(data.age) : "";
   const contactMarkup = phoneLink
-    ? `<button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">Show phone number</button><p id="operatorPhoneValue" class="hidden"><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>`
+    ? `<button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">Show phone number</button><p id="operatorPhoneValue" class="hidden" data-user-content><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>`
     : "<p class=\"muted\">No phone number provided.</p>";
   const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
   const certificateMarkup = data.certificate_url ? `
     <figure class="operator-certificate">
       <figcaption class="muted" style="margin-bottom:6px;">Crane certificate · tap to enlarge</figcaption>
-      <img src="${escapeHtml(data.certificate_url)}" alt="${name}'s crane certificate" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
+      <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="კოშკურა ამწის სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
     </figure>` : "";
 
   content.innerHTML = `
     <button class="secondary" onclick="showOperators()">Back to Operators</button>
     <div class="card" style="margin-top: 15px;">
       ${operatorPhotoMarkup(cardProfile, true)}
-      <h2>${name}</h2>
+      <h2 data-user-content>${name}</h2>
       ${certificateMarkup}
       <p class="muted">${operatorType}</p>
-      ${data.crane_control_type ? `<p>Crane operation: ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}</p>` : ""}
-      ${age ? `<p>Age: ${age}</p>` : ""}
-      <p>${location || "Location not specified"}</p>
-      <p>Experience: ${experience} years</p>
+      ${data.crane_control_type ? `<p>ამწის მართვა: ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}</p>` : ""}
+      ${age ? `<p>ასაკი: ${age}</p>` : ""}
+      <p data-user-content>${location || ""}</p>
+      <p>გამოცდილება: ${experience} წელი</p>
       ${data.contact_anytime ? "<p class=\"status-badge\">Call me anytime</p>" : ""}
       <p class="muted">Check free days</p>
       <button class="secondary" type="button" onclick="showOperatorBusyCalendar('${escapeHtml(operatorId)}')">📅 View calendar</button>
@@ -2128,11 +2128,11 @@ async function showCompanyProfile(companyId) {
   content.innerHTML = `
     <button class="secondary" onclick="showJobs('replacement')">Back to Jobs</button>
     <div class="card" style="margin-top:15px;">
-      <h2>${escapeHtml(data.full_name || "Company")}</h2>
-      <p>${escapeHtml(data.city || "")}${data.country ? ", " + escapeHtml(data.country) : ""}</p>
-      ${data.company_address ? `<p>Address: ${escapeHtml(data.company_address)}</p>` : ""}
-      <p style="white-space:pre-wrap; margin-top:15px;">${escapeHtml(data.about || "")}</p>
-      ${data.phone ? `<p>Phone: ${escapeHtml(data.phone)}</p>` : ""}
+      <h2 data-user-content>${escapeHtml(data.full_name || "კომპანია")}</h2>
+      <p data-user-content>${escapeHtml(data.city || "")}${data.country ? ", " + escapeHtml(data.country) : ""}</p>
+      ${data.company_address ? `<p>Address: <span data-user-content>${escapeHtml(data.company_address)}</span></p>` : ""}
+      <p data-user-content style="white-space:pre-wrap; margin-top:15px;">${escapeHtml(data.about || "")}</p>
+      ${data.phone ? `<p>Phone: <span data-user-content>${escapeHtml(data.phone)}</span></p>` : ""}
     </div>`;
 }
 
@@ -2186,10 +2186,10 @@ function moveDateRangeMonth(delta) {
 function renderDateRangeMonth() {
   if (!dateRangePickerState) return;
   const { month, start } = dateRangePickerState;
-  document.getElementById("dateRangeMonth").textContent = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-  document.getElementById("dateRangeHint").textContent = start ? "Now select the last day (inclusive)." : "Select the first day.";
+  document.getElementById("dateRangeMonth").textContent = month.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  document.getElementById("dateRangeHint").textContent = start ? "ახლა აირჩიეთ ბოლო დღე (ჩათვლით)." : "აირჩიეთ პირველი დღე.";
   const grid = document.getElementById("dateRangeDays");
-  const names = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const names = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
   const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
   const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   grid.innerHTML = names.map(name => `<strong class="muted">${name}</strong>`).join("") + Array(offset).fill("<span></span>").join("") + Array.from({ length: count }, (_, index) => {
@@ -2212,7 +2212,7 @@ function selectDateRangeDay(iso) {
   }
   state.startInput.value = state.start;
   state.endInput.value = iso;
-  const format = value => new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  const format = value => new Date(`${value}T00:00:00`).toLocaleDateString("ka-GE", { day: "2-digit", month: "short", year: "numeric" });
   state.input.value = `${format(state.start)} – ${format(iso)}`;
   closeDateRangePicker();
 }
@@ -2419,32 +2419,32 @@ function renderJobs() {
     const isReplacement = job.job_type === "replacement";
     if (isReplacement) {
       const formatJobDate = value => value
-        ? new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short" })
-        : "Date not set";
+        ? new Date(`${value}T00:00:00`).toLocaleDateString("ka-GE", { day: "2-digit", month: "short" })
+        : "თარიღი მითითებული არ არის";
       const dateRange = job.replacement_date
-        ? `${formatJobDate(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${formatJobDate(job.replacement_end_date)} (inclusive)` : ""}`
-        : "Date not set";
+        ? `${formatJobDate(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${formatJobDate(job.replacement_end_date)} (ჩათვლით)` : ""}`
+        : "თარიღი მითითებული არ არის";
       return `
         <div class="card" id="job-${Number(job.id)}">
-          <h3>🔄 ${escapeHtml(job.title || "Replacement Needed")}</h3>
+          <h3>🔄 <span data-user-content>${escapeHtml(job.title || "შემცვლელი საჭიროა")}</span></h3>
           <p>Dates: ${escapeHtml(dateRange)}</p>
-          ${job.created_by_type === "operator" ? `<button class="secondary" type="button" aria-label="View poster busy-days calendar" title="View busy-days calendar" onclick="showOperatorBusyCalendar('${escapeHtml(job.created_by || "")}')">📅</button>` : ""}
-          <p>Location: ${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
+          ${job.created_by_type === "operator" ? `<button class="secondary" type="button" aria-label="ვაკანსიის ავტორის დაკავებული დღეების კალენდრის ნახვა" title="დაკავებული დღეების კალენდრის ნახვა" onclick="showOperatorBusyCalendar('${escapeHtml(job.created_by || "")}')">📅</button>` : ""}
+          <p>Location: <span data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</span></p>
           <p>Crane: ${escapeHtml(job.operator_type || "Not specified")}</p>
-          <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
-          <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-          <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Operator")}</button></p>
+          <p>Payment: <span data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</span></p>
+          <p data-user-content style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
+          <p class="muted">Posted by: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "ოპერატორი")}</button></p>
         </div>
       `;
     }
     return `
       <div class="card" id="job-${Number(job.id)}">
-        <h3>${escapeHtml(job.title || "Untitled job")}</h3>
-        <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Company")}</button></p>
+        <h3 data-user-content>${escapeHtml(job.title || "უსათაურო ვაკანსია")}</h3>
+        <p class="muted">Posted by: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "კომპანია")}</button></p>
         <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
-        <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
-        <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
-        <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
+        <p class="muted" data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
+        <p data-user-content style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
+        <p>Salary: <span data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</span></p>
       </div>
     `;
   }).join("");
@@ -2584,7 +2584,7 @@ function filterApplicationsCategory(category) {
 
 function formatNotificationTime(value) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("ka-GE");
 }
 
 async function markNotificationRead(notificationId) {
@@ -2661,7 +2661,7 @@ async function showApplications(category = "all", focusApplicationId = null) {
       ? `<button class="secondary" onclick="markNotificationRead(${Number(notification.id)})">Mark read</button>`
       : "";
     return `<article class="card notification-card ${notification.is_read ? "read" : "unread"}">
-      <h3>${escapeHtml(notification.title)}</h3><p>${escapeHtml(notification.message)}</p>
+      <h3 data-user-content>${escapeHtml(localizeNotificationText(notification.title))}</h3><p data-user-content>${escapeHtml(localizeNotificationText(notification.message))}</p>
       <p class="muted">${escapeHtml(formatNotificationTime(notification.created_at))}</p>
       <div class="notification-actions">${profileAction}${responseActions}${markReadAction}</div>
     </article>`;
@@ -2673,7 +2673,7 @@ async function showApplications(category = "all", focusApplicationId = null) {
     if (!isOwner && !isApplicant) return "";
     const isReplacement = application.jobs?.job_type === "replacement";
     const status = application.status || "Pending";
-    const applicantName = application.profiles?.full_name || "Operator";
+    const applicantName = application.profiles?.full_name || "ოპერატორი";
     const inboxNotification = notificationRows.find(item =>
       item.recipient_user_id === user.id
       && String(item.related_application_id) === String(application.id)
@@ -2682,13 +2682,13 @@ async function showApplications(category = "all", focusApplicationId = null) {
     );
     const inboxNotificationId = inboxNotification ? Number(inboxNotification.id) : "null";
     const actions = isOwner && ["Pending", "Reviewed"].includes(status)
-      ? `<div class="notification-actions"><button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${inboxNotificationId})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${inboxNotificationId})">Decline</button><label>Status <select onchange="updateApplicationStatus(${Number(application.id)}, this.value, ${inboxNotificationId})"><option ${status === "Pending" ? "selected" : ""}>Pending</option><option ${status === "Reviewed" ? "selected" : ""}>Reviewed</option></select></label></div>`
+      ? `<div class="notification-actions"><button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${inboxNotificationId})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${inboxNotificationId})">Decline</button><label>Status <select onchange="updateApplicationStatus(${Number(application.id)}, this.value, ${inboxNotificationId})"><option value="Pending" ${status === "Pending" ? "selected" : ""}>Pending</option><option value="Reviewed" ${status === "Reviewed" ? "selected" : ""}>Reviewed</option></select></label></div>`
       : "";
     return `<article class="card" id="application-${Number(application.id)}">
-      <h3>${escapeHtml(application.jobs?.title || "Job")}</h3>
-      <p>${isOwner ? `From: <button class="text-link" onclick="showPublicProfile('${escapeHtml(application.applicant_id)}')">${escapeHtml(applicantName)}</button>` : `To: ${escapeHtml(application.jobs?.company || "Job owner")}`}</p>
-      <p>${escapeHtml(application.message || (isReplacement ? "Replacement request" : "No message"))}</p>
-      <p class="muted">${isReplacement ? "Replacement" : "Job application"} · ${escapeHtml(status)} · ${escapeHtml(formatNotificationTime(application.created_at))}</p>${actions}
+      <h3 data-user-content>${escapeHtml(application.jobs?.title || "ვაკანსია")}</h3>
+      <p>${isOwner ? `From: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(application.applicant_id)}')">${escapeHtml(applicantName)}</button>` : `To: <span data-user-content>${escapeHtml(application.jobs?.company || "ვაკანსიის ავტორი")}</span>`}</p>
+      <p>${application.message ? `<span data-user-content>${escapeHtml(application.message)}</span>` : (isReplacement ? "Replacement request" : "No message")}</p>
+      <p class="muted"><span>${isReplacement ? "Replacement" : "Job application"}</span> · <span>${escapeHtml(status)}</span> · <span>${escapeHtml(formatNotificationTime(application.created_at))}</span></p>${actions}
     </article>`;
   }).join("");
 
@@ -2720,6 +2720,243 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 
 }
+
+// Translate application-owned copy only. User-provided values are marked with
+// data-user-content in the templates and are deliberately skipped.
+const operoKaCopy = {
+  "OPERO": "OPERO", "Operators": "ოპერატორები", "Jobs": "ვაკანსიები", "Applications": "განაცხადები",
+  "Applications & History": "განაცხადები და ისტორია", "Applications and requests": "განაცხადები და მოთხოვნები",
+  "Dashboard": "სამუშაო პანელი", "My Profile": "ჩემი პროფილი", "Login": "შესვლა", "Register": "რეგისტრაცია", "Logout": "გასვლა",
+  "Build better teams. Move work forward.": "შევქმნათ ძლიერი გუნდები. წავიყვანოთ საქმე წინ.",
+  "A trusted network connecting construction operators, companies and new opportunities.": "სანდო პლატფორმა, რომელიც სამშენებლო ოპერატორებს, კომპანიებსა და ახალ შესაძლებლობებს აკავშირებს.",
+  "My Profile": "ჩემი პროფილი", "Account type:": "ანგარიშის ტიპი:", "Professional operator profile": "ოპერატორის პროფესიული პროფილი",
+  "Edit profile": "პროფილის რედაქტირება", "Age": "ასაკი", "Phone": "ტელეფონი", "City": "ქალაქი", "Country": "ქვეყანა",
+  "Edit personal information": "პირადი ინფორმაციის რედაქტირება", "Update your contact details and profile photo.": "განაახლეთ საკონტაქტო ინფორმაცია და პროფილის ფოტო.",
+  "Close": "დახურვა", "Full name": "სახელი და გვარი", "Company name": "კომპანიის სახელი", "Company address": "კომპანიის მისამართი",
+  "Company email": "კომპანიის ელფოსტა", "Profile photo": "პროფილის ფოტო", "Save profile": "პროფილის შენახვა",
+  "Operator card information": "ინფორმაცია ოპერატორის ბარათისთვის", "This is the professional information people see on your operator card.": "ეს ინფორმაცია გამოჩნდება ოპერატორის ბარათზე.",
+  "Equipment type": "ტექნიკის ტიპი", "Select operator type": "აირჩიეთ ტექნიკის ტიპი", "Tower Crane Operator": "კოშკურა ამწის ოპერატორი",
+  "Mobile Crane Operator": "მობილური ამწის ოპერატორი", "Excavator Operator": "ექსკავატორის ოპერატორი", "Loader Operator": "დამტვირთველის ოპერატორი",
+  "Forklift Operator": "ავტოფორკლიფტის ოპერატორი", "Other": "სხვა", "Tower crane operation": "კოშკურა ამწის მართვა",
+  "Select operation type": "აირჩიეთ მართვის ტიპი", "From the ground with remote control": "მიწიდან პულტით", "From the cabin": "კაბინიდან", "Both": "ორივე",
+  "Years of experience": "გამოცდილება (წელი)", "Experience years": "გამოცდილება (წელი)", "Currently employed?": "ამჟამად დასაქმებული ხართ?",
+  "Select yes or no": "აირჩიეთ პასუხი", "Yes": "დიახ", "No": "არა", "About you": "ჩემ შესახებ", "Call me anytime": "დამირეკეთ ნებისმიერ დროს",
+  "Mark your busy days": "მონიშნეთ დაკავებული დღეები", "Choose dates when you are unavailable for replacement work.": "მონიშნეთ დღეები, როცა შემცვლელად მუშაობას ვერ შეძლებთ.",
+  "Previous": "წინა", "Next": "შემდეგი", "Save busy days": "დაკავებული დღეების შენახვა", "Login": "შესვლა",
+  "Phone number": "ტელეფონის ნომერი", "Password": "პაროლი", "Need an account?": "ჯერ არ გაქვთ ანგარიში?", "Create your Opero account": "შექმენით Opero ანგარიში",
+  "I am an operator": "მე ვარ ოპერატორი", "I represent a company": "მე წარმოვადგენ კომპანიას", "Email": "ელფოსტა", "Repeat password": "გაიმეორეთ პაროლი",
+  "Are you currently employed?": "ამჟამად დასაქმებული ხართ?", "Age": "ასაკი", "Experience (years)": "გამოცდილება (წელი)",
+  "What type of equipment do you operate?": "რა ტიპის ტექნიკაზე მუშაობთ?", "Select equipment type": "აირჩიეთ ტექნიკის ტიპი",
+  "Bulldozer Operator": "ბულდოზერის ოპერატორი", "Telehandler Operator": "ტელესკოპური დამტვირთველის ოპერატორი", "Road Roller Operator": "საგზაო სატკეპნის ოპერატორი",
+  "Motor Grader Operator": "ავტოგრეიდერის ოპერატორი", "Concrete Pump Operator": "ბეტონის ტუმბოს ოპერატორი", "Backhoe Loader Operator": "ექსკავატორ-დამტვირთველის ოპერატორი",
+  "How do you operate the crane?": "როგორ მართავთ ამწეს?", "Select operation type": "აირჩიეთ მართვის ტიპი", "Profile photo (required)": "პროფილის ფოტო (სავალდებულოა)",
+  "Tower crane certificate photo (required)": "კოშკურა ამწის სერტიფიკატის ფოტო (სავალდებულოა)", "Take photo": "ფოტოს გადაღება", "Upload photo": "ფოტოს ატვირთვა",
+  "Create Account": "ანგარიშის შექმნა", "Already have an account?": "უკვე გაქვთ ანგარიში?", "Permanent Jobs": "მუდმივი ვაკანსიები",
+  "Replacement Jobs": "შემცვლელის ვაკანსიები", "All Jobs": "ყველა ვაკანსია", "Post a regular job": "განათავსეთ მუდმივი ვაკანსია",
+  "Post a replacement job": "განათავსეთ შემცვლელის ვაკანსია", "Need a replacement?": "შემცვლელი გჭირდებათ?", "Post a Replacement Job": "შემცვლელის ვაკანსიის განთავსება",
+  "Back to Jobs": "ვაკანსიებზე დაბრუნება", "Job title": "ვაკანსიის დასახელება", "What type of operator are you looking for?": "რა ტიპის ოპერატორს ეძებთ?",
+  "Select operator type": "აირჩიეთ ოპერატორის ტიპი", "Job description": "ვაკანსიის აღწერა", "Salary (optional)": "ანაზღაურება (არასავალდებულო)",
+  "Publish job": "ვაკანსიის გამოქვეყნება", "Publish replacement request": "შემცვლელის მოთხოვნის გამოქვეყნება", "Work dates (select start and end)": "სამუშაო დღეები (აირჩიეთ დაწყებისა და დასრულების თარიღი)",
+  "Select start and end dates": "აირჩიეთ დაწყებისა და დასრულების თარიღები", "Location / city": "ადგილმდებარეობა / ქალაქი", "Country": "ქვეყანა",
+  "Crane / operator type": "ამწის / ოპერატორის ტიპი", "Select type": "აირჩიეთ ტიპი", "Payment (GEL)": "ანაზღაურება (ლარი)",
+  "Description / additional information": "აღწერა / დამატებითი ინფორმაცია", "Search jobs by title, operator type or location": "ვაკანსიის ძიება დასახელებით, ტექნიკის ტიპით ან ადგილმდებარეობით",
+  "No jobs match your search.": "ვაკანსია ვერ მოიძებნა.", "No jobs available in this category yet.": "ამ კატეგორიაში ვაკანსიები ჯერ არ არის.",
+  "Log in as an Operator or Company to post a replacement job.": "შემცვლელის ვაკანსიის განსათავსებლად შედით ოპერატორის ან კომპანიის ანგარიშით.",
+  "Search by name, profession or location": "ძიება სახელით, პროფესიით ან ადგილმდებარეობით", "No operators match your search.": "ოპერატორი ვერ მოიძებნა.", "No operators are currently available.": "ამჟამად ოპერატორები არ არიან.",
+  "Open profile · Check free days 📅": "პროფილის ნახვა · თავისუფალი დღეების შემოწმება 📅", "Check free days": "შეამოწმეთ თავისუფალი დღეები", "📅 View calendar": "📅 კალენდრის ნახვა",
+  "Show phone number": "ნომრის ჩვენება", "No phone number provided.": "ტელეფონის ნომერი მითითებული არ არის.", "Crane certificate · tap to enlarge": "ამწის სერტიფიკატი · გასადიდებლად დააჭირეთ",
+  "Back to Operators": "ოპერატორებზე დაბრუნება", "Operator Profile": "ოპერატორის პროფილი", "Company Profile": "კომპანიის პროფილი",
+  "Find Operators": "ოპერატორების მოძებნა", "Post a Job": "ვაკანსიის განთავსება", "Welcome, ": "მოგესალმებით, ",
+  "Company Dashboard": "კომპანიის სამუშაო პანელი", "Operator Dashboard": "ოპერატორის სამუშაო პანელი", "Post a job": "ვაკანსიის განთავსება",
+  "Publish an opening for operators.": "გამოაქვეყნეთ ვაკანსია ოპერატორებისთვის.", "Create a job": "ვაკანსიის შექმნა", "My jobs": "ჩემი ვაკანსიები",
+  "Manage jobs posted by this account.": "მართეთ ამ ანგარიშიდან გამოქვეყნებული ვაკანსიები.", "View my jobs": "ჩემი ვაკანსიების ნახვა", "Review applicants and update their status.": "იხილეთ კანდიდატები და განაახლეთ მათი სტატუსი.",
+  "View applications": "განაცხადების ნახვა", "Find operators": "ოპერატორების მოძებნა", "Browse operators": "ოპერატორების დათვალიერება",
+  "Company profile": "კომპანიის პროფილი", "View profile": "პროფილის ნახვა", "Profile completion: ": "პროფილის შევსება: ", "Complete your profile so companies can learn about your experience.": "შეავსეთ პროფილი, რომ კომპანიებმა თქვენი გამოცდილების შესახებ გაიგონ.",
+  "Browse jobs": "ვაკანსიების დათვალიერება", "Find jobs": "ვაკანსიების ძიება", "My replacement requests": "ჩემი შემცვლელის მოთხოვნები", "Manage replacement posts you have published.": "მართეთ გამოქვეყნებული შემცვლელის მოთხოვნები.",
+  "View my posts": "ჩემი გამოქვეყნებული მოთხოვნები", "Need a replacement?": "შემცვლელი გჭირდებათ?", "Post the dates and details for an operator to cover your shift.": "მიუთითეთ თარიღები და პირობები, რომ ოპერატორმა თქვენი ცვლა ჩაანაცვლოს.",
+  "Need a Replacement": "შემცვლელი მჭირდება", "My applications": "ჩემი განაცხადები", "Discover operators": "ოპერატორების აღმოჩენა", "Open operator directory": "ოპერატორების სიის გახსნა",
+  "Loading...": "იტვირთება...", "Loading your options...": "იტვირთება...", "Could not load jobs. Please try again later.": "ვაკანსიების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.",
+  "Could not load operators. Please try again later.": "ოპერატორების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.", "No applications or replacement requests in this category.": "ამ კატეგორიაში განაცხადები ან შემცვლელის მოთხოვნები არ არის.",
+  "Notifications": "შეტყობინებები", "View Profile": "პროფილის ნახვა", "Accept / Confirm": "მიღება / დადასტურება", "Decline": "უარყოფა", "Mark read": "წაკითხულად მონიშვნა", "Status": "სტატუსი",
+  "Pending": "მოლოდინში", "Reviewed": "განხილულია", "Accepted": "მიღებულია", "Rejected": "უარყოფილია", "No history yet.": "ისტორია ჯერ არ არის.",
+  "Job application": "ვაკანსიაზე განაცხადი", "Replacement": "შემცვლელი", "Replacement request": "შემცვლელის მოთხოვნა", "Job owner": "ვაკანსიის ავტორი", "No message": "შეტყობინება არ არის",
+  "Edit": "რედაქტირება", "Delete": "წაშლა", "Save changes": "ცვლილებების შენახვა", "Cancel": "გაუქმება", "Job title": "ვაკანსიის დასახელება",
+  "Operator type sought": "საძიებელი ოპერატორის ტიპი", "Work dates (select start and end)": "სამუშაო დღეები (დაწყებისა და დასრულების თარიღი)",
+  "Description and conditions": "აღწერა და პირობები", "Back to Dashboard": "სამუშაო პანელზე დაბრუნება", "No description provided.": "აღწერა მითითებული არ არის.",
+  "Tower crane certificate photo": "კოშკურა ამწის სერტიფიკატის ფოტო", "Select yes or no": "აირჩიეთ დიახ ან არა", "Save operator card": "ოპერატორის ბარათის შენახვა",
+  "All": "ყველა", "History": "ისტორია", "Inbox": "შემოსული", "Search": "ძიება", "Location": "ადგილმდებარეობა", "Salary": "ანაზღაურება", "Payment": "ანაზღაურება",
+  "years": "წელი", "years old": "წლის", "Busy / unavailable": "დაკავებულია / მიუწვდომელია", "Mark as a busy day": "მონიშნეთ დაკავებულ დღედ",
+  "No applications or replacement requests in this category.": "ამ კატეგორიაში განაცხადები ან შემცვლელის მოთხოვნები არ არის.", "View busy-days calendar": "დაკავებული დღეების კალენდრის ნახვა",
+  "Job Applications": "ვაკანსიაზე განაცხადები", "System": "სისტემა", "Events in this category": "ამ კატეგორიის მოვლენები", "Notifications": "შეტყობინებები",
+  "Loading...": "იტვირთება...", "Saving busy days...": "დაკავებული დღეები ინახება...", "Busy days saved.": "დაკავებული დღეები შენახულია.",
+  "Regular job": "მუდმივი ვაკანსია", "Untitled post": "უსათაურო განცხადება", "Untitled job": "უსათაურო ვაკანსია", "Not specified": "მითითებული არ არის",
+  "Payment / salary": "ანაზღაურება", "Select start and end dates": "აირჩიეთ დაწყებისა და დასრულების თარიღები", "Company member": "კომპანიის წარმომადგენელი",
+  "Operator": "ოპერატორი", "Company": "კომპანია", "From the ground with remote control": "მიწიდან პულტით", "From the cabin": "კაბინიდან",
+  "Show phone number": "ნომრის ჩვენება", "Apply": "განაცხადის გაგზავნა", "Apply now": "განაცხადის გაგზავნა", "Application sent": "განაცხადი გაგზავნილია",
+  "You already applied to this job.": "ამ ვაკანსიაზე განაცხადი უკვე გაგზავნეთ.", "Application submitted.": "განაცხადი გაიგზავნა.",
+  "You cannot apply to a job you posted yourself.": "საკუთარ ვაკანსიაზე განაცხადს ვერ გაგზავნით.", "Only operator accounts can apply to jobs.": "ვაკანსიებზე განაცხადის გაგზავნა მხოლოდ ოპერატორს შეუძლია.",
+  "Currently employed Operators cannot apply to jobs.": "ამჟამად დასაქმებულ ოპერატორებს ვაკანსიებზე განაცხადის გაგზავნა არ შეუძლიათ.",
+  "Only Company accounts can publish regular jobs.": "მუდმივი ვაკანსიის გამოქვეყნება მხოლოდ კომპანიის ანგარიშით შეიძლება.", "Only Operator and Company accounts can post replacement jobs.": "შემცვლელის ვაკანსიის გამოქვეყნება ოპერატორსა და კომპანიას შეუძლიათ.",
+  "Search jobs by title, operator type or location": "ვაკანსიის ძიება დასახელებით, ოპერატორის ტიპით ან ადგილმდებარეობით", "No jobs match your search.": "ვაკანსია ვერ მოიძებნა.",
+  "No jobs available in this category yet.": "ამ კატეგორიაში ვაკანსიები ჯერ არ არის.", "No operators match your search.": "ოპერატორი ვერ მოიძებნა.",
+  "No operators are currently available.": "ამჟამად ოპერატორები არ არიან.", "Profile not found.": "პროფილი ვერ მოიძებნა.", "Operator profile not found.": "ოპერატორის პროფილი ვერ მოიძებნა.",
+  "Company profile not found.": "კომპანიის პროფილი ვერ მოიძებნა.", "No phone number provided.": "ტელეფონის ნომერი მითითებული არ არის.",
+  "Choose dates when you are unavailable for replacement work.": "მონიშნეთ დღეები, როცა შემცვლელად მუშაობას ვერ შეძლებთ.", "Mark your busy days": "მონიშნეთ დაკავებული დღეები",
+  "Back to Jobs": "ვაკანსიებზე დაბრუნება", "Back to Operators": "ოპერატორებზე დაბრუნება", "Back to Dashboard": "პანელზე დაბრუნება",
+  "Check free days": "თავისუფალი დღეების ნახვა", "View calendar": "კალენდრის ნახვა", "Call me anytime": "დამირეკეთ ნებისმიერ დროს",
+  "Create a job": "ვაკანსიის შექმნა", "Post a job": "ვაკანსიის განთავსება", "Manage jobs posted by this account.": "მართეთ ამ ანგარიშიდან გამოქვეყნებული ვაკანსიები.",
+  "Review applicants and update their status.": "იხილეთ კანდიდატები და განაახლეთ მათი სტატუსი.", "Complete your profile so companies can learn about your experience.": "შეავსეთ პროფილი, რომ კომპანიებმა თქვენი გამოცდილება ნახონ.",
+  "Need a replacement?": "შემცვლელი გჭირდებათ?", "Save profile": "პროფილის შენახვა", "Save operator card": "ოპერატორის ბარათის შენახვა",
+  "Take photo": "ფოტოს გადაღება", "Upload photo": "ფოტოს ატვირთვა", "Crane certificate · tap to enlarge": "ამწის სერტიფიკატი · გასადიდებლად დააჭირეთ",
+  "Date not set": "თარიღი მითითებული არ არის", "Replacement Needed": "შემცვლელი საჭიროა", "Replacement Request Sent": "შემცვლელის მოთხოვნა გაიგზავნა",
+  "New Replacement Request": "ახალი მოთხოვნა შემცვლელზე", "New Job Application": "ახალი განაცხადი ვაკანსიაზე", "Application Sent": "განაცხადი გაიგზავნა",
+  "Replacement Confirmed": "შემცვლელი დადასტურებულია", "Replacement Request Declined": "შემცვლელის მოთხოვნა უარყოფილია", "Application Accepted": "განაცხადი მიღებულია", "Application Declined": "განაცხადი უარყოფილია",
+  "Account created. You can now continue.": "ანგარიში შეიქმნა. შეგიძლიათ გააგრძელოთ.", "Account created. Log in with your phone number and password.": "ანგარიში შეიქმნა. შედით ტელეფონის ნომრითა და პაროლით.",
+  "Login successful!": "შესვლა წარმატებულია!", "Logging in...": "მიმდინარეობს შესვლა...", "Creating account...": "ანგარიში იქმნება...", "Publishing job...": "ვაკანსია ქვეყნდება...",
+  "Publishing replacement request...": "შემცვლელის მოთხოვნა ქვეყნდება...", "Profile updated successfully!": "პროფილი განახლდა.", "Please complete all required fields.": "შეავსეთ ყველა სავალდებულო ველი.",
+  "Passwords do not match.": "პაროლები ერთმანეთს არ ემთხვევა.", "Enter a valid 9-digit Georgian mobile number beginning with 5.": "შეიყვანეთ 9-ნიშნა ქართული მობილურის ნომერი, რომელიც 5-ით იწყება.",
+  "Enter a valid company email address.": "შეიყვანეთ კომპანიის სწორი ელფოსტის მისამართი.", "Please select whether you are currently employed.": "მიუთითეთ, ამჟამად დასაქმებული ხართ თუ არა.",
+  "Please select the equipment type you operate.": "აირჩიეთ ტექნიკის ტიპი, რომელზეც მუშაობთ.", "Please enter an age from 16 to 100.": "შეიყვანეთ ასაკი 16-დან 100 წლამდე.",
+  "Please select how you operate the crane.": "აირჩიეთ, როგორ მართავთ ამწეს.", "Please enter your years of experience.": "მიუთითეთ მუშაობის გამოცდილება.",
+  "Please add both a profile photo and a tower crane certificate photo.": "ატვირთეთ პროფილისა და კოშკურა ამწის სერტიფიკატის ფოტოები.", "Experience must be a whole number of zero or more.": "გამოცდილების წელი უნდა იყოს ნული ან მეტი მთელი რიცხვი.",
+  "Please login first": "ჯერ შედით სისტემაში.", "Please login first.": "ჯერ შედით სისტემაში.", "Could not load profile": "პროფილის ჩატვირთვა ვერ მოხერხდა.",
+  "Could not load this operator profile.": "ოპერატორის პროფილის ჩატვირთვა ვერ მოხერხდა.", "Could not load this company profile.": "კომპანიის პროფილის ჩატვირთვა ვერ მოხერხდა.",
+  "Could not load your history. Check that the notifications migration and access policies are installed.": "ისტორიის ჩატვირთვა ვერ მოხერხდა. გადაამოწმეთ შეტყობინებების მიგრაცია და წვდომის წესები.",
+  "You already applied. You can apply again after the job owner responds.": "განაცხადი უკვე გაგზავნეთ. ხელახლა გაგზავნას ვაკანსიის მფლობელის პასუხის შემდეგ შეძლებთ.",
+  "You have already applied to this job.": "ამ ვაკანსიაზე განაცხადი უკვე გაგზავნეთ.", "Select a valid start and end date.": "აირჩიეთ დაწყებისა და დასრულების სწორი თარიღები.",
+  "Select valid start and end dates, location, operator type and payment.": "აირჩიეთ სწორი დაწყებისა და დასრულების თარიღები, ადგილმდებარეობა, ოპერატორის ტიპი და ანაზღაურება.",
+  "Please enter a job title.": "შეიყვანეთ ვაკანსიის დასახელება.", "Please log in to publish a job.": "ვაკანსიის გამოსაქვეყნებლად შედით სისტემაში.",
+  "Please select the type of operator you are looking for.": "აირჩიეთ, რა ტიპის ოპერატორს ეძებთ.", "Only Company accounts can publish regular jobs.": "მუდმივი ვაკანსიის გამოქვეყნება მხოლოდ კომპანიის ანგარიშს შეუძლია.",
+  "Only Operator and Company accounts can post replacement jobs.": "შემცვლელის ვაკანსიის განთავსება ოპერატორსა და კომპანიას შეუძლიათ.", "Only operator accounts can apply to jobs.": "ვაკანსიაზე განაცხადის გაგზავნა მხოლოდ ოპერატორს შეუძლია.",
+  "Currently employed Operators cannot apply to jobs.": "დასაქმებულ ოპერატორებს ვაკანსიაზე განაცხადის გაგზავნა არ შეუძლიათ.", "You cannot apply to a job you posted yourself.": "საკუთარ ვაკანსიაზე განაცხადს ვერ გაგზავნით.", "Application submitted.": "განაცხადი გაიგზავნა.",
+  "No applications or replacement requests in this category.": "ამ კატეგორიაში განაცხადები ან შემცვლელის მოთხოვნები არ არის.", "No events in this category yet.": "ამ კატეგორიაში მოვლენები ჯერ არ არის.", "No history": "ისტორია არ არის",
+  "Wide view of tower cranes with long horizontal booms above a construction site": "შორი ხედი სამშენებლო ობიექტზე, ჰორიზონტალური ისრიანი კოშკურა ამწეებით",
+  "Account type": "ანგარიშის ტიპი", "New profile photo preview": "პროფილის ახალი ფოტოს წინასწარი ნახვა", "Company details": "კომპანიის მონაცემები",
+  "Choose a JPG, PNG or WEBP image smaller than 5 MB.": "აირჩიეთ JPG, PNG ან WEBP ფორმატის, 5 მბ-ზე ნაკლები ფოტო.",
+  "Photos uploaded, but profile could not be updated: ": "ფოტოები აიტვირთა, თუმცა პროფილის განახლება ვერ მოხერხდა: ",
+  "Your account profile is not available yet.": "თქვენი ანგარიშის პროფილი ჯერ ხელმისაწვდომი არ არის.",
+  "Not currently employed": "ამჟამად არ არის დასაქმებული", "Looking for replacement shifts": "ეძებს შემცვლელის სამუშაოს",
+  "Could not load availability: ": "თავისუფალი დღეების ჩატვირთვა ვერ მოხერხდა: ", "View poster busy-days calendar": "ვაკანსიის ავტორის დაკავებული დღეების კალენდრის ნახვა",
+  "View busy-days calendar": "დაკავებული დღეების კალენდრის ნახვა", "Title": "დასახელება",
+  "Add a short message to your application (optional):": "დაურთეთ მოკლე შეტყობინება განაცხადს (არასავალდებულო):",
+  "Please log in as an Operator.": "შედით ოპერატორის ანგარიშით.", "Please select whether you are currently employed.": "მიუთითეთ, ამჟამად დასაქმებული ხართ თუ არა.",
+  "Job not found or you do not have permission to edit it.": "ვაკანსია ვერ მოიძებნა ან მისი რედაქტირების უფლება არ გაქვთ.",
+  "Please complete the title and operator type; replacement requests also need a city and payment.": "შეავსეთ ვაკანსიის დასახელება და ოპერატორის ტიპი; შემცვლელის მოთხოვნისთვის ასევე მიუთითეთ ქალაქი და ანაზღაურება.",
+  "The database did not allow this update. Apply the Opero job-management migration in Supabase, then try again.": "მონაცემთა ბაზამ ცვლილება არ დაუშვა. Supabase-ში გაუშვით Opero-ს ვაკანსიების მართვის მიგრაცია და სცადეთ ხელახლა.",
+  "The database did not allow this deletion. Apply the Opero job-management migration in Supabase, then try again.": "მონაცემთა ბაზამ წაშლა არ დაუშვა. Supabase-ში გაუშვით Opero-ს ვაკანსიების მართვის მიგრაცია და სცადეთ ხელახლა.",
+  "Delete this job? This cannot be undone.": "წავშალოთ ეს ვაკანსია? ამ მოქმედების გაუქმება შეუძლებელია.", "You are not allowed to manage this post.": "ამ განცხადების მართვის უფლება არ გაქვთ.",
+  "Could not load account type. Please reload and try again.": "ანგარიშის ტიპის ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი და სცადეთ ხელახლა.",
+  "Please log in as an Operator or Company.": "შედით ოპერატორის ან კომპანიის ანგარიშით."
+};
+
+const operoKaPrefixes = {
+  "Welcome, ": "მოგესალმებით, ", "Profile completion: ": "პროფილის შევსება: ", "Experience: ": "გამოცდილება: ",
+  "Age: ": "ასაკი: ", "Crane operation: ": "ამწის მართვა: ", "Dates: ": "თარიღები: ", "Location: ": "ადგილმდებარეობა: ",
+  "Crane: ": "ამწე: ", "Payment: ": "ანაზღაურება: ", "Posted by: ": "გამომქვეყნებელი: ", "Looking for: ": "ეძებს: ",
+  "Salary: ": "ანაზღაურება: ", "Address: ": "მისამართი: ", "Phone: ": "ტელეფონი: ", "From: ": "ვისგან: ", "To: ": "ვის: ",
+  "Could not upload profile photo: ": "პროფილის ფოტოს ატვირთვა ვერ მოხერხდა: ", "Could not update job: ": "ვაკანსიის განახლება ვერ მოხერხდა: ",
+  "Could not delete job: ": "ვაკანსიის წაშლა ვერ მოხერხდა: ", "Could not publish job: ": "ვაკანსიის გამოქვეყნება ვერ მოხერხდა: ",
+  "Could not publish replacement request: ": "შემცვლელის მოთხოვნის გამოქვეყნება ვერ მოხერხდა: ", "Could not submit application: ": "განაცხადის გაგზავნა ვერ მოხერხდა: ",
+  "Could not update application status: ": "განაცხადის სტატუსის განახლება ვერ მოხერხდა: ", "Could not save busy days: ": "დაკავებული დღეების შენახვა ვერ მოხერხდა: ",
+  "Account created, but ": "ანგარიში შეიქმნა, თუმცა ", "Could not load the busy-days calendar: ": "დაკავებული დღეების კალენდარი ვერ ჩაიტვირთა: ",
+  "No ": "არ არის ", "You have not posted any ": "თქვენ არ გაქვთ გამოქვეყნებული ", "Posted by: ": "გამომქვეყნებელი: "
+};
+
+function translateOperoText(value) {
+  const original = String(value ?? "");
+  const trimmed = original.trim();
+  if (Object.prototype.hasOwnProperty.call(operoKaCopy, trimmed)) {
+    return original.replace(trimmed, operoKaCopy[trimmed]);
+  }
+  const prefix = Object.keys(operoKaPrefixes).sort((a, b) => b.length - a.length).find(key => trimmed.startsWith(key));
+  let translated = prefix ? operoKaPrefixes[prefix] + trimmed.slice(prefix.length) : trimmed;
+  const suffixes = [[" years old", " წლის"], [" years", " წელი"]];
+  for (const [english, georgian] of suffixes) {
+    if (translated.endsWith(english)) {
+      translated = translated.slice(0, -english.length) + georgian;
+      break;
+    }
+  }
+  return original.replace(trimmed, translated);
+}
+
+function localizeNotificationText(value) {
+  const original = String(value || "");
+  const title = translateOperoText(original);
+  if (title !== original) return title;
+  const patterns = [
+    [/^(.+) is available to cover your shift\.$/, name => `${name} ხელმისაწვდომია თქვენი ცვლის შესაცვლელად.`],
+    [/^You offered to cover (.+)\.$/, job => `თქვენ შესთავაზეთ ვაკანსიაზე მუშაობა: ${job}.`],
+    [/^(.+) applied for (.+)\.$/, (name, job) => `${name} გამოეხმაურა ვაკანსიას „${job}“.`],
+    [/^You applied for (.+)\.$/, job => `თქვენ გამოეხმაურეთ ვაკანსიას „${job}“.`],
+    [/^You confirmed (.+) to cover your shift\.$/, name => `თქვენ დაადასტურეთ ${name}-ის მიერ თქვენი ცვლის ჩანაცვლება.`],
+    [/^Your offer to cover (.+) was confirmed\.$/, job => `თქვენი შეთავაზება ვაკანსიაზე „${job}“ დადასტურდა.`],
+    [/^You declined (.+)'s offer to cover your shift\.$/, name => `თქვენ უარი უთხარით ${name}-ს თქვენი ცვლის ჩანაცვლებაზე.`],
+    [/^Your offer to cover (.+) was declined\.$/, job => `თქვენი შეთავაზება ვაკანსიაზე „${job}“ უარყოფილია.`],
+    [/^You accepted (.+)'s application for (.+)\.$/, (name, job) => `თქვენ მიიღეთ ${name}-ის განაცხადი ვაკანსიაზე „${job}“.`],
+    [/^Your application for (.+) was accepted\.$/, job => `თქვენი განაცხადი ვაკანსიაზე „${job}“ მიღებულია.`],
+    [/^You declined (.+)'s application for (.+)\.$/, (name, job) => `თქვენ უარყავით ${name}-ის განაცხადი ვაკანსიაზე „${job}“.`],
+    [/^Your application for (.+) was declined\.$/, job => `თქვენი განაცხადი ვაკანსიაზე „${job}“ უარყოფილია.`]
+  ];
+  for (const [pattern, format] of patterns) {
+    const match = original.match(pattern);
+    if (match) return format(...match.slice(1));
+  }
+  return original;
+}
+
+function translateOperoElement(element) {
+  if (!(element instanceof Element) || element.closest('[data-user-content], [translate="no"]')) return;
+  for (const attribute of ["placeholder", "aria-label", "title", "alt"]) {
+    if (element.hasAttribute(attribute)) {
+      const before = element.getAttribute(attribute);
+      const after = translateOperoText(before);
+      if (before !== after) element.setAttribute(attribute, after);
+    }
+  }
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  for (const node of textNodes) {
+    if (node.parentElement?.closest('[data-user-content], [translate="no"]')) continue;
+    const translated = translateOperoText(node.nodeValue);
+    if (translated !== node.nodeValue) node.nodeValue = translated;
+  }
+}
+
+function installOperoGeorgianUi() {
+  document.title = translateOperoText(document.title);
+  translateOperoElement(document.body);
+  new MutationObserver(records => {
+    for (const record of records) {
+      if (record.type === "characterData") {
+        const node = record.target;
+        if (!node.parentElement?.closest('[data-user-content], [translate="no"]')) {
+          const translated = translateOperoText(node.nodeValue);
+          if (translated !== node.nodeValue) node.nodeValue = translated;
+        }
+      } else if (record.type === "attributes") {
+        translateOperoElement(record.target);
+      } else {
+        record.addedNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            if (!node.parentElement?.closest('[data-user-content], [translate="no"]')) {
+              const translated = translateOperoText(node.nodeValue);
+              if (translated !== node.nodeValue) node.nodeValue = translated;
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE) translateOperoElement(node);
+        });
+      }
+    }
+  }).observe(document.body, { subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:["placeholder", "aria-label", "title", "alt"] });
+}
+
+installOperoGeorgianUi();
+
+const operoNativeAlert = window.alert.bind(window);
+window.alert = message => operoNativeAlert(translateOperoText(message));
+const operoNativePrompt = window.prompt.bind(window);
+window.prompt = (message, defaultValue) => operoNativePrompt(translateOperoText(message), defaultValue);
 
 
 supabaseClient.auth.onAuthStateChange((_event, session) => {
