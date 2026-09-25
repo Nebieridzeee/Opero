@@ -644,16 +644,13 @@
           <label class="profile-field">Tower crane operation
             <select id="profileCraneControlType">
               <option value="">Select operation type</option>
-              <option value="Remote control">Remote control</option>
-              <option value="Cabin">Cabin</option>
+              <option value="Remote control">From the ground with remote control</option>
+              <option value="Cabin">From the cabin</option>
               <option value="Both">Both</option>
             </select>
           </label>
           <label class="profile-field">Years of experience
             <input id="profileExperience" type="number" min="0" placeholder="Experience years">
-          </label>
-          <label class="profile-field">Crane certificate photo
-            <input id="profileCertificatePhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onchange="previewProfileCertificate(this.files?.[0])">
           </label>
           <label id="operatorAvailabilityFields" class="profile-field">Currently employed?
             <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
@@ -670,7 +667,6 @@
             Call me anytime
           </label>
         </div>
-        <img id="profileCertificatePreview" class="profile-photo-preview hidden" alt="Crane certificate preview">
         <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save operator card</button>
       </div>
 
@@ -758,6 +754,7 @@
     <input id="country" placeholder="Country" autocomplete="country-name">
 
     <div class="operator-registration-field">
+      <input id="age" type="number" min="16" max="100" step="1" placeholder="Age" required>
       <input id="experience" type="number" min="0" placeholder="Experience (years)" required>
       <label for="operatorType">What type of equipment do you operate?</label>
       <select id="operatorType">
@@ -774,6 +771,13 @@
         <option>Concrete Pump Operator</option>
         <option>Backhoe Loader Operator</option>
         <option>Other</option>
+      </select>
+      <label for="registrationCraneControlType">How do you operate the crane?</label>
+      <select id="registrationCraneControlType" required>
+        <option value="">Select operation type</option>
+        <option value="Cabin">From the cabin</option>
+        <option value="Remote control">From the ground with remote control</option>
+        <option value="Both">Both</option>
       </select>
       <p>Profile photo (required)</p>
       <div class="registration-image-actions">
@@ -1013,6 +1017,9 @@ async function register() {
     ? document.getElementById("companyAddress").value.trim()
     : "";
   const operatorType = isCompany ? "" : document.getElementById("operatorType").value;
+  const craneControlType = isCompany ? "" : document.getElementById("registrationCraneControlType").value;
+  const ageValue = isCompany ? "" : document.getElementById("age").value.trim();
+  const age = ageValue === "" ? null : Number(ageValue);
 
   const experience =
     document.getElementById("experience").value;
@@ -1059,6 +1066,16 @@ async function register() {
     return;
   }
 
+  if (!isCompany && (!Number.isInteger(age) || age < 16 || age > 100)) {
+    status.textContent = "Please enter an age from 16 to 100.";
+    return;
+  }
+
+  if (!isCompany && !craneControlType) {
+    status.textContent = "Please select how you operate the crane.";
+    return;
+  }
+
   if (!isCompany && !experience.trim()) {
     status.textContent = "Please enter your years of experience.";
     return;
@@ -1096,6 +1113,8 @@ async function register() {
     company_address: isCompany ? companyAddress : null,
     company_email: isCompany ? email : null,
     operator_type: isCompany ? null : operatorType || null,
+    crane_control_type: isCompany ? null : craneControlType,
+    age: isCompany ? null : age,
     experience_years: isCompany ? null : parsedExperience,
     is_employed: isCompany ? null : isEmployed,
     looking_for_permanent_job: isCompany ? null : false,
@@ -1293,8 +1312,6 @@ async function showProfile() {
   document.getElementById("profileContactAnytime").checked = data.contact_anytime === true;
   document.getElementById("profilePhoto").value = "";
   setOperatorPhotoPreview(data.photo_url || "");
-  document.getElementById("profileCertificatePhoto").value = "";
-  setCertificatePreview(data.certificate_url || "");
   document.getElementById("profileCompanyAddress").value = data.company_address || "";
   document.getElementById("profileCompanyEmail").value = data.company_email || "";
 
@@ -1349,23 +1366,6 @@ function previewOperatorPhoto(file) {
     return;
   }
   setOperatorPhotoPreview(URL.createObjectURL(file));
-}
-
-function setCertificatePreview(url) {
-  const preview = document.getElementById("profileCertificatePreview");
-  if (!preview) return;
-  preview.src = url || "";
-  preview.classList.toggle("hidden", !url);
-}
-
-function previewProfileCertificate(file) {
-  if (!file) return;
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
-    alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
-    document.getElementById("profileCertificatePhoto").value = "";
-    return;
-  }
-  setCertificatePreview(URL.createObjectURL(file));
 }
 
 function booleanToChoice(value) {
@@ -1569,22 +1569,6 @@ async function saveProfile() {
       updates.photo_url = publicUrl.publicUrl + "?v=" + Date.now();
     }
 
-    const certificateFile = document.getElementById("profileCertificatePhoto").files?.[0];
-    if (certificateFile) {
-      const { data: upload, error: uploadError } = await supabaseClient.storage
-        .from("operator-photos")
-        .upload(user.id + "/certificate", certificateFile, {
-          upsert: true,
-          contentType: certificateFile.type,
-          cacheControl: "3600"
-        });
-      if (uploadError) {
-        alert("Could not upload certificate photo: " + uploadError.message);
-        return;
-      }
-      const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
-      updates.certificate_url = publicUrl.publicUrl + "?v=" + Date.now();
-    }
   }
 
   const { error } = await supabaseClient.from("profiles")
@@ -1612,10 +1596,6 @@ async function saveProfile() {
     if (updates.photo_url) {
       setOperatorPhotoPreview(updates.photo_url);
       document.getElementById("profilePhoto").value = "";
-    }
-    if (updates.certificate_url) {
-      setCertificatePreview(updates.certificate_url);
-      document.getElementById("profileCertificatePhoto").value = "";
     }
     savedProfileEmploymentStatus = updates.is_employed;
     await toggleReplacementProfileFields();
@@ -1986,7 +1966,7 @@ function renderOperators(operators, searched = false) {
         ${operatorPhotoMarkup(operator)}
         <div>
           <h3>${escapeHtml(operator.full_name || "Operator")}</h3>
-          <p class="muted">${escapeHtml(operator.operator_type || "Operator")}${operator.crane_control_type ? " · " + escapeHtml(operator.crane_control_type) : ""}</p>
+          <p class="muted">${escapeHtml(operator.operator_type || "Operator")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
           <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years${operator.age ? " · Age " + escapeHtml(operator.age) : ""}</p>
         </div>
       </div>
@@ -2005,6 +1985,13 @@ function operatorPhotoMarkup(operator, large = false) {
   }
   const initial = escapeHtml((operator.full_name || "O").trim().charAt(0).toUpperCase());
   return '<div class="' + className + '" aria-hidden="true" style="display:grid;place-items:center;font-size:28px;">' + initial + '</div>';
+}
+
+function craneControlTypeLabel(value) {
+  if (value === "Cabin") return "From the cabin";
+  if (value === "Remote control") return "From the ground with remote control";
+  if (value === "Both") return "Both";
+  return value || "";
 }
 
 function renderOperatorStatuses(operator) {
@@ -2075,7 +2062,7 @@ async function showOperatorProfile(operatorId) {
       <h2>${name}</h2>
       ${certificateMarkup}
       <p class="muted">${operatorType}</p>
-      ${data.crane_control_type ? `<p>Crane operation: ${escapeHtml(data.crane_control_type)}</p>` : ""}
+      ${data.crane_control_type ? `<p>Crane operation: ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}</p>` : ""}
       ${age ? `<p>Age: ${age}</p>` : ""}
       <p>${location || "Location not specified"}</p>
       <p>Experience: ${experience} years</p>
