@@ -326,7 +326,12 @@
 
     <h2>Login</h2>
 
-    <input id="loginEmail" type="email" placeholder="Email">
+    <div id="loginPhoneRow" style="display:flex;align-items:center;gap:8px;">
+      <span style="padding:12px 14px;border:1px solid #303945;border-radius:8px;background:#121820;color:white;">+995</span>
+      <input id="loginPhone" type="tel" inputmode="numeric" placeholder="Phone number" autocomplete="tel" style="flex:1;">
+    </div>
+    <input id="loginEmail" class="hidden" type="email" placeholder="Email" autocomplete="username">
+    <button id="loginMethodToggle" class="text-link" type="button" onclick="toggleLoginMethod()">Use email instead</button>
 
     <input id="loginPassword" type="password" placeholder="Password">
 
@@ -361,10 +366,15 @@
       <input id="companyAddress" placeholder="Company address" autocomplete="street-address">
     </div>
 
-    <input id="registerEmail" type="email" placeholder="Email" autocomplete="email">
+    <div id="registrationEmailField" class="hidden">
+      <input id="registerEmail" type="email" placeholder="Email" autocomplete="email">
+    </div>
     <input id="registerPassword" type="password" placeholder="Password" autocomplete="new-password">
     <input id="registerPasswordConfirm" type="password" placeholder="Repeat password" autocomplete="new-password">
-    <input id="phone" type="tel" placeholder="Phone" autocomplete="tel">
+    <div id="registrationPhoneRow" style="display:flex;align-items:center;gap:8px;">
+      <span id="registrationPhonePrefix" style="padding:12px 14px;border:1px solid #303945;border-radius:8px;background:#121820;color:white;">+995</span>
+      <input id="phone" type="tel" inputmode="tel" placeholder="5XX XX XX XX" autocomplete="tel-national" style="flex:1;">
+    </div>
 
     <div class="operator-registration-field">
       <label for="registerIsEmployed">Are you currently employed?</label>
@@ -512,6 +522,10 @@ function showLogin() {
 
   saveAppView("login");
   hideAll();
+  loginMethod = "phone";
+  document.getElementById("loginPhoneRow").classList.remove("hidden");
+  document.getElementById("loginEmail").classList.add("hidden");
+  document.getElementById("loginMethodToggle").textContent = "Use email instead";
 
   document.getElementById("loginSection").classList.remove("hidden");
 
@@ -540,6 +554,20 @@ function setRegistrationAccountType(accountType) {
     field.classList.toggle("hidden", isCompany);
   });
   document.getElementById("companyRegistrationFields").classList.toggle("hidden", !isCompany);
+  document.getElementById("registrationEmailField").classList.toggle("hidden", !isCompany);
+  document.getElementById("registrationPhonePrefix").classList.toggle("hidden", isCompany);
+  document.getElementById("phone").placeholder = isCompany ? "Phone" : "5XX XX XX XX";
+}
+
+let loginMethod = "phone";
+
+function toggleLoginMethod() {
+  loginMethod = loginMethod === "phone" ? "email" : "phone";
+  document.getElementById("loginPhoneRow").classList.toggle("hidden", loginMethod !== "phone");
+  document.getElementById("loginEmail").classList.toggle("hidden", loginMethod !== "email");
+  document.getElementById("loginMethodToggle").textContent = loginMethod === "phone"
+    ? "Use email instead"
+    : "Use phone number instead";
 }
 
 
@@ -590,7 +618,16 @@ async function register() {
   status.textContent = "Creating account...";
 
 
-  if (!fullName || !email || !password || !passwordConfirm || !phone || !city || !country || (isCompany && !companyAddress)) {
+  const phoneDigits = phone.replace(/\D/g, "");
+  const phoneWithCountryCode = phone.trim().startsWith("+") || phoneDigits.startsWith("995")
+    ? phone
+    : `+995${phoneDigits}`;
+  const authPhone = isCompany ? phone : normalizePhoneNumber(phoneWithCountryCode, country);
+  if (!isCompany && !authPhone) {
+    status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
+    return;
+  }
+  if (!fullName || (!isCompany && !authPhone) || (isCompany && !email) || !password || !passwordConfirm || !phone || !city || !country || (isCompany && !companyAddress)) {
     status.textContent = "Please complete all required fields.";
     return;
   }
@@ -619,18 +656,14 @@ async function register() {
   }
 
 
-  const { data, error } =
-    await supabaseClient.auth.signUp({
-
-      email: email,
-
-      password: password,
-
+  const signupCredentials = isCompany ? { email, password } : { phone: authPhone, password };
+  const { data, error } = await supabaseClient.auth.signUp({
+      ...signupCredentials,
       options: {
   data: {
     full_name: fullName,
     account_type: accountType,
-    phone: phone,
+    phone: isCompany ? phone : authPhone,
     city: city,
     country: country,
     company_address: isCompany ? companyAddress : null,
@@ -666,23 +699,40 @@ async function register() {
   }
 
 
-  status.textContent =
-    "Account created. You can now login.";
+  if (isCompany) {
+    status.textContent = "Account created. You can now login.";
+    setTimeout(() => showLogin(), 1500);
+  } else if (data.session) {
+    status.textContent = "Account created. Your phone number does not need confirmation.";
+    updateAuthUI(true);
+    await updateHomeCTAs(data.user);
+    await showDashboard();
+  } else {
+    status.textContent = "Account created. Log in with your phone number and password.";
+    setTimeout(() => showLogin(), 1500);
+  }
 
+}
 
-  setTimeout(() => {
-
-    showLogin();
-
-  }, 1500);
-
+function normalizePhoneNumber(value, country = "") {
+  const input = String(value || "").trim();
+  if (!input) return "";
+  const digits = input.replace(/\D/g, "");
+  if (input.startsWith("+")) {
+    if (digits.startsWith("995")) return digits.length === 12 && digits[3] === "5" ? `+${digits}` : "";
+    return /^\+[1-9]\d{7,14}$/.test(`+${digits}`) ? `+${digits}` : "";
+  }
+  if (digits.startsWith("00")) return normalizePhoneNumber(`+${digits.slice(2)}`, country);
+  if (digits.startsWith("995")) return digits.length === 12 && digits[3] === "5" ? `+${digits}` : "";
+  if (String(country).toLowerCase().includes("georgia")) {
+    if (digits.length === 9 && digits.startsWith("5")) return `+995${digits}`;
+    if (digits.length === 10 && digits.startsWith("0")) return `+995${digits.slice(1)}`;
+  }
+  return "";
 }
 
 
 async function login() {
-
-  const email =
-    document.getElementById("loginEmail").value.trim();
 
   const password =
     document.getElementById("loginPassword").value;
@@ -693,15 +743,21 @@ async function login() {
 
   status.textContent = "Logging in...";
 
-
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-
-      email: email,
-
-      password: password
-
-    });
+  const identifier = loginMethod === "phone"
+    ? document.getElementById("loginPhone").value.trim()
+    : document.getElementById("loginEmail").value.trim();
+  const phoneDigits = identifier.replace(/\D/g, "");
+  const phoneWithCountryCode = identifier.startsWith("+") || phoneDigits.startsWith("995")
+    ? identifier
+    : `+995${phoneDigits}`;
+  const credentials = loginMethod === "email"
+    ? { email: identifier, password }
+    : { phone: normalizePhoneNumber(phoneWithCountryCode, "Georgia"), password };
+  if (!credentials.email && !credentials.phone) {
+    status.textContent = loginMethod === "email" ? "Enter the company email address." : "Enter a valid 9-digit Georgian mobile number beginning with 5.";
+    return;
+  }
+  const { data, error } = await supabaseClient.auth.signInWithPassword(credentials);
 
 
   if (error) {
