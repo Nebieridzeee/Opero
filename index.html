@@ -474,14 +474,14 @@ function restoreAppView(state) {
     login: () => showLogin(),
     register: () => showRegister(),
     profile: () => showProfile(),
-    dashboard: () => showDashboard(),
+    dashboard: () => showAccountHome(),
     myJobs: () => showMyJobs(),
     operators: () => showOperators(),
     operatorProfile: () => showOperatorProfile(args[0]),
     companyProfile: () => showCompanyProfile(args[0]),
     replacementForm: () => showOperatorReplacementForm(),
     jobs: () => showJobs(args[0], args[1]),
-    applications: () => showApplications(args[0], args[1])
+    applications: () => showAccountHome()
   };
   const restore = routes[state.view];
   if (!restore) return Promise.resolve();
@@ -699,7 +699,7 @@ async function register() {
     status.textContent = "Account created. You can now continue.";
     updateAuthUI(true);
     await updateHomeCTAs(data.user);
-    await showDashboard();
+    await showAccountHome();
   } else {
     status.textContent = "Account created. Log in with your phone number and password.";
     setTimeout(() => showLogin(), 1500);
@@ -771,7 +771,7 @@ async function login() {
 
   updateAuthUI(true);
   await updateHomeCTAs(data.user);
-  await showDashboard();
+  await showAccountHome();
 
 }
 
@@ -1066,8 +1066,8 @@ function updateAuthUI(loggedIn) {
   document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("jobsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
-  document.getElementById("applicationsNav").classList.toggle("hidden", !loggedIn);
-  document.getElementById("dashboardNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("applicationsNav").classList.add("hidden");
+  document.getElementById("dashboardNav").classList.add("hidden");
   document.getElementById("profileNav").classList.toggle("hidden", !loggedIn);
 }
 
@@ -1143,9 +1143,9 @@ async function updateHomeCTAs(user) {
 
   if (profile.account_type === "operator") {
     ctas.innerHTML = `
-      <button class="secondary" onclick="showJobs()">Find Jobs</button>
+      <button class="secondary" onclick="showOperators()">Operators</button>
+      <button onclick="showJobs()">Jobs</button>
       <button onclick="showProfile()">My Profile</button>
-      <button onclick="showDashboard()">Dashboard</button>
     `;
     return;
   }
@@ -1154,11 +1154,20 @@ async function updateHomeCTAs(user) {
     <button class="secondary" onclick="showOperators()">Find Operators</button>
     <button onclick="showJobs()">Post a Job</button>
     <button onclick="showProfile()">My Profile</button>
-    <button onclick="showDashboard()">Dashboard</button>
   `;
 }
 
+async function showAccountHome() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type === "company") return showJobs("regular");
+  return showOperators();
+}
+
 async function showDashboard() {
+  return showAccountHome();
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
   saveAppView("dashboard");
@@ -1345,7 +1354,6 @@ async function deleteJob(jobId) {
   await showMyJobs();
 }
 let operatorDirectory = [];
-let canPostReplacementFromOperatorDirectory = false;
 
 async function showOperators() {
 
@@ -1369,21 +1377,10 @@ async function showOperators() {
   }
 
   operatorDirectory = data || [];
-  canPostReplacementFromOperatorDirectory = false;
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (user) {
-    const { data: ownProfile } = await supabaseClient.from("profiles")
-      .select("account_type, is_employed").eq("id", user.id).maybeSingle();
-    canPostReplacementFromOperatorDirectory =
-      ownProfile?.account_type === "operator" && ownProfile.is_employed === true;
-  }
-
-  const replacementButton = canPostReplacementFromOperatorDirectory
-    ? `<button onclick="showOperatorReplacementForm()">Need a Replacement</button>`
-    : "";
+  if (user) operatorDirectory = operatorDirectory.filter(operator => operator.id !== user.id);
   content.innerHTML = `
     <h2>Operators</h2>
-    ${replacementButton}
     <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
     <div id="operatorResults"></div>
   `;
@@ -1633,20 +1630,20 @@ async function showOperatorReplacementForm() {
   if (!user) { showLogin(); return; }
   const { data: profile } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
-  if (profile?.account_type !== "operator") { showDashboard(); return; }
+  if (profile?.account_type !== "operator") { showAccountHome(); return; }
   currentAccountType = "operator";
   saveAppView("replacementForm");
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   document.getElementById("content").innerHTML = `
     <h2>Post a Replacement Job</h2>
-    <button class="secondary" onclick="showDashboard()">Back to Dashboard</button>
+    <button class="secondary" onclick="showJobs('replacement')">Back to Jobs</button>
     ${replacementJobFormMarkup("operator")}`;
 }
 
 async function showJobs(category = "all", focusJobId = null) {
 
-  currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "all";
+  currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "regular";
   currentJobSearchTerm = "";
   saveAppView("jobs", [currentJobCategory, focusJobId]);
   hideAll();
@@ -1662,6 +1659,10 @@ async function showJobs(category = "all", focusJobId = null) {
     accountProfile = data;
   }
   currentAccountType = accountProfile?.account_type || "";
+  if (currentAccountType === "operator" && currentJobCategory === "all") {
+    currentJobCategory = "regular";
+    saveAppView("jobs", [currentJobCategory, focusJobId]);
+  }
   currentViewingUserId = user?.id || null;
   currentUserEmployed = accountProfile?.is_employed ?? null;
 
@@ -1691,8 +1692,8 @@ async function showJobs(category = "all", focusJobId = null) {
     </div>
   ` : "";
 
-  const replacementForm = currentAccountType === "company" && currentJobCategory === "replacement"
-    ? replacementJobFormMarkup("company")
+  const replacementForm = ["company", "operator"].includes(currentAccountType) && currentJobCategory === "replacement"
+    ? replacementJobFormMarkup(currentAccountType)
     : "";
 
   const { data, error } = await supabaseClient
@@ -1720,11 +1721,16 @@ async function showJobs(category = "all", focusJobId = null) {
       .select("job_id").eq("applicant_id", user.id).in("status", ["Pending", "Reviewed"]);
     (applications || []).forEach(application => activeApplications.add(String(application.job_id)));
   }
-  const categoryTabs = `
+  const categoryTabs = currentAccountType === "operator" ? `
+    <div class="buttons" style="margin:16px 0;">
+      <button class="${currentJobCategory === "regular" ? "" : "secondary"}" onclick="filterJobCategory('regular')">Permanent Jobs</button>
+      <button class="${currentJobCategory === "replacement" ? "" : "secondary"}" onclick="filterJobCategory('replacement')">Replacement Jobs</button>
+    </div>
+  ` : `
     <div class="buttons" style="margin:16px 0;">
       <button class="${currentJobCategory === "all" ? "" : "secondary"}" onclick="filterJobCategory('all')">All Jobs</button>
-      <button class="${currentJobCategory === "regular" ? "" : "secondary"}" onclick="filterJobCategory('regular')">Regular Jobs</button>
-      <button class="${currentJobCategory === "replacement" ? "" : "secondary"}" onclick="filterJobCategory('replacement')">🔄 Replacement</button>
+      <button class="${currentJobCategory === "regular" ? "" : "secondary"}" onclick="filterJobCategory('regular')">Permanent Jobs</button>
+      <button class="${currentJobCategory === "replacement" ? "" : "secondary"}" onclick="filterJobCategory('replacement')">Replacement Jobs</button>
     </div>
   `;
   const roleMessage = currentJobCategory === "replacement" && currentAccountType === "company"
@@ -1791,7 +1797,6 @@ function renderJobs() {
           <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
           <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
           <p class="muted">Posted by: <button class="text-link" onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "Operator")}</button></p>
-          ${currentAccountType === "operator" && currentUserEmployed !== true ? (activeApplications.has(String(job.id)) ? `<button disabled>Application sent · awaiting response</button>` : `<button onclick="applyToJob(${Number(job.id)})">Apply</button>`) : ""}
         </div>
       `;
     }
@@ -1803,7 +1808,6 @@ function renderJobs() {
         <p class="muted">${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
         <p style="white-space:pre-wrap;">${escapeHtml(job.description || "")}</p>
         <p>Salary: ${escapeHtml(job.salary || "Not specified")}</p>
-        ${currentAccountType === "operator" && currentUserEmployed !== true ? (activeApplications.has(String(job.id)) ? `<button disabled>Application sent · awaiting response</button>` : `<button onclick="applyToJob(${Number(job.id)})">Apply</button>`) : ""}
       </div>
     `;
   }).join("");
