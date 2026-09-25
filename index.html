@@ -78,6 +78,15 @@
       font-size: 18px;
       margin-bottom: 30px;
     }
+    #home .hero { max-width: 1120px; margin: 0 auto; padding: 38px 20px 54px; }
+    .home-hero-photo { width: min(100%, 940px); height: clamp(220px, 38vw, 390px); margin: 0 auto 28px; overflow: hidden; border: 1px solid #303945; border-radius: 16px; background: #121820; }
+    .home-hero-photo img { display:block; width:100%; height:100%; object-fit:cover; object-position:center 52%; }
+    #home .hero h1 { margin-bottom: 12px; font-size: clamp(30px, 4vw, 42px); }
+    #home .hero p { max-width: 680px; margin: 0 auto 22px; line-height: 1.6; }
+    #homeCtas { display:flex; justify-content:center; gap:10px; }
+    #homeCtas .home-cta-button { min-width:150px; min-height:46px; padding:11px 20px; }
+    #homeCtas .home-cta-primary { border-color:#e5252a; background:#e5252a; color:#fff; }
+    #homeCtas .home-cta-secondary { border-color:#3b434d; background:#1b222c; color:#fff; }
 
     .buttons button,
     .form button {
@@ -508,7 +517,13 @@
       nav #logoutNav { position: static; transform: none; }
       #profileSection, .container { width: 100%; max-width: 100%; padding-left: 14px; padding-right: 14px; }
       .hero { padding: 42px 18px 38px; }
+      #home .hero { padding: 24px 14px 38px; }
+      .home-hero-photo { height: clamp(190px, 58vw, 270px); margin-bottom: 22px; border-radius: 12px; }
       .hero h1 { font-size: clamp(30px, 9vw, 42px); }
+      #home .hero h1 { font-size: clamp(27px, 8vw, 34px); }
+      #home .hero p { font-size: 15px; margin-bottom: 18px; }
+      #homeCtas { gap:8px; }
+      #homeCtas .home-cta-button { flex:1 1 0; min-width:0; min-height:44px; padding:10px 12px; }
       .card { padding: 15px; }
       .form { width: 100%; max-width: none; box-sizing: border-box; margin: 20px auto; padding: 18px 15px; }
       .form input, .form select, .form textarea { max-width: 100%; min-width: 0; box-sizing: border-box; }
@@ -529,12 +544,12 @@
 <header>
   <button class="logo" type="button" onclick="goHomeAndRefresh()" aria-label="Opero home">OPERO</button>
 
-  <nav>
+  <nav class="hidden">
     <button id="operatorsNav" class="hidden" onclick="showOperators()">Operators</button>
     <button id="jobsNav" class="hidden" onclick="showJobs()">Jobs</button>
     <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications <span id="applicationsUnreadBadge" class="unread-badge hidden">0</span></button>
     <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
-    <button id="loginNav" onclick="showLogin()">Login</button>
+    <button id="loginNav" class="hidden" onclick="showLogin()">Login</button>
     <button id="profileNav" class="hidden" onclick="showProfile()">My Profile</button>
     <button id="logoutNav" class="hidden" onclick="logout()">Logout</button>
   </nav>
@@ -545,13 +560,20 @@
 
   <div class="hero">
 
-    <h1>Heavy Equipment Operator Network</h1>
+    <figure class="home-hero-photo">
+      <img src="https://images.unsplash.com/photo-1748956628042-b73331e0b479?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=85&amp;w=1800" alt="Construction workers coordinating a tower crane on a building site" fetchpriority="high">
+    </figure>
+
+    <h1>Build better teams. Move work forward.</h1>
 
     <p>
-      Connect operators, companies and construction jobs.
+      A trusted network connecting construction operators, companies and new opportunities.
     </p>
 
-    <div class="buttons" id="homeCtas" aria-live="polite"></div>
+    <div class="buttons" id="homeCtas" aria-live="polite">
+      <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
+      <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
+    </div>
 
   </div>
 
@@ -1615,7 +1637,8 @@ async function logout() {
 
 
 function updateAuthUI(loggedIn) {
-  document.getElementById("loginNav").classList.toggle("hidden", loggedIn);
+  document.getElementById("loginNav").classList.add("hidden");
+  document.querySelector("header nav")?.classList.toggle("hidden", !loggedIn);
   document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("jobsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
@@ -1681,7 +1704,10 @@ async function updateHomeCTAs(user) {
   const requestId = ++homeCtaRequest;
 
   if (!user) {
-    ctas.innerHTML = "";
+    ctas.innerHTML = `
+      <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
+      <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
+    `;
     return;
   }
 
