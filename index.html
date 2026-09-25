@@ -513,8 +513,6 @@
     .registration-image-actions svg { width:17px; height:17px; flex:0 0 17px; }
     #registerSection .form { max-width:480px; padding:22px; }
     #registerSection .form h2 { margin-bottom:14px; font-size:21px; }
-    #registerSection .buttons { gap:8px; margin-bottom:16px; }
-    #registerSection .buttons button { flex:1 1 0; min-width:0; margin:0; padding:10px 8px; font-size:13px; }
     .registration-fields { display:grid; gap:0; }
     .registration-field { display:grid; gap:6px; margin-bottom:11px; color:#d9dee5; font-size:13px; font-weight:600; }
     .registration-field > input, .registration-field > select { margin:0; min-height:43px; padding:10px 12px; font-size:14px; }
@@ -526,7 +524,6 @@
     .registration-phone-row > span { padding:11px 12px; border:1px solid #303945; border-radius:8px; background:#121820; color:white; }
     .registration-phone-row > input { flex:1; min-width:0; margin:0; }
     .registration-password-fields { margin-top:10px; }
-    .registration-company-fields { display:grid; gap:0; }
     .operator-certificate { margin:16px 0; }
     .operator-certificate img { display:block; width:118px; max-height:84px; object-fit:contain; padding:4px; border:1px solid #303945; border-radius:8px; background:#fff; cursor:zoom-in; transition:width .18s ease, max-height .18s ease; }
     .operator-certificate img.is-expanded { width:min(100%, 480px); max-height:70vh; height:auto; cursor:zoom-out; }
@@ -766,12 +763,6 @@
 
     <h2>შექმენი Opero-ს ანგარიში</h2>
 
-    <div class="buttons" role="group" aria-label="ანგარიშის ტიპი">
-      <button id="operatorAccountChoice" type="button" aria-pressed="true" onclick="setRegistrationAccountType('operator')">ოპერატორი ვარ</button>
-      <button id="companyAccountChoice" type="button" class="secondary" aria-pressed="false" onclick="setRegistrationAccountType('company')">კომპანიას წარმოვადგენ</button>
-    </div>
-    <input id="accountType" type="hidden" value="operator">
-
     <div id="operatorRegistrationFields" class="registration-fields">
       <label class="registration-field">სახელი გვარი
         <input id="fullName" placeholder="სახელი გვარი" autocomplete="name" required>
@@ -825,6 +816,14 @@
           <input id="phone" type="tel" inputmode="tel" placeholder="5XX XX XX XX" autocomplete="tel-national" required>
         </div>
       </div>
+      <div class="registration-fields registration-password-fields">
+        <label class="registration-field">პაროლი
+          <input id="registerPassword" type="password" placeholder="პაროლი" autocomplete="new-password" required>
+        </label>
+        <label class="registration-field">გაიმეორეთ პაროლი
+          <input id="registerPasswordConfirm" type="password" placeholder="გაიმეორეთ პაროლი" autocomplete="new-password" required>
+        </label>
+      </div>
       <div class="registration-field">
         <span class="registration-question">სერტიფიკატის ფოტო (სავალდებულო)</span>
         <div class="registration-image-actions">
@@ -834,30 +833,6 @@
       </div>
       <input id="registrationCertificatePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
       <input id="registrationCertificatePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
-    </div>
-
-    <div id="companyRegistrationFields" class="registration-company-fields hidden">
-      <label class="registration-field">კომპანიის სახელი<input id="companyName" placeholder="კომპანიის სახელი" autocomplete="organization"></label>
-      <label class="registration-field">ქალაქი<input id="companyCity" placeholder="ქალაქი" autocomplete="address-level2"></label>
-      <label class="registration-field">ქვეყანა<input id="companyCountry" placeholder="ქვეყანა" autocomplete="country-name" value="Georgia"></label>
-      <label class="registration-field">კომპანიის მისამართი<input id="companyAddress" placeholder="კომპანიის მისამართი" autocomplete="street-address"></label>
-      <div id="registrationEmailField" class="registration-field">
-        <label class="registration-question" for="registerEmail">კომპანიის ელფოსტა</label>
-        <input id="registerEmail" type="email" placeholder="ელფოსტა" autocomplete="email">
-      </div>
-      <div class="registration-field">
-        <label class="registration-question" for="companyPhone">ტელეფონის ნომერი</label>
-        <div class="registration-phone-row"><span>+995</span><input id="companyPhone" type="tel" inputmode="tel" placeholder="5XX XX XX XX" autocomplete="tel-national"></div>
-      </div>
-    </div>
-
-    <div class="registration-fields registration-password-fields">
-      <label class="registration-field">პაროლი
-        <input id="registerPassword" type="password" placeholder="პაროლი" autocomplete="new-password" required>
-      </label>
-      <label class="registration-field">გაიმეორეთ პაროლი
-        <input id="registerPasswordConfirm" type="password" placeholder="გაიმეორეთ პაროლი" autocomplete="new-password" required>
-      </label>
     </div>
 
     <button onclick="register()">ანგარიშის შექმნა</button>
@@ -999,21 +974,8 @@ function showRegister() {
 
   document.getElementById("registerSection").classList.remove("hidden");
 
-  setRegistrationAccountType(document.getElementById("accountType").value || "operator");
-
-}
-
-function setRegistrationAccountType(accountType) {
-  const isCompany = accountType === "company";
-  document.getElementById("accountType").value = isCompany ? "company" : "operator";
-  document.getElementById("operatorAccountChoice").classList.toggle("secondary", isCompany);
-  document.getElementById("companyAccountChoice").classList.toggle("secondary", !isCompany);
-  document.getElementById("operatorAccountChoice").setAttribute("aria-pressed", String(!isCompany));
-  document.getElementById("companyAccountChoice").setAttribute("aria-pressed", String(isCompany));
-  document.getElementById("operatorRegistrationFields").classList.toggle("hidden", isCompany);
-  document.getElementById("companyRegistrationFields").classList.toggle("hidden", !isCompany);
-  document.getElementById("phone").placeholder = "5XX XX XX XX";
   toggleRegistrationCraneControls(document.getElementById("operatorType").value);
+
 }
 
 function setRegistrationEmploymentChoice(value, checkbox) {
@@ -1065,47 +1027,29 @@ async function uploadOperatorRegistrationPhotos(userId, photos) {
 
 async function register() {
 
-  const email =
-    document.getElementById("registerEmail").value.trim();
-
   const password =
     document.getElementById("registerPassword").value;
 
   const passwordConfirm =
     document.getElementById("registerPasswordConfirm").value;
 
-  const accountType =
-    document.getElementById("accountType").value;
-
-  const isCompany = accountType === "company";
-  const fullName = (isCompany
-    ? document.getElementById("companyName").value
-    : document.getElementById("fullName").value).trim();
-  const phone = (isCompany
-    ? document.getElementById("companyPhone").value
-    : document.getElementById("phone").value).trim();
-  const city = (isCompany
-    ? document.getElementById("companyCity").value
-    : document.getElementById("city").value).trim();
-  const country = isCompany
-    ? document.getElementById("companyCountry").value.trim()
-    : document.getElementById("operatorCountry").value;
-  const companyAddress = isCompany
-    ? document.getElementById("companyAddress").value.trim()
-    : "";
-  const operatorType = isCompany ? "" : document.getElementById("operatorType").value;
-  const cabinControl = !isCompany && document.getElementById("registrationCabinControl").checked;
-  const remoteControl = !isCompany && document.getElementById("registrationRemoteControl").checked;
-  const craneControlType = isCompany || operatorType !== "Tower Crane Operator"
+  const fullName = document.getElementById("fullName").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const country = document.getElementById("operatorCountry").value;
+  const operatorType = document.getElementById("operatorType").value;
+  const cabinControl = document.getElementById("registrationCabinControl").checked;
+  const remoteControl = document.getElementById("registrationRemoteControl").checked;
+  const craneControlType = operatorType !== "Tower Crane Operator"
     ? null
     : cabinControl && remoteControl ? "Both" : cabinControl ? "Cabin" : remoteControl ? "Remote control" : "";
-  const ageValue = isCompany ? "" : document.getElementById("age").value.trim();
+  const ageValue = document.getElementById("age").value.trim();
   const age = ageValue === "" ? null : Number(ageValue);
 
   const experience =
     document.getElementById("experience").value;
 
-  const isEmployed = isCompany ? null : document.getElementById("registerEmployedYes").checked
+  const isEmployed = document.getElementById("registerEmployedYes").checked
     ? true : document.getElementById("registerEmployedNo").checked ? false : null;
 
   const status =
@@ -1124,11 +1068,7 @@ async function register() {
     status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
     return;
   }
-  if (isCompany && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    status.textContent = "Enter a valid company email address.";
-    return;
-  }
-  if (!fullName || (isCompany && !email) || !password || !passwordConfirm || !phone || !city || !country || (isCompany && !companyAddress)) {
+  if (!fullName || !password || !passwordConfirm || !phone || !city || !country) {
     status.textContent = "Please complete all required fields.";
     return;
   }
@@ -1138,38 +1078,38 @@ async function register() {
     return;
   }
 
-  if (!isCompany && isEmployed === null) {
+  if (isEmployed === null) {
     status.textContent = "Please select whether you are currently employed.";
     return;
   }
 
-  if (!isCompany && !operatorType) {
+  if (!operatorType) {
     status.textContent = "Please select the equipment type you operate.";
     return;
   }
 
-  if (!isCompany && (!Number.isInteger(age) || age < 16 || age > 100)) {
+  if (!Number.isInteger(age) || age < 16 || age > 100) {
     status.textContent = "Please enter an age from 16 to 100.";
     return;
   }
 
-  if (!isCompany && operatorType === "Tower Crane Operator" && !craneControlType) {
+  if (operatorType === "Tower Crane Operator" && !craneControlType) {
     status.textContent = "აირჩიეთ, ამწეს კაბინიდან მართავთ თუ ქვემოდან პულტით.";
     return;
   }
 
-  if (!isCompany && !experience.trim()) {
+  if (!experience.trim()) {
     status.textContent = "Please enter your years of experience.";
     return;
   }
 
-  if (!isCompany && !registrationOperatorPhotos.certificate) {
+  if (!registrationOperatorPhotos.certificate) {
     status.textContent = "ატვირთეთ სერტიფიკატის ფოტო.";
     return;
   }
 
   const parsedExperience = experience === "" ? null : Number(experience);
-  if (!isCompany && (!Number.isInteger(parsedExperience) || parsedExperience < 0)) {
+  if (!Number.isInteger(parsedExperience) || parsedExperience < 0) {
     status.textContent = "Experience must be a whole number of zero or more.";
 
     return;
@@ -1181,27 +1121,25 @@ async function register() {
   // user's identifier in the UI/profile, and use a deterministic private email
   // alias for Supabase password authentication instead.
   const authEmail = phoneToAuthEmail(authPhone);
-  pendingOperatorRegistrationPhotos = isCompany ? null : { certificate: registrationOperatorPhotos.certificate };
+  pendingOperatorRegistrationPhotos = { certificate: registrationOperatorPhotos.certificate };
   const { data, error } = await supabaseClient.auth.signUp({
       email: authEmail,
       password,
       options: {
   data: {
     full_name: fullName,
-    account_type: accountType,
+    account_type: "operator",
     phone: authPhone,
     city: city,
     country: country,
-    company_address: isCompany ? companyAddress : null,
-    company_email: isCompany ? email : null,
-    operator_type: isCompany ? null : operatorType || null,
-    crane_control_type: isCompany ? null : craneControlType,
-    age: isCompany ? null : age,
-    experience_years: isCompany ? null : parsedExperience,
-    is_employed: isCompany ? null : isEmployed,
-    looking_for_permanent_job: isCompany ? null : false,
-    needs_replacement: isCompany ? null : isEmployed === true,
-    available_for_replacement: isCompany ? null : isEmployed === false
+    operator_type: operatorType,
+    crane_control_type: craneControlType,
+    age: age,
+    experience_years: parsedExperience,
+    is_employed: isEmployed,
+    looking_for_permanent_job: false,
+    needs_replacement: isEmployed === true,
+    available_for_replacement: isEmployed === false
   }
 }
 
