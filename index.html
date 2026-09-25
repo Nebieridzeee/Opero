@@ -296,15 +296,15 @@
   </div>
 
   <div id="operatorAvailabilityCalendar" class="card hidden">
-    <h3>Mark your free days</h3>
-    <p class="muted">Choose dates when you are available for replacement work.</p>
+    <h3>Mark your busy days</h3>
+    <p class="muted">Choose dates when you are unavailable for replacement work.</p>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <button type="button" class="secondary" onclick="moveAvailabilityMonth(-1)">Previous</button>
       <strong id="availabilityMonthLabel"></strong>
       <button type="button" class="secondary" onclick="moveAvailabilityMonth(1)">Next</button>
     </div>
     <div id="availabilityCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-top:12px;"></div>
-    <button type="button" onclick="saveAvailabilityMonth()">Save free days</button>
+    <button type="button" onclick="saveAvailabilityMonth()">Save busy days</button>
     <p class="status" id="availabilityCalendarStatus"></p>
   </div>
 
@@ -822,23 +822,73 @@ let availabilityMonth = new Date(new Date().getFullYear(), new Date().getMonth()
 let availabilityDateSet = new Set();
 let availabilityUserId = null;
 let savedProfileEmploymentStatus = null;
+let publicBusyCalendar = null;
 
 function localDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+async function showOperatorBusyCalendar(operatorId) {
+  const today = new Date();
+  const rangeStart = localDateKey(today);
+  const rangeEnd = localDateKey(new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()));
+  const { data, error } = await supabaseClient.from("operator_busy_dates")
+    .select("busy_date").eq("operator_id", operatorId)
+    .gte("busy_date", rangeStart).lte("busy_date", rangeEnd);
+  if (error) { alert("Could not load the busy-days calendar: " + error.message); return; }
+  publicBusyCalendar = {
+    month: new Date(today.getFullYear(), today.getMonth(), 1),
+    busyDates: new Set((data || []).map(item => String(item.busy_date).slice(0, 10)))
+  };
+  const backdrop = document.createElement("div");
+  backdrop.id = "publicBusyCalendarBackdrop";
+  backdrop.style.cssText = "position:fixed;inset:0;z-index:10000;background:#0009;display:grid;place-items:center;padding:16px";
+  backdrop.onclick = event => { if (event.target === backdrop) closeOperatorBusyCalendar(); };
+  backdrop.innerHTML = `<div style="background:#1c232b;color:white;border:1px solid #46515c;border-radius:14px;padding:18px;width:min(370px,100%);box-shadow:0 12px 40px #0008"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><button class="secondary" onclick="movePublicBusyCalendar(-1)">‹</button><strong id="publicBusyCalendarMonth"></strong><button class="secondary" onclick="movePublicBusyCalendar(1)">›</button></div><p class="muted"><span style="display:inline-block;width:12px;height:12px;background:#e5252a;border-radius:3px;vertical-align:middle"></span> Busy / unavailable</p><div id="publicBusyCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center"></div><button class="secondary" style="margin-top:14px;width:100%" onclick="closeOperatorBusyCalendar()">Close</button></div>`;
+  document.body.appendChild(backdrop);
+  renderPublicBusyCalendar();
+}
+
+function closeOperatorBusyCalendar() {
+  document.getElementById("publicBusyCalendarBackdrop")?.remove();
+  publicBusyCalendar = null;
+}
+
+function movePublicBusyCalendar(offset) {
+  if (!publicBusyCalendar) return;
+  publicBusyCalendar.month = new Date(publicBusyCalendar.month.getFullYear(), publicBusyCalendar.month.getMonth() + offset, 1);
+  renderPublicBusyCalendar();
+}
+
+function renderPublicBusyCalendar() {
+  if (!publicBusyCalendar) return;
+  const { month, busyDates } = publicBusyCalendar;
+  document.getElementById("publicBusyCalendarMonth").textContent = month.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const grid = document.getElementById("publicBusyCalendarGrid");
+  const weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  grid.innerHTML = weekdays.map(day => `<strong class="muted">${day}</strong>`).join("")
+    + Array(offset).fill("<span></span>").join("")
+    + Array.from({ length: count }, (_, index) => {
+      const key = localDateKey(new Date(month.getFullYear(), month.getMonth(), index + 1));
+      const busy = busyDates.has(key);
+      return `<span style="padding:8px 2px;border-radius:7px;${busy ? "background:#e5252a;color:white;font-weight:700;" : ""}">${index + 1}</span>`;
+    }).join("");
 }
 
 async function loadAvailabilityMonth(userId) {
   availabilityUserId = userId;
   const monthStart = localDateKey(availabilityMonth);
   const monthEnd = localDateKey(new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0));
-  const { data, error } = await supabaseClient.from("operator_availability")
-    .select("available_date").eq("operator_id", userId)
-    .gte("available_date", monthStart).lte("available_date", monthEnd);
+  const { data, error } = await supabaseClient.from("operator_busy_dates")
+    .select("busy_date").eq("operator_id", userId)
+    .gte("busy_date", monthStart).lte("busy_date", monthEnd);
   if (error) {
     document.getElementById("availabilityCalendarStatus").textContent = "Could not load availability: " + error.message;
     return;
   }
-  availabilityDateSet = new Set((data || []).map(item => String(item.available_date).slice(0, 10)));
+  availabilityDateSet = new Set((data || []).map(item => String(item.busy_date).slice(0, 10)));
   renderAvailabilityCalendar();
 }
 
@@ -861,8 +911,8 @@ function renderAvailabilityCalendar() {
     + Array.from({ length: count }, (_, index) => {
       const date = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth(), index + 1);
       const key = localDateKey(date);
-      const available = availabilityDateSet.has(key);
-      return `<button type="button" ${key < today ? "disabled" : ""} aria-pressed="${available}" title="${available ? "Free for replacement work" : "Mark as a free day"}" style="padding:9px 2px;${available ? "background:#1c9b67;color:white;border-color:#1c9b67;" : ""}" onclick="toggleAvailabilityDate('${key}')">${index + 1}</button>`;
+      const busy = availabilityDateSet.has(key);
+      return `<button type="button" ${key < today ? "disabled" : ""} aria-pressed="${busy}" title="${busy ? "Busy / unavailable" : "Mark as a busy day"}" style="padding:9px 2px;${busy ? "background:#e5252a;color:white;border-color:#e5252a;" : ""}" onclick="toggleAvailabilityDate('${key}')">${index + 1}</button>`;
     }).join("");
 }
 
@@ -877,18 +927,18 @@ async function saveAvailabilityMonth() {
   const status = document.getElementById("availabilityCalendarStatus");
   const monthStart = localDateKey(availabilityMonth);
   const monthEnd = localDateKey(new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0));
-  status.textContent = "Saving free days...";
-  const { error: deleteError } = await supabaseClient.from("operator_availability")
+  status.textContent = "Saving busy days...";
+  const { error: deleteError } = await supabaseClient.from("operator_busy_dates")
     .delete().eq("operator_id", availabilityUserId)
-    .gte("available_date", monthStart).lte("available_date", monthEnd);
-  if (deleteError) { status.textContent = "Could not save free days: " + deleteError.message; return; }
+    .gte("busy_date", monthStart).lte("busy_date", monthEnd);
+  if (deleteError) { status.textContent = "Could not save busy days: " + deleteError.message; return; }
   const dates = [...availabilityDateSet].filter(date => date >= monthStart && date <= monthEnd)
-    .map(available_date => ({ operator_id: availabilityUserId, available_date }));
+    .map(busy_date => ({ operator_id: availabilityUserId, busy_date }));
   if (dates.length) {
-    const { error } = await supabaseClient.from("operator_availability").insert(dates);
-    if (error) { status.textContent = "Could not save free days: " + error.message; return; }
+    const { error } = await supabaseClient.from("operator_busy_dates").insert(dates);
+    if (error) { status.textContent = "Could not save busy days: " + error.message; return; }
   }
-  status.textContent = "Free days saved.";
+  status.textContent = "Busy days saved.";
 }
 
 async function saveProfile() {
@@ -929,7 +979,7 @@ async function saveProfile() {
   }
 
   if (profile.account_type === "operator" && updates.is_employed === true) {
-    const { error: availabilityError } = await supabaseClient.from("operator_availability")
+    const { error: availabilityError } = await supabaseClient.from("operator_busy_dates")
       .delete().eq("operator_id", user.id);
     if (availabilityError) console.error("Could not clear availability dates:", availabilityError);
   }
@@ -1261,23 +1311,6 @@ async function showOperators() {
   }
 
   operatorDirectory = data || [];
-  if (operatorDirectory.length) {
-    const today = new Date();
-    const availabilityStart = localDateKey(today);
-    const availabilityEnd = localDateKey(new Date(today.getFullYear(), today.getMonth() + 6, today.getDate()));
-    const { data: dates, error: availabilityError } = await supabaseClient.from("operator_availability")
-      .select("operator_id, available_date")
-      .in("operator_id", operatorDirectory.map(operator => operator.id))
-      .gte("available_date", availabilityStart).lte("available_date", availabilityEnd)
-      .order("available_date", { ascending: true });
-    if (availabilityError) console.error("Could not load operator free days:", availabilityError);
-    const byOperator = new Map();
-    (dates || []).forEach(item => {
-      if (!byOperator.has(item.operator_id)) byOperator.set(item.operator_id, []);
-      byOperator.get(item.operator_id).push(item.available_date);
-    });
-    operatorDirectory.forEach(operator => { operator.available_dates = byOperator.get(operator.id) || []; });
-  }
   canPostReplacementFromOperatorDirectory = false;
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (user) {
@@ -1322,7 +1355,7 @@ function renderOperators(operators, searched = false) {
       <p>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       <p>Experience: ${escapeHtml(operator.experience_years ?? 0)} years</p>
       ${renderOperatorStatuses(operator)}
-      ${operator.available_dates?.length ? `<p class="muted">Free days: ${operator.available_dates.slice(0, 6).map(date => escapeHtml(new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { day: "2-digit", month: "short" }))).join(", ")}${operator.available_dates.length > 6 ? " …" : ""}</p>` : ""}
+      <button class="secondary" type="button" aria-label="View busy days calendar" title="View busy days calendar" onclick="showOperatorBusyCalendar('${escapeHtml(operator.id)}')">📅</button>
       <p>${escapeHtml(operator.about || "")}</p>
     </div>
   `).join("");
@@ -1389,6 +1422,7 @@ async function showOperatorProfile(operatorId) {
       <p class="muted">${operatorType}</p>
       <p>${location || "Location not specified"}</p>
       <p>Experience: ${experience} years</p>
+      <button class="secondary" type="button" onclick="showOperatorBusyCalendar('${escapeHtml(operatorId)}')">📅 View busy days</button>
       ${contactMarkup}
       <p style="white-space: pre-wrap; margin-top: 15px;">${about}</p>
     </div>
@@ -1615,6 +1649,13 @@ async function showJobs(category = "all", focusJobId = null) {
   }
 
   availableJobs = data || [];
+  const jobOwnerIds = [...new Set(availableJobs.map(job => job.created_by).filter(Boolean))];
+  if (jobOwnerIds.length) {
+    const { data: owners } = await supabaseClient.from("profiles")
+      .select("id, account_type").in("id", jobOwnerIds);
+    const ownerTypeById = new Map((owners || []).map(owner => [owner.id, owner.account_type]));
+    availableJobs.forEach(job => { job.created_by_type = ownerTypeById.get(job.created_by) || ""; });
+  }
   activeApplications = new Set();
   if (user) {
     const { data: applications } = await supabaseClient.from("applications")
@@ -1686,6 +1727,7 @@ function renderJobs() {
         <div class="card" id="job-${Number(job.id)}">
           <h3>🔄 ${escapeHtml(job.title || "Replacement Needed")}</h3>
           <p>Dates: ${escapeHtml(dateRange)}</p>
+          ${job.created_by_type === "operator" ? `<button class="secondary" type="button" aria-label="View poster busy-days calendar" title="View busy-days calendar" onclick="showOperatorBusyCalendar('${escapeHtml(job.created_by || "")}')">📅</button>` : ""}
           <p>Location: ${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</p>
           <p>Crane: ${escapeHtml(job.operator_type || "Not specified")}</p>
           <p>Payment: ${escapeHtml(job.salary || "Not specified")}</p>
