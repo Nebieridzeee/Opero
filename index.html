@@ -1780,7 +1780,7 @@ function updateAuthUI(loggedIn) {
   document.getElementById("loginNav").classList.add("hidden");
   document.querySelector("header nav")?.classList.toggle("hidden", !loggedIn);
   document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
-  document.getElementById("jobsNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("jobsNav").classList.add("hidden");
   document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("applicationsNav").classList.add("hidden");
   document.getElementById("dashboardNav").classList.add("hidden");
