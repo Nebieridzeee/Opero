@@ -175,9 +175,10 @@
     @keyframes operator-looking-pulse { 0%,100% { border-color:#26784e; box-shadow:0 0 0 0 rgb(66 216 135 / 0%); } 50% { border-color:#42d887; box-shadow:0 0 10px rgb(66 216 135 / 22%); } }
     @media (prefers-reduced-motion: reduce) { .operator-card .status-badge-looking { animation:none; } }
     .operator-card-own { width:min(100%,560px); padding:11px 13px; border-color:#34463d; }
-    .operator-card-own .operator-card-main { gap:10px; }
-    .operator-card-own .operator-avatar { flex-basis:52px; width:52px; height:52px; border-radius:10px; }
-    .operator-card-own .operator-card-copy h3 { margin:0; font-size:15px; }
+    .operator-card-own:not(.operator-card-employed) .operator-card-main { gap:10px; }
+    .operator-card-own:not(.operator-card-employed) .operator-avatar { flex-basis:52px; width:52px; height:52px; border-radius:10px; }
+    .operator-card-own:not(.operator-card-employed) .operator-card-copy h3 { margin:0; font-size:15px; }
+    .operator-card-employed { width:100%; }
     .operator-card-own-label { display:inline-block; margin-bottom:3px; color:#8ef0b4; font-size:11px; font-weight:600; }
     .operator-profile-edit-action { justify-self:start; }
     #operatorResults, #jobResults { display:grid; gap:12px; }
@@ -1240,10 +1241,10 @@ async function register() {
     status.textContent = "Account created. You can now continue.";
     updateAuthUI(true);
     await updateHomeCTAs(data.user);
-    await showAccountHome();
+    showHome();
   } else {
     status.textContent = "Account created. Log in with your phone number and password.";
-    setTimeout(() => showLogin(), 1500);
+    showHome();
   }
 
 }
@@ -1326,7 +1327,7 @@ async function login(event) {
 
   updateAuthUI(true);
   await updateHomeCTAs(data.user);
-  await showAccountHome();
+  showHome();
 
 }
 
@@ -1843,13 +1844,7 @@ async function updateHomeCTAs(user) {
   `;
 }
 
-async function showAccountHome() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) { showLogin(); return; }
-  const { data: profile } = await supabaseClient.from("profiles")
-    .select("account_type").eq("id", user.id).maybeSingle();
-  return showOperators();
-}
+function showAccountHome() { return showHome(); }
 
 async function showDashboard() {
   return showAccountHome();
@@ -2050,12 +2045,14 @@ async function showOperators() {
   const content = document.getElementById("content");
   content.innerHTML = "<h2>Operators</h2><p class='muted'>Loading...</p>";
 
-  const { data, error } = await supabaseClient
-    .from("profiles")
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  let operatorsQuery = supabaseClient.from("profiles")
     .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
-    .eq("account_type", "operator")
-    .eq("is_employed", false)
-    .order("created_at", { ascending: false });
+    .eq("account_type", "operator");
+  operatorsQuery = user
+    ? operatorsQuery.or(`is_employed.eq.false,id.eq.${user.id}`)
+    : operatorsQuery.eq("is_employed", false);
+  const { data, error } = await operatorsQuery.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Could not load operators:", error);
@@ -2064,7 +2061,6 @@ async function showOperators() {
   }
 
   operatorDirectory = data || [];
-  const { data: { user } } = await supabaseClient.auth.getUser();
   operatorDirectory = operatorDirectory.map(operator => ({ ...operator, is_own_profile: operator.id === user?.id }));
   operatorDirectory.sort((a, b) => Number(b.is_own_profile) - Number(a.is_own_profile));
   content.innerHTML = `
@@ -2091,25 +2087,29 @@ function renderOperators(operators, searched = false) {
     results.innerHTML = `<p class="muted">${searched ? "No operators match your search." : "No operators are currently available."}</p>`;
     return;
   }
-  results.innerHTML = operators.map(operator => `
-    <article class="card operator-card ${operator.is_own_profile ? "operator-card-own" : ""}" role="button" tabindex="0"
+  results.innerHTML = operators.map(operator => {
+    const compactOwnCard = operator.is_own_profile && operator.is_employed !== true;
+    const employedOwnCard = operator.is_own_profile && operator.is_employed === true;
+    return `
+    <article class="card operator-card ${operator.is_own_profile ? "operator-card-own" : ""} ${employedOwnCard ? "operator-card-employed" : ""}" role="button" tabindex="0"
       aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
       onclick="showOperatorProfile('${escapeHtml(operator.id)}')"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOperatorProfile('${escapeHtml(operator.id)}')}">
       <div class="operator-card-main">
         ${operatorPhotoMarkup(operator)}
         <div class="operator-card-copy">
-          ${operator.is_own_profile ? '<span class="operator-card-own-label">ჩემი პროფილი</span>' : ""}
+          ${operator.is_own_profile ? `<span class="operator-card-own-label">${employedOwnCard ? "დასაქმებული · ჩემი პროფილი" : "ჩემი პროფილი"}</span>` : ""}
           <h3 data-user-content>${escapeHtml(operator.full_name || "ოპერატორი")}</h3>
-          ${operator.is_own_profile ? "" : `<p class="operator-card-type">${escapeHtml(operator.operator_type || "ოპერატორი")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
+          ${compactOwnCard ? "" : `<p class="operator-card-type">${escapeHtml(operator.operator_type || "ოპერატორი")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
           <p class="operator-card-experience">გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>`}
         </div>
       </div>
-      ${operator.is_own_profile ? "" : `<p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
-      ${renderOperatorStatuses(operator)}
+      ${compactOwnCard ? "" : `<p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
+      ${employedOwnCard ? '<span class="status-badge">დასაქმებულია</span>' : renderOperatorStatuses(operator)}
       ${operator.contact_anytime ? `<span class="status-badge">დარეკვა ნებისმიერ დროს</span>` : ""}`}
     </article>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function operatorPhotoMarkup(operator, large = false) {
@@ -2154,12 +2154,15 @@ async function showOperatorProfile(operatorId) {
     return;
   }
 
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone")
+  const { data: { user: viewingUser } } = await supabaseClient.auth.getUser();
+  let operatorProfileQuery = supabaseClient.from("profiles")
+    .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone, is_employed")
     .eq("id", operatorId)
-    .eq("account_type", "operator")
-    .single();
+    .eq("account_type", "operator");
+  operatorProfileQuery = viewingUser
+    ? operatorProfileQuery.or(`is_employed.eq.false,id.eq.${viewingUser.id}`)
+    : operatorProfileQuery.eq("is_employed", false);
+  const { data, error } = await operatorProfileQuery.single();
 
   if (error || !data) {
     console.error("Could not load operator profile:", error);
@@ -2169,7 +2172,6 @@ async function showOperatorProfile(operatorId) {
     return;
   }
 
-  const { data: { user: viewingUser } } = await supabaseClient.auth.getUser();
   const isOwnProfile = viewingUser?.id === operatorId;
 
   const name = escapeHtml(data.full_name || "Operator");
@@ -2192,6 +2194,20 @@ async function showOperatorProfile(operatorId) {
       <figcaption>კოშკურა ამწის სერტიფიკატი · გასადიდებლად დააჭირე</figcaption>
       <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="კოშკურა ამწის სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
     </figure>` : "";
+  const calendarMarkup = data.is_employed === true ? "" : `
+        <aside class="operator-profile-calendar" aria-label="ოპერატორის თავისუფალი და დაკავებული დღეების კალენდარი">
+          <div class="operator-profile-calendar-head">
+            <h3>კალენდარი</h3>
+            <button id="operatorProfileCalendarPrevious" class="operator-profile-calendar-nav" type="button" aria-label="წინა თვე" onclick="moveOperatorProfileCalendar(-1)">‹</button>
+            <span id="operatorProfileCalendarMonth" class="operator-profile-calendar-month"></span>
+            <button class="operator-profile-calendar-nav" type="button" aria-label="შემდეგი თვე" onclick="moveOperatorProfileCalendar(1)">›</button>
+          </div>
+          <div class="operator-profile-calendar-legend">
+            <span><i style="background:#174b35"></i>თავისუფალი</span>
+            <span><i style="background:#a32a30"></i>დაკავებული</span>
+          </div>
+          <div id="operatorProfileCalendarGrid" class="operator-profile-calendar-grid"><p class="operator-profile-calendar-error">კალენდარი იტვირთება…</p></div>
+        </aside>`;
 
   content.innerHTML = `
     <button class="secondary" onclick="showOperators()">ოპერატორებზე დაბრუნება</button>
@@ -2214,25 +2230,13 @@ async function showOperatorProfile(operatorId) {
           ${contactMarkup}
           ${aboutMarkup}
         </section>
-        <aside class="operator-profile-calendar" aria-label="ოპერატორის თავისუფალი და დაკავებული დღეების კალენდარი">
-          <div class="operator-profile-calendar-head">
-            <h3>კალენდარი</h3>
-            <button id="operatorProfileCalendarPrevious" class="operator-profile-calendar-nav" type="button" aria-label="წინა თვე" onclick="moveOperatorProfileCalendar(-1)">‹</button>
-            <span id="operatorProfileCalendarMonth" class="operator-profile-calendar-month"></span>
-            <button class="operator-profile-calendar-nav" type="button" aria-label="შემდეგი თვე" onclick="moveOperatorProfileCalendar(1)">›</button>
-          </div>
-          <div class="operator-profile-calendar-legend">
-            <span><i style="background:#174b35"></i>თავისუფალი</span>
-            <span><i style="background:#a32a30"></i>დაკავებული</span>
-          </div>
-          <div id="operatorProfileCalendarGrid" class="operator-profile-calendar-grid"><p class="operator-profile-calendar-error">კალენდარი იტვირთება…</p></div>
-        </aside>
+        ${calendarMarkup}
       </div>
       ${isOwnProfile ? '<button type="button" class="secondary operator-profile-edit-action" onclick="showProfile()">პროფილის რედაქტირება</button>' : ""}
       ${certificateMarkup}
     </div>
   `;
-  await loadOperatorProfileCalendar(operatorId);
+  if (data.is_employed !== true) await loadOperatorProfileCalendar(operatorId);
 }
 
 function toggleCertificatePhoto(image) {
