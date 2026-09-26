@@ -170,8 +170,9 @@
     .operator-card-experience { margin:0; color:#e3e7eb; font-size:13px; line-height:1.4; }
     .operator-card-location { margin:0; color:#aeb7c1; font-size:13px; }
     .operator-card .status-badges { margin:0; }
-    .operator-card-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; padding-top:9px; border-top:1px solid #28313b; color:#c2c9d1; font-size:12px; }
-    .operator-card-footer .calendar-hint { flex:0 0 auto; color:#f1f3f5; }
+    .operator-card .status-badge-looking { border-color:#26784e; background:#123526; color:#8ef0b4; animation:operator-looking-pulse 1.8s ease-in-out infinite; }
+    @keyframes operator-looking-pulse { 0%,100% { border-color:#26784e; box-shadow:0 0 0 0 rgb(66 216 135 / 0%); } 50% { border-color:#42d887; box-shadow:0 0 10px rgb(66 216 135 / 22%); } }
+    @media (prefers-reduced-motion: reduce) { .operator-card .status-badge-looking { animation:none; } }
     #operatorResults, #jobResults { display:grid; gap:12px; }
     #operatorResults > .card, #jobResults > .card { margin:0; }
     .job-card { display:grid; gap:12px; padding:16px; border-radius:14px; }
@@ -2131,7 +2132,6 @@ function renderOperators(operators, searched = false) {
       <p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       ${renderOperatorStatuses(operator)}
       ${operator.contact_anytime ? `<span class="status-badge">დარეკვა ნებისმიერ დროს</span>` : ""}
-      <div class="operator-card-footer"><span>პროფილის ნახვა</span><span class="calendar-hint">📅 თავისუფალი დღეები</span></div>
     </article>
   `).join("");
 }
