@@ -559,6 +559,43 @@
     .operator-certificate { margin:16px 0; }
     .operator-certificate img { display:block; width:118px; max-height:84px; object-fit:contain; padding:4px; border:1px solid #303945; border-radius:8px; background:#fff; cursor:zoom-in; transition:width .18s ease, max-height .18s ease; }
     .operator-certificate img.is-expanded { width:min(100%, 480px); max-height:70vh; height:auto; cursor:zoom-out; }
+    .operator-profile-card { display:grid; gap:18px; margin-top:14px; padding:18px; }
+    .operator-profile-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,290px); align-items:start; gap:18px; }
+    .operator-profile-main { min-width:0; display:grid; align-content:start; gap:14px; }
+    .operator-profile-summary { display:flex; align-items:flex-start; gap:14px; min-width:0; }
+    .operator-profile-card .operator-profile-photo { flex:0 0 96px; width:96px; height:96px; border-radius:13px; }
+    .operator-profile-identity { min-width:0; }
+    .operator-profile-identity h2 { margin:0 0 4px; font-size:20px; line-height:1.3; overflow-wrap:anywhere; }
+    .operator-profile-type { margin:0 0 9px; color:#c4ccd5; font-size:13px; line-height:1.4; }
+    .operator-profile-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:0; }
+    .operator-profile-fact { min-width:0; padding:8px 9px; border:1px solid #2b3540; border-radius:8px; background:#0e141a; }
+    .operator-profile-fact dt { margin-bottom:2px; color:#929eaa; font-size:10px; }
+    .operator-profile-fact dd { margin:0; color:#eef1f4; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+    .operator-profile-contact { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+    .operator-profile-contact button { min-height:36px; padding:8px 11px; font-size:12px; }
+    .operator-profile-contact-value { margin:0; color:#fff; font-weight:600; }
+    .operator-profile-contact-value a, .operator-profile-contact-value a:visited { color:#fff; text-decoration:none; }
+    .operator-profile-about { padding-top:12px; border-top:1px solid #28313b; }
+    .operator-profile-about h3 { margin:0 0 5px; color:#d7dde5; font-size:13px; }
+    .operator-profile-about p { margin:0; color:#c0c8d1; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .operator-profile-calendar { min-width:0; padding:13px; border:1px solid #2b3540; border-radius:12px; background:#0e141a; }
+    .operator-profile-calendar-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+    .operator-profile-calendar-head h3 { margin:0; color:#f4f6f8; font-size:14px; }
+    .operator-profile-calendar-month { flex:1; text-align:center; color:#d7dde5; font-size:12px; font-weight:600; }
+    .operator-profile-calendar-nav { width:30px; min-width:30px; height:30px; padding:0; border:1px solid #36414d; border-radius:7px; background:#171f28; color:#fff; line-height:1; }
+    .operator-profile-calendar-legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:9px; color:#aeb7c1; font-size:10px; }
+    .operator-profile-calendar-legend span { display:inline-flex; align-items:center; gap:5px; }
+    .operator-profile-calendar-legend i { width:9px; height:9px; border-radius:3px; }
+    .operator-profile-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; text-align:center; }
+    .operator-profile-calendar-grid strong { padding:3px 0; color:#929eaa; font-size:10px; font-weight:500; }
+    .operator-profile-calendar-day { display:grid; min-height:29px; place-items:center; border-radius:6px; font-size:11px; font-weight:600; }
+    .operator-profile-calendar-day.is-free { background:#174b35; color:#a8efc4; }
+    .operator-profile-calendar-day.is-busy { background:#a32a30; color:#fff; }
+    .operator-profile-calendar-day.is-past { background:#1b222c; color:#707b87; }
+    .operator-profile-calendar-error { grid-column:1/-1; margin:4px 0; color:#f1a4a7; font-size:11px; }
+    .operator-profile-card .operator-certificate { margin:0; padding-top:14px; border-top:1px solid #28313b; }
+    .operator-profile-card .operator-certificate figcaption { margin-bottom:7px; color:#c4ccd5; font-size:12px; }
+    @media (max-width: 760px) { .operator-profile-layout { grid-template-columns:minmax(0,1fr); } .operator-profile-calendar { width:100%; max-width:360px; } }
 
     @media (min-width: 641px) and (max-width: 1024px) {
       .container { width: min(100% - 40px, 960px); }
@@ -594,6 +631,12 @@
       .replacement-form-toggle { min-height: 54px; padding: 12px 14px; }
       .registration-image-actions button { flex:0 1 auto; }
       #jobSearch { margin: 14px 0; }
+      .operator-profile-card { gap:14px; padding:14px; }
+      .operator-profile-layout { gap:14px; }
+      .operator-profile-summary { gap:11px; }
+      .operator-profile-card .operator-profile-photo { flex-basis:78px; width:78px; height:78px; border-radius:10px; }
+      .operator-profile-identity h2 { font-size:18px; }
+      .operator-profile-calendar { max-width:none; padding:11px; }
       #operatorAvailabilityCalendar, #availabilityCalendarGrid { max-width: 100%; box-sizing: border-box; overflow-x: auto; }
       img { max-width: 100%; }
     }  </style>
@@ -1445,6 +1488,7 @@ let availabilityDateSet = new Set();
 let availabilityUserId = null;
 let savedProfileEmploymentStatus = null;
 let publicBusyCalendar = null;
+let operatorProfileCalendar = null;
 
 function localDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -1497,6 +1541,63 @@ function renderPublicBusyCalendar() {
       const busy = busyDates.has(key);
       return `<span style="padding:8px 2px;border-radius:7px;${busy ? "background:#e5252a;color:white;font-weight:700;" : ""}">${index + 1}</span>`;
     }).join("");
+}
+
+async function loadOperatorProfileCalendar(operatorId) {
+  const grid = document.getElementById("operatorProfileCalendarGrid");
+  if (!grid) return;
+  grid.innerHTML = '<p class="operator-profile-calendar-error">კალენდარი იტვირთება…</p>';
+  const today = new Date();
+  const rangeStart = localDateKey(today);
+  const rangeEnd = localDateKey(new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()));
+  const { data, error } = await supabaseClient.from("operator_busy_dates")
+    .select("busy_date").eq("operator_id", operatorId)
+    .gte("busy_date", rangeStart).lte("busy_date", rangeEnd);
+  if (document.getElementById("operatorProfileCalendarGrid") !== grid) return;
+  if (error) {
+    grid.innerHTML = '<p class="operator-profile-calendar-error">კალენდრის ჩატვირთვა ვერ მოხერხდა.</p>';
+    console.error("Could not load operator profile calendar:", error);
+    return;
+  }
+  operatorProfileCalendar = {
+    operatorId,
+    month: new Date(today.getFullYear(), today.getMonth(), 1),
+    minMonth: new Date(today.getFullYear(), today.getMonth(), 1),
+    busyDates: new Set((data || []).map(item => String(item.busy_date).slice(0, 10)))
+  };
+  renderOperatorProfileCalendar();
+}
+
+function moveOperatorProfileCalendar(offset) {
+  if (!operatorProfileCalendar) return;
+  const nextMonth = new Date(operatorProfileCalendar.month.getFullYear(), operatorProfileCalendar.month.getMonth() + offset, 1);
+  if (nextMonth < operatorProfileCalendar.minMonth) return;
+  operatorProfileCalendar.month = nextMonth;
+  renderOperatorProfileCalendar();
+}
+
+function renderOperatorProfileCalendar() {
+  if (!operatorProfileCalendar) return;
+  const { month, minMonth, busyDates } = operatorProfileCalendar;
+  const label = document.getElementById("operatorProfileCalendarMonth");
+  const grid = document.getElementById("operatorProfileCalendarGrid");
+  if (!label || !grid) return;
+  label.textContent = month.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  const weekdays = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
+  const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const todayKey = localDateKey(new Date());
+  grid.innerHTML = weekdays.map(day => `<strong>${day}</strong>`).join("")
+    + Array(offset).fill("<span></span>").join("")
+    + Array.from({ length: count }, (_, index) => {
+      const day = index + 1;
+      const key = localDateKey(new Date(month.getFullYear(), month.getMonth(), day));
+      const dayClass = busyDates.has(key) ? "is-busy" : key < todayKey ? "is-past" : "is-free";
+      const label = dayClass === "is-busy" ? "დაკავებულია" : dayClass === "is-free" ? "თავისუფალია" : "გასული დღე";
+      return `<span class="operator-profile-calendar-day ${dayClass}" aria-label="${day} — ${label}">${day}</span>`;
+    }).join("");
+  const previous = document.getElementById("operatorProfileCalendarPrevious");
+  if (previous) previous.disabled = month <= minMonth;
 }
 
 async function loadAvailabilityMonth(userId) {
@@ -2103,33 +2204,55 @@ async function showOperatorProfile(operatorId) {
   const phoneLink = phone.replace(/[^+\d]/g, "");
   const age = data.age ? escapeHtml(data.age) : "";
   const contactMarkup = phoneLink
-    ? `<button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">Show phone number</button><p id="operatorPhoneValue" class="hidden" data-user-content><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p>`
-    : "<p class=\"muted\">No phone number provided.</p>";
+    ? `<div class="operator-profile-contact"><button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">ნომრის ჩვენება</button><p id="operatorPhoneValue" class="operator-profile-contact-value hidden" data-user-content><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p></div>`
+    : "<p class=\"muted\">ტელეფონის ნომერი მითითებული არ არის.</p>";
   const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
+  const aboutMarkup = data.about ? `<section class="operator-profile-about"><h3>ჩემ შესახებ</h3><p>${about}</p></section>` : "";
   const certificateMarkup = data.certificate_url ? `
     <figure class="operator-certificate">
-      <figcaption class="muted" style="margin-bottom:6px;">Crane certificate · tap to enlarge</figcaption>
+      <figcaption>კოშკურა ამწის სერტიფიკატი · გასადიდებლად დააჭირე</figcaption>
       <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="კოშკურა ამწის სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
     </figure>` : "";
 
   content.innerHTML = `
-    <button class="secondary" onclick="showOperators()">Back to Operators</button>
-    <div class="card" style="margin-top: 15px;">
-      ${operatorPhotoMarkup(cardProfile, true)}
-      <h2 data-user-content>${name}</h2>
+    <button class="secondary" onclick="showOperators()">ოპერატორებზე დაბრუნება</button>
+    <div class="card operator-profile-card">
+      <div class="operator-profile-layout">
+        <section class="operator-profile-main">
+          <div class="operator-profile-summary">
+            ${operatorPhotoMarkup(cardProfile, true)}
+            <div class="operator-profile-identity">
+              <h2 data-user-content>${name}</h2>
+              <p class="operator-profile-type">${operatorType}${data.crane_control_type ? ` · ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}` : ""}</p>
+              <dl class="operator-profile-facts">
+                <div class="operator-profile-fact"><dt>გამოცდილება</dt><dd>${experience} წელი</dd></div>
+                ${age ? `<div class="operator-profile-fact"><dt>ასაკი</dt><dd>${age}</dd></div>` : ""}
+                <div class="operator-profile-fact"><dt>ქალაქი</dt><dd data-user-content>${location || "—"}</dd></div>
+              </dl>
+            </div>
+          </div>
+          ${data.contact_anytime ? "<span class=\"status-badge\">დარეკვა ნებისმიერ დროს</span>" : ""}
+          ${contactMarkup}
+          ${aboutMarkup}
+        </section>
+        <aside class="operator-profile-calendar" aria-label="ოპერატორის თავისუფალი და დაკავებული დღეების კალენდარი">
+          <div class="operator-profile-calendar-head">
+            <h3>კალენდარი</h3>
+            <button id="operatorProfileCalendarPrevious" class="operator-profile-calendar-nav" type="button" aria-label="წინა თვე" onclick="moveOperatorProfileCalendar(-1)">‹</button>
+            <span id="operatorProfileCalendarMonth" class="operator-profile-calendar-month"></span>
+            <button class="operator-profile-calendar-nav" type="button" aria-label="შემდეგი თვე" onclick="moveOperatorProfileCalendar(1)">›</button>
+          </div>
+          <div class="operator-profile-calendar-legend">
+            <span><i style="background:#174b35"></i>თავისუფალი</span>
+            <span><i style="background:#a32a30"></i>დაკავებული</span>
+          </div>
+          <div id="operatorProfileCalendarGrid" class="operator-profile-calendar-grid"><p class="operator-profile-calendar-error">კალენდარი იტვირთება…</p></div>
+        </aside>
+      </div>
       ${certificateMarkup}
-      <p class="muted">${operatorType}</p>
-      ${data.crane_control_type ? `<p>ამწის მართვა: ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}</p>` : ""}
-      ${age ? `<p>ასაკი: ${age}</p>` : ""}
-      <p data-user-content>${location || ""}</p>
-      <p>გამოცდილება: ${experience} წელი</p>
-      ${data.contact_anytime ? "<p class=\"status-badge\">Call me anytime</p>" : ""}
-      <p class="muted">Check free days</p>
-      <button class="secondary" type="button" onclick="showOperatorBusyCalendar('${escapeHtml(operatorId)}')">📅 View calendar</button>
-      ${contactMarkup}
-      <p style="white-space: pre-wrap; margin-top: 15px;">${about}</p>
     </div>
   `;
+  await loadOperatorProfileCalendar(operatorId);
 }
 
 function toggleCertificatePhoto(image) {
