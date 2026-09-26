@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Noto+Sans+Georgian:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <title>Opero — Heavy Equipment Operator Network</title>
 
@@ -13,7 +16,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     body {
@@ -31,10 +34,18 @@
     }
 
     .logo {
-      font-size: 24px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: white;
+      font-family: "Bahnschrift", "Manrope", "Arial Black", Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: 26px;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: .7px;
+      cursor: pointer;
     }
+    .logo .logo-o { color: #e5252a; }
+    .logo .logo-rest { font-size: .84em; }
 
     nav button {
       background: none;
@@ -47,6 +58,15 @@
 
     nav button:hover {
       color: white;
+    }
+    nav button:hover:not(:disabled), nav button:focus-visible:not(:disabled), nav button:active:not(:disabled) {
+      outline: 1px solid #fff;
+      outline-offset: 1px;
+      border: 1px solid #fff;
+      border-radius: 7px;
+      background: transparent;
+      color: #fff;
+      box-shadow: none;
     }
 
     .hero {
@@ -64,6 +84,21 @@
       font-size: 18px;
       margin-bottom: 30px;
     }
+    #home .hero { max-width: 1120px; margin: 0 auto; padding: 38px 20px 54px; }
+    .home-hero-photo { position:relative; width: min(100%, 940px); height: clamp(260px, 38vw, 420px); margin: 0 auto; overflow: hidden; border: 1px solid #303945; border-radius: 16px; background: #121820; }
+    .home-hero-photo::after { position:absolute; inset:0; background:linear-gradient(90deg, rgb(7 10 14 / 46%), rgb(7 10 14 / 28%)); content:""; }
+    .home-hero-photo > img { display:block; width:100%; height:100%; object-fit:cover; object-position:center 52%; filter:blur(.6px) brightness(.9); transform:scale(1.015); }
+    .home-hero-overlay { position:absolute; z-index:1; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; }
+    .home-hero-overlay { font-family:"Noto Sans Georgian", Inter, ui-sans-serif, system-ui, sans-serif; }
+    #home .hero h1 { max-width:760px; margin:0; color:#fff; font-family:"Bahnschrift", "Manrope", "Arial Black", Inter, ui-sans-serif, system-ui, sans-serif; font-size:clamp(48px, 6vw, 60px); font-weight:800; line-height:1; letter-spacing:.7px; text-shadow:0 2px 14px rgb(0 0 0 / 24%); }
+    #home .home-brand-o { color:#e5252a; }
+    #home .home-brand-rest { font-size:.84em; }
+    #home .hero p { max-width:680px; margin:0; color:#cbd1d8; font-family:"Noto Sans Georgian", sans-serif; font-size:clamp(15px, 1.6vw, 18px); font-weight:400; line-height:1.6; text-shadow:0 2px 10px rgb(0 0 0 / 35%); }
+    .home-hero-overlay h1, .home-hero-overlay p, #homeCtas .home-cta-button { font-family:"Noto Sans Georgian", Inter, ui-sans-serif, system-ui, sans-serif; }
+    #homeCtas { display:flex; justify-content:center; gap:10px; }
+    #homeCtas .home-cta-button { min-width:150px; min-height:46px; margin:0; padding:11px 20px; }
+    #homeCtas .home-cta-primary { border-color:#e5252a; background:#e5252a; color:#fff; }
+    #homeCtas .home-cta-secondary { border-color:#3b434d; background:#1b222c; color:#fff; }
 
     .buttons button,
     .form button {
@@ -102,6 +137,299 @@
 
     .muted {
       color: #9299a3;
+    }
+
+    .operator-card {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      padding: 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .operator-card:hover, .operator-card:focus-visible {
+      border-color: #e5252a;
+      background:#151c24;
+      transform: translateY(-1px);
+      outline: none;
+    }
+    .operator-card-main { display:flex; align-items:center; gap:13px; min-width:0; }
+    .operator-avatar {
+      flex:0 0 68px;
+      width: 68px;
+      height: 68px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #1b222c;
+      border: 1px solid #39424d;
+    }
+    .operator-card-copy { min-width:0; flex:1; }
+    .operator-card-copy h3 { margin:0 0 4px; color:#fff; font-size:17px; line-height:1.3; overflow-wrap:anywhere; }
+    .operator-card-type { margin:0 0 5px; color:#b7c0ca; font-size:13px; line-height:1.4; }
+    .operator-card-experience { margin:0; color:#e3e7eb; font-size:13px; line-height:1.4; }
+    .operator-card-location { margin:0; color:#aeb7c1; font-size:13px; }
+    .operator-card .status-badges { margin:0; }
+    .operator-card-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; padding-top:9px; border-top:1px solid #28313b; color:#c2c9d1; font-size:12px; }
+    .operator-card-footer .calendar-hint { flex:0 0 auto; color:#f1f3f5; }
+    #operatorResults, #jobResults { display:grid; gap:12px; }
+    #operatorResults > .card, #jobResults > .card { margin:0; }
+    .job-card { display:grid; gap:12px; padding:16px; border-radius:14px; }
+    .job-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; min-width:0; padding:0; border:0; background:transparent; }
+    .job-card-title-wrap { min-width:0; }
+    .job-card-kind { display:inline-flex; margin-bottom:5px; padding:3px 8px; border:1px solid #39424d; border-radius:999px; color:#cbd1d8; font-size:11px; line-height:1.3; }
+    .job-card h3 { margin:0; color:#fff; font-size:17px; line-height:1.35; overflow-wrap:anywhere; }
+    .job-card-company { margin:4px 0 0; color:#aeb7c1; font-size:12px; }
+    .job-card-calendar { flex:0 0 38px; width:38px; min-width:38px; height:38px; padding:0; border:1px solid #39424d; border-radius:9px; background:#1b222c; color:#fff; }
+    .job-card-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .job-card-fact { min-width:0; padding:8px 10px; border:1px solid #28313b; border-radius:9px; background:#0e141a; }
+    .job-card-fact-label { display:block; margin-bottom:3px; color:#929eaa; font-size:11px; }
+    .job-card-fact-value { display:block; color:#edf0f3; font-size:13px; line-height:1.4; overflow-wrap:anywhere; }
+    .job-card-description { margin:0; color:#d4d9df; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .job-card-footer { display:flex; align-items:center; gap:5px; padding:8px 0 0; border-top:1px solid #28313b; color:#929eaa; font-size:12px; text-align:left; }
+    .job-card-footer .text-link { color:#f1f3f5; }
+    .operator-profile-photo {
+      width: min(220px, 60vw);
+      height: min(220px, 60vw);
+      border-radius: 16px;
+      object-fit: cover;
+      background: #25282b;
+      border: 2px solid #e5252a;
+    }
+    #profileSection {
+      width: min(940px, 100%);
+      margin: 28px auto;
+      padding: 0 20px;
+    }
+    .profile-shell {
+      padding: clamp(18px, 3vw, 30px);
+      border: 1px solid #242c35;
+      border-radius: 16px;
+      background: #10161d;
+    }
+    .profile-shell > h2 { margin-bottom: 6px; }
+    .profile-account-type { margin-bottom: 20px; }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .profile-panel {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid #242c35;
+      border-radius: 12px;
+      background: #121820;
+    }
+    .profile-panel.full { grid-column: 1 / -1; }
+    .profile-panel h3 { margin-bottom: 6px; }
+    .profile-panel > .muted { margin-bottom: 16px; line-height: 1.5; }
+    .profile-overview {
+      display: flex;
+      align-items: flex-start;
+      gap: 22px;
+    }
+    .profile-overview-photo {
+      display: grid;
+      flex: 0 0 116px;
+      width: 116px;
+      height: 116px;
+      overflow: hidden;
+      place-items: center;
+      border: 1px solid var(--opero-border);
+      border-radius: 14px;
+      background: #eef0f2;
+      color: var(--opero-red);
+      font-size: 36px;
+      font-weight: 700;
+    }
+    .profile-overview-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .profile-overview-details { flex: 1; min-width: 0; }
+    .profile-overview-heading, .profile-panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .profile-overview-heading h3 { margin: 0; font-size: 22px; }
+    .profile-overview-heading .muted { margin: 2px 0 0; font-size: 13px; }
+    .profile-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .profile-info-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #f7f8f9;
+    }
+    .profile-info-cell span { color: var(--opero-muted); font-size: 11px; }
+    .profile-info-cell strong {
+      overflow-wrap: anywhere;
+      color: var(--opero-ink);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .profile-panel-heading { margin-bottom: 16px; }
+    .profile-panel-heading h3 { margin-bottom: 2px; }
+    .profile-panel-heading .muted { margin: 0; font-size: 13px; }
+    .profile-photo-preview {
+      display: block;
+      width: 72px;
+      height: 72px;
+      margin-top: 12px;
+      border: 1px solid var(--opero-border);
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .availability-calendar-card {
+      grid-column: 1;
+      width: 100%;
+      max-width: 390px;
+      padding: 16px;
+    }
+    .availability-calendar-card > .muted { margin: 4px 0 12px; font-size: 13px; }
+    .availability-calendar-card > div:first-of-type { gap: 8px !important; }
+    .availability-calendar-card > div:first-of-type button {
+      min-height: 34px;
+      padding: 5px 9px;
+      font-size: 12px;
+    }
+    #availabilityCalendarGrid {
+      max-width: 340px;
+      margin: 10px auto 12px !important;
+      gap: 3px !important;
+    }
+    #availabilityCalendarGrid strong { font-size: 11px; }
+    #availabilityCalendarGrid button {
+      width: 100%;
+      min-width: 0;
+      min-height: 31px;
+      height: 31px;
+      padding: 0 !important;
+      border-radius: 7px;
+      font-size: 12px;
+    }
+    .profile-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 14px;
+    }
+    .profile-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+      color: #d7dde5;
+      font-size: 14px;
+    }
+    .profile-field.wide { grid-column: 1 / -1; }
+    .profile-field input, .profile-field select, .profile-field textarea {
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      padding: 11px 12px;
+      border: 1px solid #303945;
+      border-radius: 8px;
+      background: #0b0f14;
+      color: white;
+    }
+    .profile-field textarea { min-height: 100px; resize: vertical; }
+    .profile-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      color: #d7dde5;
+    }
+    .profile-checkbox input { width: 18px; height: 18px; accent-color: #e5252a; }
+    .profile-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    #operatorPhoneValue a, #operatorPhoneValue a:visited { color: #fff; }
+    #operatorPhoneValue a:hover { color: #fff; text-decoration: underline; }
+    @media (max-width: 640px) {
+      .profile-grid, .profile-fields { grid-template-columns: minmax(0, 1fr); }
+      .profile-panel.full, .profile-field.wide { grid-column: auto; }
+      .profile-actions { flex-wrap: wrap; }
+      .profile-overview { gap: 12px; padding: 14px; }
+      .profile-overview-photo { flex-basis: 78px; width: 78px; height: 78px; border-radius: 11px; font-size: 26px; }
+      .profile-overview-heading { align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+      .profile-overview-heading h3 { font-size: 18px; }
+      .profile-info-grid { gap: 6px; }
+      .profile-info-cell { padding: 7px; }
+      .profile-info-cell strong { font-size: 12px; }
+      .availability-calendar-card { grid-column: auto; max-width: 360px; }
+    }
+
+    button.text-link {
+      padding: 0;
+      border: 0;
+      background: none;
+      color: #d7dde5;
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .unread-badge {
+      display: inline-block;
+      min-width: 19px;
+      padding: 2px 6px;
+      margin-left: 4px;
+      border-radius: 999px;
+      background: #e65f5f;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .notification-card.unread {
+      border-color: #4a8ac7;
+      background: #162433;
+    }
+
+    .notification-card.read {
+      opacity: .78;
+    }
+
+    .notification-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .status-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border: 1px solid #303945;
+      border-radius: 999px;
+      background: #1b222c;
+      color: #d7dde5;
+      font-size: 13px;
     }
 
     .form {
@@ -149,25 +477,184 @@
       color: #666;
       padding: 50px 20px;
     }
-  </style>
+
+    :root {
+      --opero-red: #e5252a;
+      --opero-red-dark: #e5252a;
+      --opero-ink: #ffffff;
+      --opero-dark: #ffffff;
+      --opero-page: #0b0f14;
+      --opero-white: #121820;
+      --opero-border: #242c35;
+      --opero-muted: #9299a3;
+    }
+
+    button:hover:not(:disabled), button:focus-visible:not(:disabled), button:active:not(:disabled) {
+      outline: 1px solid #e5252a;
+      outline-offset: 1px;
+      border-color: #e5252a;
+      background-color: transparent;
+      color: #fff;
+      box-shadow: none;
+      transform: none;
+    }
+    .logo:hover:not(:disabled), .logo:focus-visible:not(:disabled), .logo:active:not(:disabled) {
+      outline: none;
+      border: 0;
+      background: none;
+      color: #fff;
+      box-shadow: none;
+      transform: none;
+    }
+    button.secondary:hover:not(:disabled), button.secondary:focus-visible:not(:disabled), button.secondary:active:not(:disabled),
+    .buttons button.secondary:hover:not(:disabled) {
+      outline: 1px solid #e5252a;
+      outline-offset: 1px;
+      border-color: #e5252a;
+      background-color: #1b222c;
+      color: #fff;
+      box-shadow: none;
+    }
+    .profile-info-cell {
+      border-color: #303945;
+      background: #0b0f14;
+    }
+    .profile-info-cell span { color: #9299a3; }
+    .profile-info-cell strong { color: #fff; }
+    .replacement-job-entry { margin: 16px 0 20px; }
+    .replacement-form-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 58px;
+      padding: 14px 18px;
+      border: 1px solid #303945;
+      border-left: 4px solid #e5252a;
+      border-radius: 12px;
+      background: #121820;
+      color: #fff;
+      text-align: left;
+    }
+    .replacement-toggle-icon { color: #e5252a; font-size: 23px; line-height: 1; }
+    .replacement-job-entry .card { margin-top: 12px; }
+    #jobSearch { width: 100%; box-sizing: border-box; margin: 16px 0; }
+    .registration-image-actions { display:flex; flex-wrap:wrap; gap:7px; margin:6px 0 12px; }
+    .registration-image-actions button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:36px; padding:7px 11px; font-size:13px; }
+    .registration-image-actions svg { width:17px; height:17px; flex:0 0 17px; }
+    #registerSection .form { max-width:480px; padding:22px; }
+    #registerSection .form h2 { margin-bottom:14px; font-size:21px; }
+    .registration-fields { display:grid; gap:0; }
+    .registration-field { display:grid; gap:6px; margin-bottom:11px; color:#d9dee5; font-size:13px; font-weight:600; }
+    .registration-field > input, .registration-field > select { margin:0; min-height:43px; padding:10px 12px; font-size:14px; }
+    .registration-question { margin-bottom:7px; color:#d9dee5; font-size:13px; font-weight:650; }
+    .registration-choice-row { display:flex; flex-wrap:wrap; gap:8px; }
+    .registration-choice { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:7px 11px; border:1px solid #303945; border-radius:8px; background:#0b0f14; color:#f1f3f5; font-size:13px; font-weight:500; cursor:pointer; }
+    .registration-choice input { width:16px !important; height:16px; min-height:16px !important; margin:0 !important; padding:0 !important; accent-color:#e5252a; }
+    .registration-phone-row { display:flex; align-items:center; gap:8px; }
+    .registration-phone-row > span { padding:11px 12px; border:1px solid #303945; border-radius:8px; background:#121820; color:white; }
+    .registration-phone-row > input { flex:1; min-width:0; margin:0; }
+    .registration-password-fields { margin-top:10px; }
+    .operator-certificate { margin:16px 0; }
+    .operator-certificate img { display:block; width:118px; max-height:84px; object-fit:contain; padding:4px; border:1px solid #303945; border-radius:8px; background:#fff; cursor:zoom-in; transition:width .18s ease, max-height .18s ease; }
+    .operator-certificate img.is-expanded { width:min(100%, 480px); max-height:70vh; height:auto; cursor:zoom-out; }
+    .operator-profile-card { display:grid; gap:18px; margin-top:14px; padding:18px; }
+    .operator-profile-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,290px); align-items:start; gap:18px; }
+    .operator-profile-main { min-width:0; display:grid; align-content:start; gap:14px; }
+    .operator-profile-summary { display:flex; align-items:flex-start; gap:14px; min-width:0; }
+    .operator-profile-card .operator-profile-photo { flex:0 0 96px; width:96px; height:96px; border-radius:13px; }
+    .operator-profile-identity { min-width:0; }
+    .operator-profile-identity h2 { margin:0 0 4px; font-size:20px; line-height:1.3; overflow-wrap:anywhere; }
+    .operator-profile-type { margin:0 0 9px; color:#c4ccd5; font-size:13px; line-height:1.4; }
+    .operator-profile-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; margin:0; }
+    .operator-profile-fact { min-width:0; padding:8px 9px; border:1px solid #2b3540; border-radius:8px; background:#0e141a; }
+    .operator-profile-fact dt { margin-bottom:2px; color:#929eaa; font-size:10px; }
+    .operator-profile-fact dd { margin:0; color:#eef1f4; font-size:12px; line-height:1.4; overflow-wrap:anywhere; }
+    .operator-profile-contact { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+    .operator-profile-contact button { min-height:36px; padding:8px 11px; font-size:12px; }
+    .operator-profile-contact-value { margin:0; color:#fff; font-weight:600; }
+    .operator-profile-contact-value a, .operator-profile-contact-value a:visited { color:#fff; text-decoration:none; }
+    .operator-profile-about { padding-top:12px; border-top:1px solid #28313b; }
+    .operator-profile-about h3 { margin:0 0 5px; color:#d7dde5; font-size:13px; }
+    .operator-profile-about p { margin:0; color:#c0c8d1; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .operator-profile-calendar { min-width:0; padding:13px; border:1px solid #2b3540; border-radius:12px; background:#0e141a; }
+    .operator-profile-calendar-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+    .operator-profile-calendar-head h3 { margin:0; color:#f4f6f8; font-size:14px; }
+    .operator-profile-calendar-month { flex:1; text-align:center; color:#d7dde5; font-size:12px; font-weight:600; }
+    .operator-profile-calendar-nav { width:30px; min-width:30px; height:30px; padding:0; border:1px solid #36414d; border-radius:7px; background:#171f28; color:#fff; line-height:1; }
+    .operator-profile-calendar-legend { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:9px; color:#aeb7c1; font-size:10px; }
+    .operator-profile-calendar-legend span { display:inline-flex; align-items:center; gap:5px; }
+    .operator-profile-calendar-legend i { width:9px; height:9px; border-radius:3px; }
+    .operator-profile-calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; text-align:center; }
+    .operator-profile-calendar-grid strong { padding:3px 0; color:#929eaa; font-size:10px; font-weight:500; }
+    .operator-profile-calendar-day { display:grid; min-height:29px; place-items:center; border-radius:6px; font-size:11px; font-weight:600; }
+    .operator-profile-calendar-day.is-free { background:#174b35; color:#a8efc4; }
+    .operator-profile-calendar-day.is-busy { background:#a32a30; color:#fff; }
+    .operator-profile-calendar-day.is-past { background:#1b222c; color:#707b87; }
+    .operator-profile-calendar-error { grid-column:1/-1; margin:4px 0; color:#f1a4a7; font-size:11px; }
+    .operator-profile-card .operator-certificate { margin:0; padding-top:14px; border-top:1px solid #28313b; }
+    .operator-profile-card .operator-certificate figcaption { margin-bottom:7px; color:#c4ccd5; font-size:12px; }
+    @media (max-width: 760px) { .operator-profile-layout { grid-template-columns:minmax(0,1fr); } .operator-profile-calendar { width:100%; max-width:360px; } }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .container { width: min(100% - 40px, 960px); }
+      #profileSection { width: min(100%, 940px); }
+    }
+    @media (max-width: 640px) {
+      body { overflow-x: hidden; padding-bottom: 24px; }
+      header { min-width: 0; flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+      .logo { font-size: 21px; }
+      nav { width: 100%; max-width: 100%; gap: 4px; overflow-x: auto; }
+      nav { justify-content: flex-end; margin-left: auto; }
+      nav button { flex: 0 0 auto; min-height: 40px; margin: 0; padding: 8px 10px; white-space: nowrap; }
+      nav #logoutNav { position: static; transform: none; }
+      #profileSection, .container { width: 100%; max-width: 100%; padding-left: 14px; padding-right: 14px; }
+      #registerSection .form { margin:18px auto; padding:18px 15px; }
+      .hero { padding: 42px 18px 38px; }
+      #home .hero { padding: 24px 14px 38px; }
+      .home-hero-photo { height: clamp(285px, 82vw, 360px); border-radius: 12px; }
+      .home-hero-overlay { gap:10px; padding:16px; }
+      .hero h1 { font-size: clamp(30px, 9vw, 42px); }
+      #home .hero h1 { max-width: 100%; font-size: clamp(42px, 12vw, 50px); line-height:1; overflow-wrap:normal; }
+      #home .hero p { max-width: 100%; font-size: clamp(13px, 3.8vw, 15px); line-height:1.5; margin: 0; }
+      #homeCtas { gap:8px; }
+      #homeCtas { width:100%; }
+      #homeCtas .home-cta-button { flex:1 1 0; width:100%; min-width:0; min-height:44px; padding:9px 3px; font-size:clamp(12px, 3.8vw, 14px); line-height:1.25; white-space:nowrap; }
+      .card { padding: 15px; }
+      .form { width: 100%; max-width: none; box-sizing: border-box; margin: 20px auto; padding: 18px 15px; }
+      .form input, .form select, .form textarea { max-width: 100%; min-width: 0; box-sizing: border-box; }
+      .buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+      .buttons button { flex: 1 1 130px; min-width: 0; white-space: normal; }
+      .profile-overview, .profile-summary { flex-wrap: wrap; }
+      .profile-overview > *, .profile-summary > * { min-width: 0; }
+      .replacement-form-toggle { min-height: 54px; padding: 12px 14px; }
+      .registration-image-actions button { flex:0 1 auto; }
+      #jobSearch { margin: 14px 0; }
+      .operator-profile-card { gap:14px; padding:14px; }
+      .operator-profile-layout { gap:14px; }
+      .operator-profile-summary { gap:11px; }
+      .operator-profile-card .operator-profile-photo { flex-basis:78px; width:78px; height:78px; border-radius:10px; }
+      .operator-profile-identity h2 { font-size:18px; }
+      .operator-profile-calendar { max-width:none; padding:11px; }
+      #operatorAvailabilityCalendar, #availabilityCalendarGrid { max-width: 100%; box-sizing: border-box; overflow-x: auto; }
+      img { max-width: 100%; }
+    }  </style>
 </head>
 
 <body>
 
 <header>
-  <div class="logo">OPERO</div>
+  <button class="logo" type="button" onclick="goHomeAndRefresh()" aria-label="Opero home"><span class="logo-o">O</span><span class="logo-rest">PERO</span></button>
 
-  <nav>
-    <button onclick="showHome()">Home</button>
-    <button onclick="showOperators()">Operators</button>
-    <button onclick="showJobs()">Jobs</button>
-    <button id="loginNav" onclick="showLogin()">Login</button>
-    <button id="registerNav" onclick="showRegister()">Register</button>
+  <nav class="hidden">
+    <button id="operatorsNav" class="hidden" onclick="showOperators()">Operators</button>
+    <button id="jobsNav" class="hidden" onclick="showJobs()">Jobs</button>
+    <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications <span id="applicationsUnreadBadge" class="unread-badge hidden">0</span></button>
+    <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
+    <button id="loginNav" class="hidden" onclick="showLogin()">Login</button>
     <button id="profileNav" class="hidden" onclick="showProfile()">My Profile</button>
-    <button id="loginNav" onclick="showLogin()">Login</button>
-<button id="registerNav" onclick="showRegister()">Register</button>
-<button id="logoutNav" class="hidden" onclick="logout()">Logout</button>
-<button id="logoutNav" class="hidden" onclick="logout()">Logout</button>
+    <button id="logoutNav" class="hidden" onclick="logout()">Logout</button>
   </nav>
 </header>
 
@@ -176,16 +663,17 @@
 
   <div class="hero">
 
-    <h1>Heavy Equipment Operator Network</h1>
-
-    <p>
-      Connect operators, companies and construction jobs.
-    </p>
-
-    <div class="buttons">
-      <button onclick="showRegister()">Create Profile</button>
-      <button class="secondary" onclick="showJobs()">Find Jobs</button>
-    </div>
+    <figure class="home-hero-photo">
+      <img src="https://images.unsplash.com/photo-1638873662638-77062e9788d4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=85&amp;w=1800" alt="Wide view of tower cranes with long horizontal booms above a construction site" fetchpriority="high">
+      <figcaption class="home-hero-overlay">
+        <h1 aria-label="Opero"><span class="home-brand-o">O</span><span class="home-brand-rest">PERO</span></h1>
+        <p>სამშენებლო სფეროს შესაძლებლობები ერთ სივრცეში</p>
+        <div class="buttons" id="homeCtas" aria-live="polite">
+          <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
+          <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
+        </div>
+      </figcaption>
+    </figure>
 
   </div>
 
@@ -198,22 +686,148 @@
 
 </section>
 
+<section id="profileSection" class="hidden">
+  <div class="profile-shell">
+    <h2>My Profile</h2>
+    <p class="muted profile-account-type">Account type: <strong id="profileAccountTypeLabel"></strong></p>
+    <div class="profile-grid">
+      <div id="operatorProfileOverview" class="profile-panel profile-overview full hidden">
+        <div class="profile-overview-photo">
+          <img id="profileSummaryPhoto" class="hidden" alt="Profile photo">
+          <div id="profileSummaryInitial" aria-hidden="true"></div>
+        </div>
+        <div class="profile-overview-details">
+          <div class="profile-overview-heading">
+            <div>
+              <h3 id="profileSummaryName" data-user-content></h3>
+              <p class="muted">Professional operator profile</p>
+            </div>
+            <button type="button" class="secondary" onclick="togglePersonalProfileEditor()">Edit profile</button>
+          </div>
+          <div class="profile-info-grid">
+            <div class="profile-info-cell"><span>Age</span><strong id="profileSummaryAge"></strong></div>
+            <div class="profile-info-cell"><span>Phone</span><strong id="profileSummaryPhone" data-user-content></strong></div>
+            <div class="profile-info-cell"><span>City</span><strong id="profileSummaryCity" data-user-content></strong></div>
+            <div class="profile-info-cell"><span>Country</span><strong id="profileSummaryCountry" data-user-content></strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="profilePersonalEditor" class="profile-panel full hidden">
+        <div class="profile-panel-heading">
+          <div><h3 id="personalEditorTitle">Edit personal information</h3><p class="muted">Update your contact details and profile photo.</p></div>
+          <button id="closePersonalEditor" type="button" class="text-link" onclick="togglePersonalProfileEditor()">Close</button>
+        </div>
+        <div class="profile-fields">
+          <label class="profile-field">Full name
+            <input id="profileName" type="text" placeholder="Full name">
+          </label>
+          <label id="profileAgeField" class="profile-field">Age
+            <input id="profileAge" type="number" min="16" max="100" step="1" placeholder="Age">
+          </label>
+          <label class="profile-field">Phone
+            <input id="profilePhone" type="text" placeholder="Phone">
+          </label>
+          <label class="profile-field">City
+            <input id="profileCity" type="text" placeholder="City">
+          </label>
+          <label class="profile-field">Country
+            <input id="profileCountry" type="text" placeholder="Country">
+          </label>
+          <div id="companyAddressField" class="profile-field hidden">Company address
+            <input id="profileCompanyAddress" type="text" placeholder="Company address">
+          </div>
+          <div id="companyEmailProfileField" class="profile-field hidden">Company email
+            <input id="profileCompanyEmail" type="email" placeholder="Company email">
+          </div>
+          <label id="operatorPhotoProfileField" class="profile-field">Profile photo
+            <input id="profilePhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onchange="previewOperatorPhoto(this.files?.[0])">
+          </label>
+        </div>
+        <img id="profilePhotoPreview" class="profile-photo-preview hidden" alt="New profile photo preview">
+        <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save profile</button>
+      </div>
+
+      <div id="operatorCardDetails" class="profile-panel full hidden">
+        <h3>Operator card information</h3>
+        <p class="muted">This is the professional information people see on your operator card.</p>
+        <div class="profile-fields">
+          <label id="operatorTypeProfileField" class="profile-field">Equipment type
+            <select id="profileOperatorType">
+              <option value="">Select operator type</option>
+              <option value="Tower Crane Operator">Tower Crane Operator</option>
+              <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+              <option value="Excavator Operator">Excavator Operator</option>
+              <option value="Loader Operator">Loader Operator</option>
+              <option value="Forklift Operator">Forklift Operator</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label class="profile-field">Tower crane operation
+            <select id="profileCraneControlType">
+              <option value="">Select operation type</option>
+              <option value="Remote control">From the ground with remote control</option>
+              <option value="Cabin">From the cabin</option>
+              <option value="Both">Both</option>
+            </select>
+          </label>
+          <label class="profile-field">Years of experience
+            <input id="profileExperience" type="number" min="0" placeholder="Experience years">
+          </label>
+          <label id="operatorAvailabilityFields" class="profile-field">Currently employed?
+            <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
+              <option value="">Select yes or no</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+          <label class="profile-field wide">About you
+            <textarea id="profileAbout" placeholder="About you"></textarea>
+          </label>
+          <label class="profile-checkbox wide">
+            <input id="profileContactAnytime" type="checkbox">
+            Call me anytime
+          </label>
+        </div>
+        <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save operator card</button>
+      </div>
+
+      <div id="operatorAvailabilityCalendar" class="profile-panel availability-calendar-card hidden">
+        <h3>Mark your busy days</h3>
+        <p class="muted">Choose dates when you are unavailable for replacement work.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <button type="button" class="secondary" onclick="moveAvailabilityMonth(-1)">Previous</button>
+          <strong id="availabilityMonthLabel"></strong>
+          <button type="button" class="secondary" onclick="moveAvailabilityMonth(1)">Next</button>
+        </div>
+        <div id="availabilityCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;margin-top:12px;"></div>
+        <button class="secondary" type="button" onclick="saveAvailabilityMonth()">Save busy days</button>
+        <p class="status" id="availabilityCalendarStatus"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 <section id="loginSection" class="hidden">
 
-  <div class="form">
+  <form class="form" id="loginForm" onsubmit="login(event)">
 
-    <h2>Login</h2>
+    <h2>შესვლა</h2>
 
-    <input id="loginEmail" type="email" placeholder="Email">
+    <div id="loginPhoneRow" class="registration-phone-row">
+      <span>+995</span>
+      <input id="loginPhone" type="tel" inputmode="numeric" placeholder="ტელეფონის ნომერი" autocomplete="tel-national" required>
+    </div>
 
-    <input id="loginPassword" type="password" placeholder="Password">
+    <input id="loginPassword" type="password" placeholder="პაროლი" autocomplete="current-password" required>
 
-    <button onclick="login()">Login</button>
+    <button type="submit">შესვლა</button>
 
     <p class="status" id="loginStatus"></p>
+    <p class="muted">არ გაქვს ანგარიში? <button class="text-link" type="button" onclick="showRegister()">რეგისტრაცია</button></p>
 
-  </div>
+  </form>
 
 </section>
 
@@ -222,40 +836,84 @@
 
   <div class="form">
 
-    <h2>Create Operator Profile</h2>
+    <h2>შექმენი Opero-ს ანგარიში</h2>
 
-    <input id="fullName" placeholder="Full name">
+    <div id="operatorRegistrationFields" class="registration-fields">
+      <label class="registration-field">სახელი გვარი
+        <input id="fullName" placeholder="სახელი გვარი" autocomplete="name" required>
+      </label>
+      <label class="registration-field">ქალაქი
+        <input id="city" placeholder="ქალაქი" autocomplete="address-level2" required>
+      </label>
+      <input id="operatorCountry" type="hidden" value="Georgia">
+      <label class="registration-field">ასაკი
+        <input id="age" type="number" min="16" max="100" step="1" placeholder="ასაკი" required>
+      </label>
+      <div class="registration-field">
+        <span class="registration-question">დასაქმებული ხართ?</span>
+        <div class="registration-choice-row">
+          <label class="registration-choice"><input id="registerEmployedYes" type="checkbox" value="yes" onchange="setRegistrationEmploymentChoice('yes', this)"> კი</label>
+          <label class="registration-choice"><input id="registerEmployedNo" type="checkbox" value="no" onchange="setRegistrationEmploymentChoice('no', this)"> არა</label>
+        </div>
+      </div>
+      <label class="registration-field">რომელ ტექნიკას მართავ?
+        <select id="operatorType" required onchange="toggleRegistrationCraneControls(this.value)">
+        <option value="">აირჩიე ტექნიკა</option>
+        <option value="Tower Crane Operator">კოშკურა ამწის ოპერატორი</option>
+        <option value="Mobile Crane Operator">მობილური ამწის ოპერატორი</option>
+        <option value="Excavator Operator">ექსკავატორის ოპერატორი</option>
+        <option value="Forklift Operator">ავტოფორკლიფტის ოპერატორი</option>
+        <option value="Loader Operator">დამტვირთველის ოპერატორი</option>
+        <option value="Bulldozer Operator">ბულდოზერის ოპერატორი</option>
+        <option value="Telehandler Operator">ტელესკოპური დამტვირთველის ოპერატორი</option>
+        <option value="Road Roller Operator">საგზაო სატკეპნის ოპერატორი</option>
+        <option value="Motor Grader Operator">ავტოგრეიდერის ოპერატორი</option>
+        <option value="Concrete Pump Operator">ბეტონის ტუმბოს ოპერატორი</option>
+        <option value="Backhoe Loader Operator">ექსკავატორ-დამტვირთველის ოპერატორი</option>
+        <option value="Other">სხვა</option>
+        </select>
+      </label>
+      <div id="registrationCraneControlField" class="registration-field hidden">
+        <span class="registration-question">ამწე კოშკურაზე მუშაობა</span>
+        <span class="muted" style="font-size:12px;font-weight:400;">მონიშნე კაბინიდან ან ქვემოდან პულტით მუშაობა — შეიძლება ორივე</span>
+        <div class="registration-choice-row">
+          <label class="registration-choice"><input id="registrationCabinControl" type="checkbox" value="Cabin"> კაბინიდან</label>
+          <label class="registration-choice"><input id="registrationRemoteControl" type="checkbox" value="Remote control"> ქვემოდან პულტით</label>
+        </div>
+      </div>
+      <label class="registration-field">გამოცდილება (წლები)
+        <input id="experience" type="number" min="0" placeholder="გამოცდილება (წლები)" required>
+      </label>
+      <div class="registration-field">
+        <label class="registration-question" for="phone">ტელეფონის ნომერი</label>
+        <div id="registrationPhoneRow" class="registration-phone-row">
+          <span id="registrationPhonePrefix">+995</span>
+          <input id="phone" type="tel" inputmode="tel" placeholder="5XX XX XX XX" autocomplete="tel-national" required>
+        </div>
+      </div>
+      <div class="registration-fields registration-password-fields">
+        <label class="registration-field">პაროლი
+          <input id="registerPassword" type="password" placeholder="პაროლი" autocomplete="new-password" required>
+        </label>
+        <label class="registration-field">გაიმეორეთ პაროლი
+          <input id="registerPasswordConfirm" type="password" placeholder="გაიმეორეთ პაროლი" autocomplete="new-password" required>
+        </label>
+      </div>
+      <div class="registration-field">
+        <span class="registration-question">სერტიფიკატის ფოტო (სავალდებულო)</span>
+        <div class="registration-image-actions">
+          <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoCamera').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>ფოტოს გადაღება</button>
+          <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoUpload').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>ფოტოს ატვირთვა</button>
+        </div>
+      </div>
+      <input id="registrationCertificatePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
+      <input id="registrationCertificatePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
+    </div>
 
-    <input id="registerEmail" type="email" placeholder="Email">
-
-    <input id="registerPassword" type="password" placeholder="Password">
-
-    <input id="phone" placeholder="Phone">
-
-    <input id="city" placeholder="City">
-
-    <input id="country" value="Georgia" placeholder="Country">
-
-    <select id="operatorType">
-
-      <option value="">Operator type</option>
-      <option>Tower Crane Operator</option>
-      <option>Mobile Crane Operator</option>
-      <option>Excavator Operator</option>
-      <option>Forklift Operator</option>
-      <option>Loader Operator</option>
-      <option>Bulldozer Operator</option>
-      <option>Other</option>
-
-    </select>
-
-    <input id="experience" type="number" placeholder="Experience (years)">
-
-    <textarea id="about" placeholder="About you / experience"></textarea>
-
-    <button onclick="register()">Create Account</button>
+    <button onclick="register()">ანგარიშის შექმნა</button>
 
     <p class="status" id="registerStatus"></p>
+    <p class="muted">უკვე გაქვს ანგარიში? <button class="text-link" type="button" onclick="showLogin()">შესვლა</button></p>
 
   </div>
 
@@ -281,6 +939,77 @@ const supabaseClient =
     SUPABASE_ANON_KEY
   );
 
+const OPERO_HISTORY_KEY = "operoHistory";
+let restoringAppHistory = false;
+
+if (!window.history.state?.[OPERO_HISTORY_KEY]) {
+  window.history.replaceState({ [OPERO_HISTORY_KEY]: true, view: "home", args: [] }, "", window.location.href);
+}
+
+function persistAppView(state) {
+  try { sessionStorage.setItem("operoLastView", JSON.stringify(state)); } catch (_) {}
+}
+
+function setActiveNavigation(view) {
+  const activeId = view === "profile" ? "profileNav"
+    : ["operators", "operatorProfile"].includes(view) ? "operatorsNav"
+    : ["jobs", "replacementForm", "myJobs", "companyProfile"].includes(view) ? "jobsNav"
+    : null;
+  ["operatorsNav", "jobsNav", "profileNav"].forEach(id => {
+    document.getElementById(id)?.classList.toggle("active", id === activeId);
+  });
+}
+
+function saveAppView(view, args = []) {
+  setActiveNavigation(view);
+  if (restoringAppHistory) return;
+  const state = { [OPERO_HISTORY_KEY]: true, view, args };
+  window.history.pushState(state, "", window.location.href);
+  persistAppView(state);
+}
+
+function goHomeAndRefresh() {
+  const state = { [OPERO_HISTORY_KEY]: true, view: "home", args: [] };
+  try { sessionStorage.setItem("operoReturnHome", "1"); } catch (_) {}
+  persistAppView(state);
+  window.history.replaceState(state, "", window.location.href);
+  window.location.reload();
+}
+
+function restoreAppView(state) {
+  if (!state?.[OPERO_HISTORY_KEY]) return Promise.resolve();
+  setActiveNavigation(state.view);
+  const args = Array.isArray(state.args) ? state.args : [];
+  const routes = {
+    home: () => showHome(),
+    login: () => showLogin(),
+    register: () => showRegister(),
+    profile: () => showProfile(),
+    dashboard: () => showAccountHome(),
+    myJobs: () => showMyJobs(),
+    operators: () => showOperators(),
+    operatorProfile: () => showOperatorProfile(args[0]),
+    companyProfile: () => showCompanyProfile(args[0]),
+    replacementForm: () => showOperatorReplacementForm(),
+    jobs: () => showJobs(args[0], args[1]),
+    applications: () => showAccountHome()
+  };
+  const restore = routes[state.view];
+  if (!restore) return Promise.resolve();
+
+  persistAppView(state);
+  restoringAppHistory = true;
+  return Promise.resolve().then(restore).catch(error => {
+    console.error("Could not restore page:", error);
+  }).finally(() => {
+    restoringAppHistory = false;
+  });
+}
+
+window.addEventListener("popstate", event => {
+  restoreAppView(event.state);
+});
+
 
 function hideAll() {
 
@@ -288,12 +1017,13 @@ function hideAll() {
   document.getElementById("mainContent").classList.add("hidden");
   document.getElementById("loginSection").classList.add("hidden");
   document.getElementById("registerSection").classList.add("hidden");
-
+  document.getElementById("profileSection").classList.add("hidden");
 }
 
 
 function showHome() {
 
+  saveAppView("home");
   hideAll();
 
   document.getElementById("home").classList.remove("hidden");
@@ -303,7 +1033,9 @@ function showHome() {
 
 function showLogin() {
 
+  saveAppView("login");
   hideAll();
+  document.getElementById("loginPhoneRow").classList.remove("hidden");
 
   document.getElementById("loginSection").classList.remove("hidden");
 
@@ -312,41 +1044,88 @@ function showLogin() {
 
 function showRegister() {
 
+  saveAppView("register");
   hideAll();
 
   document.getElementById("registerSection").classList.remove("hidden");
 
+  toggleRegistrationCraneControls(document.getElementById("operatorType").value);
+
+}
+
+function setRegistrationEmploymentChoice(value, checkbox) {
+  if (!checkbox.checked) return;
+  document.getElementById(value === "yes" ? "registerEmployedNo" : "registerEmployedYes").checked = false;
+}
+
+function toggleRegistrationCraneControls(operatorType) {
+  const isTowerCrane = operatorType === "Tower Crane Operator";
+  document.getElementById("registrationCraneControlField").classList.toggle("hidden", !isTowerCrane);
+  if (!isTowerCrane) {
+    document.getElementById("registrationCabinControl").checked = false;
+    document.getElementById("registrationRemoteControl").checked = false;
+  }
 }
 
 
+let registrationOperatorPhotos = { certificate: null };
+let pendingOperatorRegistrationPhotos = null;
+
+function setRegistrationPhoto(kind, file) {
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
+    return;
+  }
+  registrationOperatorPhotos[kind] = file;
+}
+
+async function uploadOperatorRegistrationPhotos(userId, photos) {
+  const updates = {};
+  for (const [kind, column, path] of [
+    ["profile", "photo_url", "avatar"],
+    ["certificate", "certificate_url", "certificate"]
+  ]) {
+    const file = photos?.[kind];
+    if (!file) continue;
+    const { data: upload, error } = await supabaseClient.storage.from("operator-photos")
+      .upload(`${userId}/${path}`, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
+    if (error) throw new Error(`Could not upload ${kind === "profile" ? "profile" : "certificate"} photo: ${error.message}`);
+    const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
+    updates[column] = `${publicUrl.publicUrl}?v=${Date.now()}`;
+  }
+  if (Object.keys(updates).length) {
+    const { error } = await supabaseClient.from("profiles").update(updates).eq("id", userId);
+    if (error) throw new Error(`Photos uploaded, but profile could not be updated: ${error.message}`);
+  }
+}
+
 async function register() {
-
-  const fullName =
-    document.getElementById("fullName").value.trim();
-
-  const email =
-    document.getElementById("registerEmail").value.trim();
 
   const password =
     document.getElementById("registerPassword").value;
 
-  const phone =
-    document.getElementById("phone").value.trim();
+  const passwordConfirm =
+    document.getElementById("registerPasswordConfirm").value;
 
-  const city =
-    document.getElementById("city").value.trim();
-
-  const country =
-    document.getElementById("country").value.trim();
-
-  const operatorType =
-    document.getElementById("operatorType").value;
+  const fullName = document.getElementById("fullName").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const country = document.getElementById("operatorCountry").value;
+  const operatorType = document.getElementById("operatorType").value;
+  const cabinControl = document.getElementById("registrationCabinControl").checked;
+  const remoteControl = document.getElementById("registrationRemoteControl").checked;
+  const craneControlType = operatorType !== "Tower Crane Operator"
+    ? null
+    : cabinControl && remoteControl ? "Both" : cabinControl ? "Cabin" : remoteControl ? "Remote control" : "";
+  const ageValue = document.getElementById("age").value.trim();
+  const age = ageValue === "" ? null : Number(ageValue);
 
   const experience =
     document.getElementById("experience").value;
 
-  const about =
-    document.getElementById("about").value.trim();
+  const isEmployed = document.getElementById("registerEmployedYes").checked
+    ? true : document.getElementById("registerEmployedNo").checked ? false : null;
 
   const status =
     document.getElementById("registerStatus");
@@ -355,32 +1134,87 @@ async function register() {
   status.textContent = "Creating account...";
 
 
-  if (!fullName || !email || !password) {
+  const phoneDigits = phone.replace(/\D/g, "");
+  const phoneWithCountryCode = phone.trim().startsWith("+") || phoneDigits.startsWith("995")
+    ? phone
+    : `+995${phoneDigits}`;
+  const authPhone = normalizePhoneNumber(phoneWithCountryCode, country);
+  if (!authPhone) {
+    status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
+    return;
+  }
+  if (!fullName || !password || !passwordConfirm || !phone || !city || !country) {
+    status.textContent = "Please complete all required fields.";
+    return;
+  }
 
-    status.textContent =
-      "Please enter name, email and password.";
+  if (password !== passwordConfirm) {
+    status.textContent = "Passwords do not match.";
+    return;
+  }
+
+  if (isEmployed === null) {
+    status.textContent = "Please select whether you are currently employed.";
+    return;
+  }
+
+  if (!operatorType) {
+    status.textContent = "Please select the equipment type you operate.";
+    return;
+  }
+
+  if (!Number.isInteger(age) || age < 16 || age > 100) {
+    status.textContent = "Please enter an age from 16 to 100.";
+    return;
+  }
+
+  if (operatorType === "Tower Crane Operator" && !craneControlType) {
+    status.textContent = "აირჩიეთ, ამწეს კაბინიდან მართავთ თუ ქვემოდან პულტით.";
+    return;
+  }
+
+  if (!experience.trim()) {
+    status.textContent = "Please enter your years of experience.";
+    return;
+  }
+
+  if (!registrationOperatorPhotos.certificate) {
+    status.textContent = "ატვირთეთ სერტიფიკატის ფოტო.";
+    return;
+  }
+
+  const parsedExperience = experience === "" ? null : Number(experience);
+  if (!Number.isInteger(parsedExperience) || parsedExperience < 0) {
+    status.textContent = "Experience must be a whole number of zero or more.";
 
     return;
 
   }
 
 
-  const { data, error } =
-    await supabaseClient.auth.signUp({
-
-      email: email,
-
-      password: password,
-
+  // Supabase phone/password signup requires an SMS provider. Keep phone as the
+  // user's identifier in the UI/profile, and use a deterministic private email
+  // alias for Supabase password authentication instead.
+  const authEmail = phoneToAuthEmail(authPhone);
+  pendingOperatorRegistrationPhotos = { certificate: registrationOperatorPhotos.certificate };
+  const { data, error } = await supabaseClient.auth.signUp({
+      email: authEmail,
+      password,
       options: {
   data: {
     full_name: fullName,
-    phone: phone,
+    account_type: "operator",
+    phone: authPhone,
     city: city,
     country: country,
     operator_type: operatorType,
-    experience_years: experience,
-    about: about
+    crane_control_type: craneControlType,
+    age: age,
+    experience_years: parsedExperience,
+    is_employed: isEmployed,
+    looking_for_permanent_job: false,
+    needs_replacement: isEmployed === true,
+    available_for_replacement: isEmployed === false
   }
 }
 
@@ -406,23 +1240,56 @@ async function register() {
   }
 
 
-  status.textContent =
-    "Account created. You can now login.";
-
-
-  setTimeout(() => {
-
-    showLogin();
-
-  }, 1500);
+  if (data.session) {
+    if (pendingOperatorRegistrationPhotos) {
+      try {
+        await uploadOperatorRegistrationPhotos(data.user.id, pendingOperatorRegistrationPhotos);
+        pendingOperatorRegistrationPhotos = null;
+      } catch (uploadError) {
+        status.textContent = `Account created, but ${uploadError.message} Please retry after logging in.`;
+        alert(status.textContent);
+        updateAuthUI(true);
+        await showProfile();
+        return;
+      }
+    }
+    status.textContent = "Account created. You can now continue.";
+    updateAuthUI(true);
+    await updateHomeCTAs(data.user);
+    await showAccountHome();
+  } else {
+    status.textContent = "Account created. Log in with your phone number and password.";
+    setTimeout(() => showLogin(), 1500);
+  }
 
 }
 
+function normalizePhoneNumber(value, country = "") {
+  const input = String(value || "").trim();
+  if (!input) return "";
+  const digits = input.replace(/\D/g, "");
+  if (input.startsWith("+")) {
+    if (digits.startsWith("995")) return digits.length === 12 && digits[3] === "5" ? `+${digits}` : "";
+    return /^\+[1-9]\d{7,14}$/.test(`+${digits}`) ? `+${digits}` : "";
+  }
+  if (digits.startsWith("00")) return normalizePhoneNumber(`+${digits.slice(2)}`, country);
+  if (digits.startsWith("995")) return digits.length === 12 && digits[3] === "5" ? `+${digits}` : "";
+  if (String(country).toLowerCase().includes("georgia")) {
+    if (digits.length === 9 && digits.startsWith("5")) return `+995${digits}`;
+    if (digits.length === 10 && digits.startsWith("0")) return `+995${digits.slice(1)}`;
+  }
+  return "";
+}
 
-async function login() {
+function phoneToAuthEmail(phone) {
+  // Phone numbers are normalized before reaching this function, so each
+  // number maps to one stable Supabase identity without exposing an email UI.
+  return String(phone).replace(/\D/g, "") + "@phone.opero.invalid";
+}
 
-  const email =
-    document.getElementById("loginEmail").value.trim();
+
+async function login(event) {
+  event?.preventDefault();
 
   const password =
     document.getElementById("loginPassword").value;
@@ -433,15 +1300,18 @@ async function login() {
 
   status.textContent = "Logging in...";
 
-
-  const { data, error } =
-    await supabaseClient.auth.signInWithPassword({
-
-      email: email,
-
-      password: password
-
-    });
+  const identifier = document.getElementById("loginPhone").value.trim();
+  const phoneDigits = identifier.replace(/\D/g, "");
+  const phoneWithCountryCode = identifier.startsWith("+") || phoneDigits.startsWith("995")
+    ? identifier
+    : `+995${phoneDigits}`;
+  const normalizedPhone = normalizePhoneNumber(phoneWithCountryCode, "Georgia");
+  if (!normalizedPhone) {
+    status.textContent = "Enter a valid 9-digit Georgian mobile number beginning with 5.";
+    return;
+  }
+  const credentials = { email: phoneToAuthEmail(normalizedPhone), password };
+  const { data, error } = await supabaseClient.auth.signInWithPassword(credentials);
 
 
   if (error) {
@@ -456,207 +1326,1549 @@ async function login() {
   status.textContent =
     "Login successful!";
 
+  if (pendingOperatorRegistrationPhotos) {
+    try {
+      await uploadOperatorRegistrationPhotos(data.user.id, pendingOperatorRegistrationPhotos);
+      pendingOperatorRegistrationPhotos = null;
+    } catch (uploadError) {
+      status.textContent = uploadError.message;
+      alert(uploadError.message);
+      updateAuthUI(true);
+      await showProfile();
+      return;
+    }
+  }
 
-  updateAuthUI();
 
-  setTimeout(() => {
-
-    showHome();
-
-  }, 700);
+  updateAuthUI(true);
+  await updateHomeCTAs(data.user);
+  await showAccountHome();
 
 }
 
+async function showProfile() {
+  saveAppView("profile");
+  hideAll();
+
+  const profileSection = document.getElementById("profileSection");
+
+  if (!profileSection) {
+    alert("Profile section not found");
+    return;
+  }
+
+  profileSection.classList.remove("hidden");
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    console.error(error);
+    alert("Could not load profile");
+    return;
+  }
+
+  document.getElementById("profileAccountTypeLabel").textContent =
+    data.account_type === "company" ? "Company" : "Operator";
+
+  const isOperator = data.account_type === "operator";
+  document.getElementById("operatorProfileOverview").classList.toggle("hidden", !isOperator);
+  document.getElementById("operatorCardDetails").classList.toggle("hidden", !isOperator);
+  document.getElementById("profilePersonalEditor").classList.toggle("hidden", isOperator);
+  document.getElementById("personalEditorTitle").textContent = isOperator ? "Edit personal information" : "Company details";
+  document.getElementById("closePersonalEditor").classList.toggle("hidden", !isOperator);
+  document.getElementById("profileAgeField").classList.toggle("hidden", !isOperator);
+  document.getElementById("operatorPhotoProfileField").classList.toggle("hidden", !isOperator);
+  document.getElementById("profileName").value =
+    data.full_name || "";
+
+  document.getElementById("profileName").placeholder = data.account_type === "company" ? "Company name" : "Full name";
+  document.getElementById("companyAddressField").classList.toggle("hidden", data.account_type !== "company");
+  document.getElementById("companyEmailProfileField").classList.toggle("hidden", data.account_type !== "company");
+  document.getElementById("profileAge").value = data.age ?? "";
+  document.getElementById("profileSummaryName").textContent = data.full_name || "Operator";
+  document.getElementById("profileSummaryAge").textContent = data.age ? data.age + " წელი" : "—";
+  document.getElementById("profileSummaryPhone").textContent = data.phone || "—";
+  document.getElementById("profileSummaryCity").textContent = data.city || "—";
+  document.getElementById("profileSummaryCountry").textContent = data.country || "—";
+  document.getElementById("profileSummaryInitial").textContent = (data.full_name || "O").trim().charAt(0).toUpperCase();
+  document.getElementById("profileCraneControlType").value = data.crane_control_type || "";
+  document.getElementById("profileContactAnytime").checked = data.contact_anytime === true;
+  document.getElementById("profilePhoto").value = "";
+  setOperatorPhotoPreview(data.photo_url || "");
+  document.getElementById("profileCompanyAddress").value = data.company_address || "";
+  document.getElementById("profileCompanyEmail").value = data.company_email || "";
+
+  document.getElementById("profilePhone").value =
+    data.phone || "";
+
+  document.getElementById("profileCity").value =
+    data.city || "";
+
+  document.getElementById("profileCountry").value =
+    data.country || "Georgia";
+
+  document.getElementById("profileOperatorType").value =
+    data.account_type === "operator" ? data.operator_type || "" : "";
+  document.getElementById("profileIsEmployed").value = booleanToChoice(data.is_employed);
+  savedProfileEmploymentStatus = data.is_employed;
+  toggleReplacementProfileFields();
+  const calendar = document.getElementById("operatorAvailabilityCalendar");
+  calendar.classList.toggle("hidden", data.account_type !== "operator" || data.is_employed !== false);
+
+  document.getElementById("profileExperience").value =
+    data.experience_years || "";
+
+  document.getElementById("profileAbout").value =
+    data.about || "";
+}
+
+function setOperatorPhotoPreview(url) {
+  const preview = document.getElementById("profilePhotoPreview");
+  const summaryPhoto = document.getElementById("profileSummaryPhoto");
+  const summaryInitial = document.getElementById("profileSummaryInitial");
+  if (preview) {
+    preview.src = url || "";
+    preview.classList.toggle("hidden", !url);
+  }
+  if (summaryPhoto && summaryInitial) {
+    summaryPhoto.src = url || "";
+    summaryPhoto.classList.toggle("hidden", !url);
+    summaryInitial.classList.toggle("hidden", Boolean(url));
+  }
+}
+
+function togglePersonalProfileEditor() {
+  document.getElementById("profilePersonalEditor")?.classList.toggle("hidden");
+}
+
+function previewOperatorPhoto(file) {
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
+    document.getElementById("profilePhoto").value = "";
+    return;
+  }
+  setOperatorPhotoPreview(URL.createObjectURL(file));
+}
+
+function booleanToChoice(value) {
+  return value === true ? "yes" : value === false ? "no" : "";
+}
+
+function choiceToBoolean(value) {
+  return value === "yes" ? true : value === "no" ? false : null;
+}
+
+async function toggleReplacementProfileFields() {
+  const employed = document.getElementById("profileIsEmployed")?.value;
+  const calendar = document.getElementById("operatorAvailabilityCalendar");
+  const showCalendar = employed === "no" && savedProfileEmploymentStatus === false;
+  if (calendar) calendar.classList.toggle("hidden", !showCalendar);
+  if (showCalendar) {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) await loadAvailabilityMonth(user.id);
+  }
+}
+
+let availabilityMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let availabilityDateSet = new Set();
+let availabilityUserId = null;
+let savedProfileEmploymentStatus = null;
+let publicBusyCalendar = null;
+let operatorProfileCalendar = null;
+
+function localDateKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+async function showOperatorBusyCalendar(operatorId) {
+  const today = new Date();
+  const rangeStart = localDateKey(today);
+  const rangeEnd = localDateKey(new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()));
+  const { data, error } = await supabaseClient.from("operator_busy_dates")
+    .select("busy_date").eq("operator_id", operatorId)
+    .gte("busy_date", rangeStart).lte("busy_date", rangeEnd);
+  if (error) { alert("Could not load the busy-days calendar: " + error.message); return; }
+  publicBusyCalendar = {
+    month: new Date(today.getFullYear(), today.getMonth(), 1),
+    busyDates: new Set((data || []).map(item => String(item.busy_date).slice(0, 10)))
+  };
+  const backdrop = document.createElement("div");
+  backdrop.id = "publicBusyCalendarBackdrop";
+  backdrop.style.cssText = "position:fixed;inset:0;z-index:10000;background:rgb(21 23 25 / 48%);display:grid;place-items:center;padding:16px";
+  backdrop.onclick = event => { if (event.target === backdrop) closeOperatorBusyCalendar(); };
+  backdrop.innerHTML = `<div style="background:#fff;color:#17191c;border:1px solid #e1e4e7;border-radius:12px;padding:20px;width:min(370px,100%);box-shadow:0 8px 24px rgb(21 23 25 / 14%)"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><button class="secondary" onclick="movePublicBusyCalendar(-1)">‹</button><strong id="publicBusyCalendarMonth"></strong><button class="secondary" onclick="movePublicBusyCalendar(1)">›</button></div><p class="muted"><span style="display:inline-block;width:12px;height:12px;background:#e53935;border-radius:3px;vertical-align:middle"></span> Busy / unavailable</p><div id="publicBusyCalendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center"></div><button class="secondary" style="margin-top:14px;width:100%" onclick="closeOperatorBusyCalendar()">Close</button></div>`;
+  document.body.appendChild(backdrop);
+  renderPublicBusyCalendar();
+}
+
+function closeOperatorBusyCalendar() {
+  document.getElementById("publicBusyCalendarBackdrop")?.remove();
+  publicBusyCalendar = null;
+}
+
+function movePublicBusyCalendar(offset) {
+  if (!publicBusyCalendar) return;
+  publicBusyCalendar.month = new Date(publicBusyCalendar.month.getFullYear(), publicBusyCalendar.month.getMonth() + offset, 1);
+  renderPublicBusyCalendar();
+}
+
+function renderPublicBusyCalendar() {
+  if (!publicBusyCalendar) return;
+  const { month, busyDates } = publicBusyCalendar;
+  document.getElementById("publicBusyCalendarMonth").textContent = month.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  const grid = document.getElementById("publicBusyCalendarGrid");
+  const weekdays = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
+  const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  grid.innerHTML = weekdays.map(day => `<strong class="muted">${day}</strong>`).join("")
+    + Array(offset).fill("<span></span>").join("")
+    + Array.from({ length: count }, (_, index) => {
+      const key = localDateKey(new Date(month.getFullYear(), month.getMonth(), index + 1));
+      const busy = busyDates.has(key);
+      return `<span style="padding:8px 2px;border-radius:7px;${busy ? "background:#e5252a;color:white;font-weight:700;" : ""}">${index + 1}</span>`;
+    }).join("");
+}
+
+async function loadOperatorProfileCalendar(operatorId) {
+  const grid = document.getElementById("operatorProfileCalendarGrid");
+  if (!grid) return;
+  grid.innerHTML = '<p class="operator-profile-calendar-error">კალენდარი იტვირთება…</p>';
+  const today = new Date();
+  const rangeStart = localDateKey(today);
+  const rangeEnd = localDateKey(new Date(today.getFullYear() + 2, today.getMonth(), today.getDate()));
+  const { data, error } = await supabaseClient.from("operator_busy_dates")
+    .select("busy_date").eq("operator_id", operatorId)
+    .gte("busy_date", rangeStart).lte("busy_date", rangeEnd);
+  if (document.getElementById("operatorProfileCalendarGrid") !== grid) return;
+  if (error) {
+    grid.innerHTML = '<p class="operator-profile-calendar-error">კალენდრის ჩატვირთვა ვერ მოხერხდა.</p>';
+    console.error("Could not load operator profile calendar:", error);
+    return;
+  }
+  operatorProfileCalendar = {
+    operatorId,
+    month: new Date(today.getFullYear(), today.getMonth(), 1),
+    minMonth: new Date(today.getFullYear(), today.getMonth(), 1),
+    busyDates: new Set((data || []).map(item => String(item.busy_date).slice(0, 10)))
+  };
+  renderOperatorProfileCalendar();
+}
+
+function moveOperatorProfileCalendar(offset) {
+  if (!operatorProfileCalendar) return;
+  const nextMonth = new Date(operatorProfileCalendar.month.getFullYear(), operatorProfileCalendar.month.getMonth() + offset, 1);
+  if (nextMonth < operatorProfileCalendar.minMonth) return;
+  operatorProfileCalendar.month = nextMonth;
+  renderOperatorProfileCalendar();
+}
+
+function renderOperatorProfileCalendar() {
+  if (!operatorProfileCalendar) return;
+  const { month, minMonth, busyDates } = operatorProfileCalendar;
+  const label = document.getElementById("operatorProfileCalendarMonth");
+  const grid = document.getElementById("operatorProfileCalendarGrid");
+  if (!label || !grid) return;
+  label.textContent = month.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  const weekdays = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
+  const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const todayKey = localDateKey(new Date());
+  grid.innerHTML = weekdays.map(day => `<strong>${day}</strong>`).join("")
+    + Array(offset).fill("<span></span>").join("")
+    + Array.from({ length: count }, (_, index) => {
+      const day = index + 1;
+      const key = localDateKey(new Date(month.getFullYear(), month.getMonth(), day));
+      const dayClass = busyDates.has(key) ? "is-busy" : key < todayKey ? "is-past" : "is-free";
+      const label = dayClass === "is-busy" ? "დაკავებულია" : dayClass === "is-free" ? "თავისუფალია" : "გასული დღე";
+      return `<span class="operator-profile-calendar-day ${dayClass}" aria-label="${day} — ${label}">${day}</span>`;
+    }).join("");
+  const previous = document.getElementById("operatorProfileCalendarPrevious");
+  if (previous) previous.disabled = month <= minMonth;
+}
+
+async function loadAvailabilityMonth(userId) {
+  availabilityUserId = userId;
+  const monthStart = localDateKey(availabilityMonth);
+  const monthEnd = localDateKey(new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0));
+  const { data, error } = await supabaseClient.from("operator_busy_dates")
+    .select("busy_date").eq("operator_id", userId)
+    .gte("busy_date", monthStart).lte("busy_date", monthEnd);
+  if (error) {
+    document.getElementById("availabilityCalendarStatus").textContent = "Could not load availability: " + error.message;
+    return;
+  }
+  availabilityDateSet = new Set((data || []).map(item => String(item.busy_date).slice(0, 10)));
+  renderAvailabilityCalendar();
+}
+
+function moveAvailabilityMonth(offset) {
+  availabilityMonth = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + offset, 1);
+  if (availabilityUserId) loadAvailabilityMonth(availabilityUserId);
+}
+
+function renderAvailabilityCalendar() {
+  const label = document.getElementById("availabilityMonthLabel");
+  const grid = document.getElementById("availabilityCalendarGrid");
+  if (!label || !grid) return;
+  label.textContent = availabilityMonth.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  const weekdays = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
+  const offset = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth(), 1).getDay();
+  const count = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0).getDate();
+  const today = localDateKey(new Date());
+  grid.innerHTML = weekdays.map(day => `<strong class="muted">${day}</strong>`).join("")
+    + Array(offset).fill("<span></span>").join("")
+    + Array.from({ length: count }, (_, index) => {
+      const date = new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth(), index + 1);
+      const key = localDateKey(date);
+      const busy = availabilityDateSet.has(key);
+      return `<button type="button" ${key < today ? "disabled" : ""} aria-pressed="${busy}" title="${busy ? "Busy / unavailable" : "Mark as a busy day"}" style="padding:9px 2px;${busy ? "background:#e5252a;color:white;border-color:#e5252a;" : ""}" onclick="toggleAvailabilityDate('${key}')">${index + 1}</button>`;
+    }).join("");
+}
+
+function toggleAvailabilityDate(date) {
+  if (availabilityDateSet.has(date)) availabilityDateSet.delete(date);
+  else availabilityDateSet.add(date);
+  renderAvailabilityCalendar();
+}
+
+async function saveAvailabilityMonth() {
+  if (!availabilityUserId) return;
+  const status = document.getElementById("availabilityCalendarStatus");
+  const monthStart = localDateKey(availabilityMonth);
+  const monthEnd = localDateKey(new Date(availabilityMonth.getFullYear(), availabilityMonth.getMonth() + 1, 0));
+  status.textContent = "Saving busy days...";
+  const { error: deleteError } = await supabaseClient.from("operator_busy_dates")
+    .delete().eq("operator_id", availabilityUserId)
+    .gte("busy_date", monthStart).lte("busy_date", monthEnd);
+  if (deleteError) { status.textContent = "Could not save busy days: " + deleteError.message; return; }
+  const dates = [...availabilityDateSet].filter(date => date >= monthStart && date <= monthEnd)
+    .map(busy_date => ({ operator_id: availabilityUserId, busy_date }));
+  if (dates.length) {
+    const { error } = await supabaseClient.from("operator_busy_dates").insert(dates);
+    if (error) { status.textContent = "Could not save busy days: " + error.message; return; }
+  }
+  status.textContent = "Busy days saved.";
+}
+
+async function saveProfile() {
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
+
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).single();
+  if (profileError || !profile) {
+    alert("Could not load account type. Please reload and try again.");
+    return;
+  }
+
+  const updates = {
+    full_name: document.getElementById("profileName").value.trim(),
+    phone: document.getElementById("profilePhone").value.trim(),
+    city: document.getElementById("profileCity").value.trim(),
+    country: document.getElementById("profileCountry").value.trim(),
+    experience_years: Number(document.getElementById("profileExperience").value) || null,
+    about: document.getElementById("profileAbout").value.trim()
+  };
+  if (profile.account_type === "company") {
+    updates.company_address = document.getElementById("profileCompanyAddress").value.trim();
+    updates.company_email = document.getElementById("profileCompanyEmail").value.trim();
+  }
+  if (profile.account_type === "operator") {
+    const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
+    if (employed === null) { alert("Please select whether you are currently employed."); return; }
+    const ageValue = document.getElementById("profileAge").value.trim();
+    const age = ageValue === "" ? null : Number(ageValue);
+    if (age !== null && (!Number.isInteger(age) || age < 16 || age > 100)) {
+      alert("Enter an age from 16 to 100.");
+      return;
+    }
+    updates.operator_type = document.getElementById("profileOperatorType").value;
+    updates.is_employed = employed;
+    updates.age = age;
+    updates.crane_control_type = document.getElementById("profileCraneControlType").value || null;
+    updates.contact_anytime = document.getElementById("profileContactAnytime").checked;
+
+    const photoFile = document.getElementById("profilePhoto").files?.[0];
+    if (photoFile) {
+      const { data: upload, error: uploadError } = await supabaseClient.storage
+        .from("operator-photos")
+        .upload(user.id + "/avatar", photoFile, {
+          upsert: true,
+          contentType: photoFile.type,
+          cacheControl: "3600"
+        });
+      if (uploadError) {
+        alert("Could not upload profile photo: " + uploadError.message);
+        return;
+      }
+      const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
+      updates.photo_url = publicUrl.publicUrl + "?v=" + Date.now();
+    }
+
+  }
+
+  const { error } = await supabaseClient.from("profiles")
+    .update(updates).eq("id", user.id);
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  if (profile.account_type === "operator" && updates.is_employed === true) {
+    const { error: availabilityError } = await supabaseClient.from("operator_busy_dates")
+      .delete().eq("operator_id", user.id);
+    if (availabilityError) console.error("Could not clear availability dates:", availabilityError);
+  }
+
+  alert("Profile updated successfully!");
+  if (profile.account_type === "operator") {
+    document.getElementById("profileSummaryName").textContent = updates.full_name || "Operator";
+    document.getElementById("profileSummaryAge").textContent = updates.age ? updates.age + " წელი" : "—";
+    document.getElementById("profileSummaryPhone").textContent = updates.phone || "—";
+    document.getElementById("profileSummaryCity").textContent = updates.city || "—";
+    document.getElementById("profileSummaryCountry").textContent = updates.country || "—";
+    document.getElementById("profileSummaryInitial").textContent = (updates.full_name || "O").trim().charAt(0).toUpperCase();
+    document.getElementById("profilePersonalEditor").classList.add("hidden");
+    if (updates.photo_url) {
+      setOperatorPhotoPreview(updates.photo_url);
+      document.getElementById("profilePhoto").value = "";
+    }
+    savedProfileEmploymentStatus = updates.is_employed;
+    await toggleReplacementProfileFields();
+  }
+}
 
 async function logout() {
 
   await supabaseClient.auth.signOut();
 
-  updateAuthUI();
+  updateAuthUI(false);
+  updateHomeCTAs(null);
 
   showHome();
 
 }
 
 
-async function updateAuthUI() {
-
-  const { data } =
-    await supabaseClient.auth.getSession();
-
-  const loggedIn =
-    !!data.session;
-
-
-  document
-    .getElementById("loginNav")
-    .classList.toggle("hidden", loggedIn);
-
-
-  document
-    .getElementById("registerNav")
-    .classList.toggle("hidden", loggedIn);
-
-
-  document
-    .getElementById("logoutNav")
-    .classList.toggle("hidden", !loggedIn);
-
+function updateAuthUI(loggedIn) {
+  document.getElementById("loginNav").classList.add("hidden");
+  document.querySelector("header nav")?.classList.toggle("hidden", !loggedIn);
+  document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("jobsNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("applicationsNav").classList.add("hidden");
+  document.getElementById("dashboardNav").classList.add("hidden");
+  document.getElementById("profileNav").classList.toggle("hidden", !loggedIn);
+  if (!loggedIn) setActiveNavigation("");
 }
 
+let notificationRealtimeChannel = null;
+let notificationUserId = null;
+let notificationCountRequest = 0;
+
+async function refreshUnreadNotificationCount(userId = notificationUserId) {
+  const badge = document.getElementById("applicationsUnreadBadge");
+  if (!badge) return;
+  const requestId = ++notificationCountRequest;
+  if (!userId) {
+    badge.textContent = "0";
+    badge.classList.add("hidden");
+    return;
+  }
+  const { count, error } = await supabaseClient.from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("recipient_user_id", userId)
+    .eq("is_read", false);
+  if (requestId !== notificationCountRequest) return;
+  if (error) {
+    badge.classList.add("hidden");
+    console.error("Could not load unread notification count:", error);
+    return;
+  }
+  const unreadCount = count || 0;
+  badge.textContent = String(unreadCount);
+  badge.classList.toggle("hidden", unreadCount === 0);
+}
+
+function configureNotificationUpdates(user) {
+  const nextUserId = user?.id || null;
+  if (notificationRealtimeChannel && notificationUserId !== nextUserId) {
+    supabaseClient.removeChannel(notificationRealtimeChannel);
+    notificationRealtimeChannel = null;
+  }
+  notificationUserId = nextUserId;
+  refreshUnreadNotificationCount(nextUserId);
+  if (!nextUserId || notificationRealtimeChannel || typeof supabaseClient.channel !== "function") return;
+  notificationRealtimeChannel = supabaseClient
+    .channel(`notifications:${nextUserId}`)
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "notifications",
+      filter: `recipient_user_id=eq.${nextUserId}`
+    }, () => refreshUnreadNotificationCount(nextUserId))
+    .subscribe();
+}
+
+let homeCtaRequest = 0;
+
+async function updateHomeCTAs(user) {
+  const ctas = document.getElementById("homeCtas");
+  if (!ctas) return;
+  const requestId = ++homeCtaRequest;
+
+  if (!user) {
+    ctas.innerHTML = `
+      <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
+      <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
+    `;
+    return;
+  }
+
+  ctas.innerHTML = "<span class=\"muted\">Loading your options...</span>";
+  const { data: profile, error } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (requestId !== homeCtaRequest) return;
+
+  if (error || !profile || !["operator", "company"].includes(profile.account_type)) {
+    ctas.innerHTML = "<span class=\"muted\">Your account profile is not available yet.</span>";
+    return;
+  }
+
+  if (profile.account_type === "operator") {
+    ctas.innerHTML = `
+      <button class="secondary" onclick="showOperators()">Operators</button>
+      <button onclick="showJobs()">Jobs</button>
+      <button onclick="showProfile()">My Profile</button>
+    `;
+    return;
+  }
+
+  ctas.innerHTML = `
+    <button class="secondary" onclick="showOperators()">Find Operators</button>
+    <button onclick="showJobs()">Post a Job</button>
+    <button onclick="showProfile()">My Profile</button>
+  `;
+}
+
+async function showAccountHome() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type === "company") return showJobs("regular");
+  return showOperators();
+}
+
+async function showDashboard() {
+  return showAccountHome();
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  saveAppView("dashboard");
+  hideAll();
+  const mainContent = document.getElementById("mainContent");
+  const content = document.getElementById("content");
+  mainContent.classList.remove("hidden");
+  content.innerHTML = "<h2>Dashboard</h2><p class='muted'>Loading...</p>";
+
+  const { data: profile, error } = await supabaseClient.from("profiles")
+    .select("account_type, full_name, operator_type, city, experience_years, about")
+    .eq("id", user.id).maybeSingle();
+  if (error || !profile || !["operator", "company"].includes(profile.account_type)) {
+    content.innerHTML = "<h2>Dashboard</h2><p class='muted'>Your account profile is not ready. Please sign out and sign in again, or contact support.</p>";
+    return;
+  }
+
+  if (profile.account_type === "company") {
+    content.innerHTML = `
+      <h2>Company Dashboard</h2>
+      <p class="muted">Welcome, <span data-user-content>${escapeHtml(profile.full_name || "კომპანიის წარმომადგენელი")}</span>.</p>
+      <div class="card"><h3>Post a job</h3><p>Publish an opening for operators.</p><button onclick="showJobs()">Create a job</button></div>
+      <div class="card"><h3>My jobs</h3><p>Manage jobs posted by this account.</p><button onclick="showMyJobs()">View my jobs</button></div>
+      <div class="card"><h3>Applications</h3><p>Review applicants and update their status.</p><button onclick="showApplications()">View applications</button></div>
+      <div class="card"><h3>Find operators</h3><button onclick="showOperators()">Browse operators</button></div>
+      <div class="card"><h3>Company profile</h3><button onclick="showProfile()">View profile</button></div>
+    `;
+    return;
+  }
+
+  const fields = [profile.full_name, profile.operator_type, profile.city, profile.experience_years, profile.about];
+  const completion = Math.round(fields.filter(value => value !== null && value !== undefined && String(value).trim() !== "").length / fields.length * 100);
+  content.innerHTML = `
+    <h2>Operator Dashboard</h2>
+    <p class="muted">Welcome, <span data-user-content>${escapeHtml(profile.full_name || "ოპერატორი")}</span>.</p>
+    <div class="card"><h3>Profile completion: ${completion}%</h3><p>Complete your profile so companies can learn about your experience.</p><button onclick="showProfile()">My profile</button></div>
+    <div class="card"><h3>Browse jobs</h3><button onclick="showJobs()">Find jobs</button></div>
+    <div class="card"><h3>My replacement requests</h3><p>Manage replacement posts you have published.</p><button onclick="showMyJobs()">View my posts</button></div>
+    <div class="card"><h3>Need a replacement?</h3><p>Post the dates and details for an operator to cover your shift.</p><button onclick="showOperatorReplacementForm()">Need a Replacement</button></div>
+    <div class="card"><h3>My applications</h3><button onclick="showApplications()">View applications</button></div>
+    <div class="card"><h3>Discover operators</h3><button onclick="showOperators()">Open operator directory</button></div>
+  `;
+}
+
+async function showMyJobs() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profileError || !["company", "operator"].includes(profile?.account_type)) {
+    showDashboard();
+    return;
+  }
+
+  saveAppView("myJobs");
+  hideAll();
+  const content = document.getElementById("content");
+  document.getElementById("mainContent").classList.remove("hidden");
+  const heading = profile.account_type === "operator" ? "My Replacement Requests" : "My Jobs";
+  content.innerHTML = `<h2>${heading}</h2><p class="muted">Loading...</p>`;
+
+  let jobsQuery = supabaseClient.from("jobs")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date")
+    .eq("created_by", user.id).order("created_at", { ascending: false });
+  if (profile.account_type === "operator") jobsQuery = jobsQuery.eq("job_type", "replacement");
+  const { data: jobs, error } = await jobsQuery;
+  if (error) {
+    content.innerHTML = `<h2>${heading}</h2><p class="muted">Could not load your posts: ${escapeHtml(error.message)}</p><button onclick="showDashboard()">Back to Dashboard</button>`;
+    return;
+  }
+
+  const dateValue = value => escapeHtml(value || "");
+  content.innerHTML = `<h2>${heading}</h2><button onclick="showDashboard()">Back to Dashboard</button>` +
+    (jobs?.length ? jobs.map(job => {
+      const id = Number(job.id);
+      const replacement = job.job_type === "replacement";
+      const dateText = replacement
+        ? `${escapeHtml(job.replacement_date || "თარიღი მითითებული არ არის")}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${escapeHtml(job.replacement_end_date)} (ჩათვლით)` : ""}`
+        : "";
+      return `
+      <div class="card">
+        <h3 data-user-content>${escapeHtml(job.title || "უსათაურო განცხადება")}</h3><p data-user-content>${escapeHtml(job.company || (replacement ? "შემცვლელის მოთხოვნა" : ""))}</p>
+        ${replacement ? `<p class="muted">Dates: ${dateText}</p>` : "<p class='muted'>Regular job</p>"}
+        <p class="muted">Looking for: ${escapeHtml(job.operator_type || "Not specified")}</p>
+        <p class="muted"><span data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</span></p>
+        <p data-user-content>${escapeHtml(job.description || "")}</p><p>Salary: <span data-user-content>${escapeHtml(job.salary || "Not specified")}</span></p>
+        <button type="button" onclick="toggleJobEdit(${id})">Edit</button>
+        <button class="secondary" type="button" onclick="deleteJob(${id})">Delete</button>
+        <form id="jobEditForm-${id}" class="form hidden" style="margin:16px 0 0; padding:16px;" onsubmit="saveJobEdits(event, ${id})">
+          <h3>${replacement ? "შემცვლელის მოთხოვნის რედაქტირება" : "ვაკანსიის რედაქტირება"}</h3>
+          <label for="jobEditTitle-${id}">Job title</label>
+          <input id="jobEditTitle-${id}" value="${escapeHtml(job.title || "")}" required>
+          ${profile.account_type === "company" ? `<label for="jobEditCompany-${id}">Company name</label><input id="jobEditCompany-${id}" value="${escapeHtml(job.company || "")}">` : ""}
+          <label for="jobEditType-${id}">Operator type sought</label>
+          <input id="jobEditType-${id}" value="${escapeHtml(job.operator_type || "")}" required>
+          ${replacement ? `
+            <label for="jobEditDateRange-${id}">Work dates (select start and end)</label>
+            <input id="jobEditDateRange-${id}" type="text" data-start="jobEditStartDate-${id}" data-end="jobEditEndDate-${id}" value="${dateValue(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${dateValue(job.replacement_end_date)}` : ""}" placeholder="Select start and end dates" readonly required onclick="openDateRangePicker(this)">
+            <input id="jobEditStartDate-${id}" type="hidden" value="${dateValue(job.replacement_date)}">
+            <input id="jobEditEndDate-${id}" type="hidden" value="${dateValue(job.replacement_end_date || job.replacement_date)}">
+          ` : ""}
+          <label for="jobEditCity-${id}">City</label>
+          <input id="jobEditCity-${id}" value="${escapeHtml(job.city || "")}" ${replacement ? "required" : ""}>
+          <label for="jobEditCountry-${id}">Country</label>
+          <input id="jobEditCountry-${id}" value="${escapeHtml(job.country || "")}">
+          <label for="jobEditSalary-${id}">Payment / salary</label>
+          <input id="jobEditSalary-${id}" value="${escapeHtml(job.salary || "")}" ${replacement ? "required" : ""}>
+          <label for="jobEditDescription-${id}">Description and conditions</label>
+          <textarea id="jobEditDescription-${id}">${escapeHtml(job.description || "")}</textarea>
+          <button type="submit">Save changes</button>
+          <button class="secondary" type="button" onclick="toggleJobEdit(${id})">Cancel</button>
+        </form>
+      </div>`;
+    }).join("") : `<p class="muted">${profile.account_type === "operator" ? "შემცვლელის მოთხოვნები ჯერ არ გამოგიქვეყნებიათ." : "ვაკანსიები ჯერ არ გამოგიქვეყნებიათ."}</p>`);
+}
+
+function toggleJobEdit(jobId) {
+  document.getElementById(`jobEditForm-${Number(jobId)}`)?.classList.toggle("hidden");
+}
+
+async function saveJobEdits(event, jobId) {
+  event.preventDefault();
+  const id = Number(jobId);
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  const { data: job, error: jobError } = await supabaseClient.from("jobs").select("id, job_type")
+    .eq("id", id).eq("created_by", user.id).maybeSingle();
+  if (profileError || jobError || !job || !["company", "operator"].includes(profile?.account_type)
+      || (profile.account_type === "operator" && job.job_type !== "replacement")) {
+    alert("Job not found or you do not have permission to edit it.");
+    return;
+  }
+
+  const value = suffix => document.getElementById(`jobEdit${suffix}-${id}`).value.trim();
+  const updates = {
+    title: value("Title"),
+    operator_type: value("Type"),
+    city: value("City"),
+    country: value("Country"),
+    salary: value("Salary"),
+    description: value("Description")
+  };
+  const companyField = document.getElementById(`jobEditCompany-${id}`);
+  if (companyField) updates.company = companyField.value.trim() || null;
+
+  if (!updates.title || !updates.operator_type || (job.job_type === "replacement" && (!updates.city || !updates.salary))) {
+    alert("Please complete the title and operator type; replacement requests also need a city and payment.");
+    return;
+  }
+  if (job.job_type === "replacement") {
+    const startDate = value("StartDate");
+    const endDate = value("EndDate");
+    if (!startDate || !endDate || endDate < startDate) {
+      alert("Select a valid start and end date.");
+      return;
+    }
+    updates.replacement_date = startDate;
+    updates.replacement_end_date = endDate;
+  }
+
+  const { data, error } = await supabaseClient.from("jobs").update(updates)
+    .eq("id", id).eq("created_by", user.id).select("id").maybeSingle();
+  if (error) { alert("Could not update job: " + error.message); return; }
+  if (!data) { alert("The database did not allow this update. Apply the Opero job-management migration in Supabase, then try again."); return; }
+  await showMyJobs();
+}
+async function deleteJob(jobId) {
+  if (!confirm("Delete this job? This cannot be undone.")) return;
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile, error: profileError } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profileError || !["company", "operator"].includes(profile?.account_type)) {
+    alert("You are not allowed to manage this post.");
+    return;
+  }
+  let deleteQuery = supabaseClient.from("jobs").delete().eq("id", jobId).eq("created_by", user.id);
+  if (profile.account_type === "operator") deleteQuery = deleteQuery.eq("job_type", "replacement");
+  const { data, error } = await deleteQuery.select("id").maybeSingle();
+  if (error) { alert("Could not delete job: " + error.message); return; }
+  if (!data) { alert("The database did not allow this deletion. Apply the Opero job-management migration in Supabase, then try again."); return; }
+  await showMyJobs();
+}
+let operatorDirectory = [];
 
 async function showOperators() {
 
+  saveAppView("operators");
   hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
+  const content = document.getElementById("content");
+  content.innerHTML = "<h2>Operators</h2><p class='muted'>Loading...</p>";
 
-  document
-    .getElementById("mainContent")
-    .classList.remove("hidden");
-
-
-  const content =
-    document.getElementById("content");
-
-
-  content.innerHTML =
-    "<h2>Operators</h2><p class='muted'>Loading...</p>";
-
-
-  const { data, error } =
-    await supabaseClient
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
+    .eq("account_type", "operator")
+    .eq("is_employed", false)
+    .order("created_at", { ascending: false });
 
   if (error) {
-
-    content.innerHTML =
-      "<p>Error loading operators.</p>";
-
+    console.error("Could not load operators:", error);
+    content.innerHTML = "<h2>Operators</h2><p class='muted'>Could not load operators. Please try again later.</p>";
     return;
-
   }
 
-
-  if (!data.length) {
-
-    content.innerHTML =
-      "<h2>Operators</h2><p class='muted'>No operators yet.</p>";
-
-    return;
-
-  }
-
-
-  content.innerHTML =
-    "<h2>Operators</h2>" +
-    data.map(operator => `
-
-      <div class="card">
-
-        <h3>${escapeHtml(operator.full_name)}</h3>
-
-        <p class="muted">
-          ${escapeHtml(operator.operator_type || "Operator")}
-        </p>
-
-        <p>
-          ${escapeHtml(operator.city || "")}
-          ${operator.country ? ", " + escapeHtml(operator.country) : ""}
-        </p>
-
-        <p>
-          Experience:
-          ${operator.experience_years || 0} years
-        </p>
-
-        <p>
-          ${escapeHtml(operator.about || "")}
-        </p>
-
-      </div>
-
-    `).join("");
-
+  operatorDirectory = data || [];
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (user) operatorDirectory = operatorDirectory.filter(operator => operator.id !== user.id);
+  content.innerHTML = `
+    <h2>Operators</h2>
+    <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
+    <div id="operatorResults"></div>
+  `;
+  renderOperators(operatorDirectory);
 }
 
+function filterOperators(query) {
+  const term = String(query || "").trim().toLocaleLowerCase();
+  const matches = operatorDirectory.filter(operator =>
+    [operator.full_name, operator.operator_type, operator.city, operator.country, operator.about]
+      .some(value => String(value || "").toLocaleLowerCase().includes(term))
+  );
+  renderOperators(matches, Boolean(term));
+}
 
-async function showJobs() {
+function renderOperators(operators, searched = false) {
+  const results = document.getElementById("operatorResults");
+  if (!results) return;
+  if (!operators.length) {
+    results.innerHTML = `<p class="muted">${searched ? "No operators match your search." : "No operators are currently available."}</p>`;
+    return;
+  }
+  results.innerHTML = operators.map(operator => `
+    <article class="card operator-card" role="button" tabindex="0"
+      aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
+      onclick="showOperatorProfile('${escapeHtml(operator.id)}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOperatorProfile('${escapeHtml(operator.id)}')}">
+      <div class="operator-card-main">
+        ${operatorPhotoMarkup(operator)}
+        <div class="operator-card-copy">
+          <h3 data-user-content>${escapeHtml(operator.full_name || "ოპერატორი")}</h3>
+          <p class="operator-card-type">${escapeHtml(operator.operator_type || "ოპერატორი")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
+          <p class="operator-card-experience">გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>
+        </div>
+      </div>
+      <p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
+      ${renderOperatorStatuses(operator)}
+      ${operator.contact_anytime ? `<span class="status-badge">დარეკვა ნებისმიერ დროს</span>` : ""}
+      <div class="operator-card-footer"><span>პროფილის ნახვა</span><span class="calendar-hint">📅 თავისუფალი დღეები</span></div>
+    </article>
+  `).join("");
+}
 
+function operatorPhotoMarkup(operator, large = false) {
+  const className = large ? "operator-profile-photo" : "operator-avatar";
+  if (operator.photo_url) {
+    return '<img translate="no" class="' + className + '" src="' + escapeHtml(operator.photo_url) + '" alt="ოპერატორის ფოტო">';
+  }
+  const initial = escapeHtml((operator.full_name || "O").trim().charAt(0).toUpperCase());
+  return '<div class="' + className + '" aria-hidden="true" style="display:grid;place-items:center;font-size:28px;">' + initial + '</div>';
+}
+
+function craneControlTypeLabel(value) {
+  if (value === "Cabin") return "From the cabin";
+  if (value === "Remote control") return "From the ground with remote control";
+  if (value === "Both") return "Both";
+  return value || "";
+}
+
+function renderOperatorStatuses(operator) {
+  const badges = [];
+  if (operator.is_employed === false) badges.push({ label: "⚪ ამჟამად არ არის დასაქმებული", looking: false });
+  if (operator.is_employed === false && operator.available_for_replacement === true) badges.push({ label: "🔄 ეძებს შემცვლელის სამუშაოს", looking: true });
+  if (!badges.length) return "";
+  return `<div class="status-badges">${badges.map(({ label, looking }) => `<span class="status-badge ${looking ? "status-badge-looking" : ""}">${label}</span>`).join("")}</div>`;
+}
+
+async function showOperatorProfile(operatorId) {
+
+  saveAppView("operatorProfile", [operatorId]);
   hideAll();
 
-  document
-    .getElementById("mainContent")
-    .classList.remove("hidden");
-
-
-  const content =
-    document.getElementById("content");
-
-
+  const mainContent = document.getElementById("mainContent");
+  const content = document.getElementById("content");
+  mainContent.classList.remove("hidden");
   content.innerHTML =
-    "<h2>Jobs</h2><p class='muted'>Loading...</p>";
+    "<h2>Operator Profile</h2><p class=\"muted\">Loading profile...</p>";
 
-
-  const { data, error } =
-    await supabaseClient
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-
-  if (error) {
-
+  if (!operatorId) {
     content.innerHTML =
-      "<p>Error loading jobs.</p>";
-
+      "<p class=\"muted\">Operator profile not found.</p>" +
+      "<button onclick=\"showOperators()\">Back to Operators</button>";
     return;
-
   }
 
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone")
+    .eq("id", operatorId)
+    .eq("account_type", "operator")
+    .single();
 
-  if (!data.length) {
-
+  if (error || !data) {
+    console.error("Could not load operator profile:", error);
     content.innerHTML =
-      "<h2>Jobs</h2><p class='muted'>No jobs available yet.</p>";
-
+      "<p class=\"muted\">Could not load this operator profile.</p>" +
+      "<button onclick=\"showOperators()\">Back to Operators</button>";
     return;
-
   }
 
+  const name = escapeHtml(data.full_name || "Operator");
+  const operatorType = escapeHtml(data.operator_type || "Operator");
+  const city = escapeHtml(data.city || "");
+  const country = escapeHtml(data.country || "");
+  const location = [city, country].filter(Boolean).join(", ");
+  const experience = escapeHtml(data.experience_years ?? 0);
+  const about = data.about ? `<span data-user-content>${escapeHtml(data.about)}</span>` : "აღწერა მითითებული არ არის.";
+  const phone = String(data.phone || "").trim();
+  const phoneLink = phone.replace(/[^+\d]/g, "");
+  const age = data.age ? escapeHtml(data.age) : "";
+  const contactMarkup = phoneLink
+    ? `<div class="operator-profile-contact"><button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">ნომრის ჩვენება</button><p id="operatorPhoneValue" class="operator-profile-contact-value hidden" data-user-content><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p></div>`
+    : "<p class=\"muted\">ტელეფონის ნომერი მითითებული არ არის.</p>";
+  const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
+  const aboutMarkup = data.about ? `<section class="operator-profile-about"><h3>ჩემ შესახებ</h3><p>${about}</p></section>` : "";
+  const certificateMarkup = data.certificate_url ? `
+    <figure class="operator-certificate">
+      <figcaption>კოშკურა ამწის სერტიფიკატი · გასადიდებლად დააჭირე</figcaption>
+      <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="კოშკურა ამწის სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
+    </figure>` : "";
 
-  content.innerHTML =
-    "<h2>Jobs</h2>" +
-    data.map(job => `
-
-      <div class="card">
-
-        <h3>${escapeHtml(job.title)}</h3>
-
-        <p>${escapeHtml(job.company || "")}</p>
-
-        <p class="muted">
-          ${escapeHtml(job.city || "")},
-          ${escapeHtml(job.country || "")}
-        </p>
-
-        <p>
-          ${escapeHtml(job.description || "")}
-        </p>
-
-        <p>
-          Salary:
-          ${escapeHtml(job.salary || "Not specified")}
-        </p>
-
+  content.innerHTML = `
+    <button class="secondary" onclick="showOperators()">ოპერატორებზე დაბრუნება</button>
+    <div class="card operator-profile-card">
+      <div class="operator-profile-layout">
+        <section class="operator-profile-main">
+          <div class="operator-profile-summary">
+            ${operatorPhotoMarkup(cardProfile, true)}
+            <div class="operator-profile-identity">
+              <h2 data-user-content>${name}</h2>
+              <p class="operator-profile-type">${operatorType}${data.crane_control_type ? ` · ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}` : ""}</p>
+              <dl class="operator-profile-facts">
+                <div class="operator-profile-fact"><dt>გამოცდილება</dt><dd>${experience} წელი</dd></div>
+                ${age ? `<div class="operator-profile-fact"><dt>ასაკი</dt><dd>${age}</dd></div>` : ""}
+                <div class="operator-profile-fact"><dt>ქალაქი</dt><dd data-user-content>${location || "—"}</dd></div>
+              </dl>
+            </div>
+          </div>
+          ${data.contact_anytime ? "<span class=\"status-badge\">დარეკვა ნებისმიერ დროს</span>" : ""}
+          ${contactMarkup}
+          ${aboutMarkup}
+        </section>
+        <aside class="operator-profile-calendar" aria-label="ოპერატორის თავისუფალი და დაკავებული დღეების კალენდარი">
+          <div class="operator-profile-calendar-head">
+            <h3>კალენდარი</h3>
+            <button id="operatorProfileCalendarPrevious" class="operator-profile-calendar-nav" type="button" aria-label="წინა თვე" onclick="moveOperatorProfileCalendar(-1)">‹</button>
+            <span id="operatorProfileCalendarMonth" class="operator-profile-calendar-month"></span>
+            <button class="operator-profile-calendar-nav" type="button" aria-label="შემდეგი თვე" onclick="moveOperatorProfileCalendar(1)">›</button>
+          </div>
+          <div class="operator-profile-calendar-legend">
+            <span><i style="background:#174b35"></i>თავისუფალი</span>
+            <span><i style="background:#a32a30"></i>დაკავებული</span>
+          </div>
+          <div id="operatorProfileCalendarGrid" class="operator-profile-calendar-grid"><p class="operator-profile-calendar-error">კალენდარი იტვირთება…</p></div>
+        </aside>
       </div>
-
-    `).join("");
-
+      ${certificateMarkup}
+    </div>
+  `;
+  await loadOperatorProfileCalendar(operatorId);
 }
 
+function toggleCertificatePhoto(image) {
+  const expanded = image.classList.toggle("is-expanded");
+  image.setAttribute("aria-expanded", String(expanded));
+}
 
+async function showCompanyProfile(companyId) {
+  saveAppView("companyProfile", [companyId]);
+  hideAll();
+  const content = document.getElementById("content");
+  document.getElementById("mainContent").classList.remove("hidden");
+  content.innerHTML = "<h2>Company Profile</h2><p class='muted'>Loading profile...</p>";
+  if (!companyId) {
+    content.innerHTML = "<p class='muted'>Company profile not found.</p><button onclick=\"showJobs('replacement')\">Back to Jobs</button>";
+    return;
+  }
+  const { data, error } = await supabaseClient.from("profiles")
+    .select("full_name, city, country, about, phone, company_address")
+    .eq("id", companyId)
+    .eq("account_type", "company")
+    .single();
+  if (error || !data) {
+    content.innerHTML = "<p class='muted'>Could not load this company profile.</p><button onclick=\"showJobs('replacement')\">Back to Jobs</button>";
+    return;
+  }
+  content.innerHTML = `
+    <button class="secondary" onclick="showJobs('replacement')">Back to Jobs</button>
+    <div class="card" style="margin-top:15px;">
+      <h2 data-user-content>${escapeHtml(data.full_name || "კომპანია")}</h2>
+      <p data-user-content>${escapeHtml(data.city || "")}${data.country ? ", " + escapeHtml(data.country) : ""}</p>
+      ${data.company_address ? `<p>Address: <span data-user-content>${escapeHtml(data.company_address)}</span></p>` : ""}
+      <p data-user-content style="white-space:pre-wrap; margin-top:15px;">${escapeHtml(data.about || "")}</p>
+      ${data.phone ? `<p>Phone: <span data-user-content>${escapeHtml(data.phone)}</span></p>` : ""}
+    </div>`;
+}
+
+async function showPublicProfile(profileId) {
+  if (!profileId) return;
+  const { data, error } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", profileId).maybeSingle();
+  if (error || !data) {
+    document.getElementById("content").innerHTML = "<p class='muted'>Profile not found.</p>";
+    document.getElementById("mainContent").classList.remove("hidden");
+    return;
+  }
+  if (data.account_type === "company") return showCompanyProfile(profileId);
+  if (data.account_type === "operator") return showOperatorProfile(profileId);
+}
+
+let availableJobs = [];
+let currentAccountType = "";
+let currentUserEmployed = null;
+let currentJobCategory = "all";
+let currentJobSearchTerm = "";
+let currentViewingUserId = null;
+let activeApplications = new Set();
+let dateRangePickerState = null;
+
+function openDateRangePicker(input) {
+  const startInput = document.getElementById(input.dataset.start);
+  const endInput = document.getElementById(input.dataset.end);
+  if (!startInput || !endInput) return;
+  dateRangePickerState = { input, startInput, endInput, start: "", month: new Date() };
+  const backdrop = document.createElement("div");
+  backdrop.id = "dateRangePickerBackdrop";
+  backdrop.style.cssText = "position:fixed;inset:0;z-index:10000;background:#0009;display:grid;place-items:center;padding:16px";
+  backdrop.onclick = event => { if (event.target === backdrop) closeDateRangePicker(); };
+  backdrop.innerHTML = `<div style="background:#1c232b;color:white;border:1px solid #46515c;border-radius:14px;padding:18px;width:min(360px,100%);box-shadow:0 12px 40px #0008"><div style="display:flex;align-items:center;justify-content:space-between"><button type="button" class="secondary" onclick="moveDateRangeMonth(-1)">‹</button><strong id="dateRangeMonth"></strong><button type="button" class="secondary" onclick="moveDateRangeMonth(1)">›</button></div><p id="dateRangeHint" class="muted" style="text-align:center"></p><div id="dateRangeDays" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center"></div><button type="button" class="secondary" style="margin-top:12px;width:100%" onclick="closeDateRangePicker()">Cancel</button></div>`;
+  document.body.appendChild(backdrop);
+  renderDateRangeMonth();
+}
+
+function closeDateRangePicker() {
+  document.getElementById("dateRangePickerBackdrop")?.remove();
+  dateRangePickerState = null;
+}
+
+function moveDateRangeMonth(delta) {
+  if (!dateRangePickerState) return;
+  dateRangePickerState.month.setMonth(dateRangePickerState.month.getMonth() + delta);
+  renderDateRangeMonth();
+}
+
+function renderDateRangeMonth() {
+  if (!dateRangePickerState) return;
+  const { month, start } = dateRangePickerState;
+  document.getElementById("dateRangeMonth").textContent = month.toLocaleDateString("ka-GE", { month: "long", year: "numeric" });
+  document.getElementById("dateRangeHint").textContent = start ? "ახლა აირჩიეთ ბოლო დღე (ჩათვლით)." : "აირჩიეთ პირველი დღე.";
+  const grid = document.getElementById("dateRangeDays");
+  const names = ["კვი", "ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ"];
+  const offset = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  grid.innerHTML = names.map(name => `<strong class="muted">${name}</strong>`).join("") + Array(offset).fill("<span></span>").join("") + Array.from({ length: count }, (_, index) => {
+    const day = index + 1;
+    const date = new Date(month.getFullYear(), month.getMonth(), day);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const selected = start === iso || dateRangePickerState.endInput.value === iso;
+    return `<button type="button" class="${selected ? "" : "secondary"}" style="padding:8px 2px" onclick="selectDateRangeDay('${iso}')">${day}</button>`;
+  }).join("");
+}
+
+function selectDateRangeDay(iso) {
+  const state = dateRangePickerState;
+  if (!state) return;
+  if (!state.start || state.endInput.value || iso < state.start) {
+    state.start = iso;
+    state.endInput.value = "";
+    renderDateRangeMonth();
+    return;
+  }
+  state.startInput.value = state.start;
+  state.endInput.value = iso;
+  const format = value => new Date(`${value}T00:00:00`).toLocaleDateString("ka-GE", { day: "2-digit", month: "short", year: "numeric" });
+  state.input.value = `${format(state.start)} – ${format(iso)}`;
+  closeDateRangePicker();
+}
+
+function replacementJobFormMarkup(accountType) {
+  return `
+    <div class="card">
+      <h3>🔄 ${accountType === "company" ? "Post a replacement job" : "Need a replacement?"}</h3>
+      <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
+        <input id="replacementTitle" type="text" value="Replacement Needed" placeholder="Title" required>
+        <label for="replacementDateRange">Work dates (select start and end)</label>
+        <input id="replacementDateRange" type="text" data-start="replacementDate" data-end="replacementEndDate" placeholder="Select start and end dates" readonly required onclick="openDateRangePicker(this)">
+        <input id="replacementDate" type="hidden">
+        <input id="replacementEndDate" type="hidden">
+        <input id="replacementCity" type="text" placeholder="Location / city" required>
+        <input id="replacementCountry" type="text" value="Georgia" placeholder="Country">
+        <label for="replacementOperatorType">Crane / operator type</label>
+        <select id="replacementOperatorType" required>
+          <option value="">Select type</option>
+          <option value="Tower Crane Operator">Tower Crane Operator</option>
+          <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+          <option value="Excavator Operator">Excavator Operator</option>
+          <option value="Loader Operator">Loader Operator</option>
+          <option value="Forklift Operator">Forklift Operator</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="replacementPayment" type="number" min="0" step="0.01" placeholder="Payment (GEL)" required>
+        <textarea id="replacementDescription" placeholder="Description / additional information"></textarea>
+        <button onclick="publishReplacementJob()">Publish replacement request</button>
+        <p class="status" id="replacementJobStatus"></p>
+      </div>
+    </div>`;
+}
+
+async function showOperatorReplacementForm() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "operator") { showAccountHome(); return; }
+  currentAccountType = "operator";
+  saveAppView("replacementForm");
+  hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
+  document.getElementById("content").innerHTML = `
+    <h2>Post a Replacement Job</h2>
+    <button class="secondary" onclick="showJobs('replacement')">Back to Jobs</button>
+    ${replacementJobFormMarkup("operator")}`;
+}
+
+async function showJobs(category = "all", focusJobId = null) {
+
+  currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "regular";
+  currentJobSearchTerm = "";
+  saveAppView("jobs", [currentJobCategory, focusJobId]);
+  hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
+  const content = document.getElementById("content");
+  content.innerHTML = "<h2>Jobs</h2><p class='muted'>Loading...</p>";
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  let accountProfile = null;
+  if (user) {
+    const { data } = await supabaseClient.from("profiles")
+      .select("account_type, is_employed").eq("id", user.id).maybeSingle();
+    accountProfile = data;
+  }
+  currentAccountType = accountProfile?.account_type || "";
+  if (currentAccountType === "operator" && currentJobCategory === "all") {
+    currentJobCategory = "regular";
+    saveAppView("jobs", [currentJobCategory, focusJobId]);
+  }
+  currentViewingUserId = user?.id || null;
+  currentUserEmployed = accountProfile?.is_employed ?? null;
+
+  const companyForm = currentAccountType === "company" && currentJobCategory !== "replacement" ? `
+    <div class="card">
+      <h3>Post a regular job</h3>
+      <div class="form" style="margin:15px 0 0; padding:0; background:transparent; border:0;">
+        <input id="jobTitle" type="text" placeholder="Job title" required>
+        <label for="jobOperatorType">What type of operator are you looking for?</label>
+        <select id="jobOperatorType" required>
+          <option value="">Select operator type</option>
+          <option value="Tower Crane Operator">Tower Crane Operator</option>
+          <option value="Mobile Crane Operator">Mobile Crane Operator</option>
+          <option value="Excavator Operator">Excavator Operator</option>
+          <option value="Loader Operator">Loader Operator</option>
+          <option value="Forklift Operator">Forklift Operator</option>
+          <option value="Other">Other</option>
+        </select>
+        <input id="jobCompany" type="text" placeholder="Company name">
+        <input id="jobCity" type="text" placeholder="City">
+        <input id="jobCountry" type="text" placeholder="Country">
+        <textarea id="jobDescription" placeholder="Job description"></textarea>
+        <input id="jobSalary" type="text" placeholder="Salary (optional)">
+        <button onclick="publishJob()">Publish job</button>
+        <p class="status" id="jobStatus"></p>
+      </div>
+    </div>
+  ` : "";
+
+  const replacementForm = ["company", "operator"].includes(currentAccountType) && currentJobCategory === "replacement"
+    ? `<div class="replacement-job-entry">
+        <button type="button" class="secondary replacement-form-toggle" aria-expanded="false" aria-controls="replacementJobFormContainer" onclick="toggleReplacementJobForm(this)">
+          <span>${currentAccountType === "company" ? "Post a replacement job" : "Need a replacement?"}</span>
+          <span class="replacement-toggle-icon" aria-hidden="true">＋</span>
+        </button>
+        <div id="replacementJobFormContainer" class="hidden">${replacementJobFormMarkup(currentAccountType)}</div>
+      </div>`
+    : "";
+
+  const { data, error } = await supabaseClient
+    .from("jobs")
+    .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, created_by, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Could not load jobs:", error);
+    content.innerHTML = "<h2>Jobs</h2><p class=\"muted\">Could not load jobs. Please try again later.</p>";
+    return;
+  }
+
+  availableJobs = data || [];
+  const jobOwnerIds = [...new Set(availableJobs.map(job => job.created_by).filter(Boolean))];
+  if (jobOwnerIds.length) {
+    const { data: owners } = await supabaseClient.from("profiles")
+      .select("id, account_type").in("id", jobOwnerIds);
+    const ownerTypeById = new Map((owners || []).map(owner => [owner.id, owner.account_type]));
+    availableJobs.forEach(job => { job.created_by_type = ownerTypeById.get(job.created_by) || ""; });
+  }
+  activeApplications = new Set();
+  if (user) {
+    const { data: applications } = await supabaseClient.from("applications")
+      .select("job_id").eq("applicant_id", user.id).in("status", ["Pending", "Reviewed"]);
+    (applications || []).forEach(application => activeApplications.add(String(application.job_id)));
+  }
+  const categoryTabs = currentAccountType === "operator" ? `
+    <div class="buttons" style="margin:16px 0;">
+      <button class="${currentJobCategory === "regular" ? "" : "secondary"}" onclick="filterJobCategory('regular')">Permanent Jobs</button>
+      <button class="${currentJobCategory === "replacement" ? "" : "secondary"}" onclick="filterJobCategory('replacement')">Replacement Jobs</button>
+    </div>
+  ` : `
+    <div class="buttons" style="margin:16px 0;">
+      <button class="${currentJobCategory === "all" ? "" : "secondary"}" onclick="filterJobCategory('all')">All Jobs</button>
+      <button class="${currentJobCategory === "regular" ? "" : "secondary"}" onclick="filterJobCategory('regular')">Permanent Jobs</button>
+      <button class="${currentJobCategory === "replacement" ? "" : "secondary"}" onclick="filterJobCategory('replacement')">Replacement Jobs</button>
+    </div>
+  `;
+  const roleMessage = currentJobCategory === "replacement" && currentAccountType === "company"
+    ? ""
+    : currentJobCategory === "replacement" && !currentAccountType
+      ? "<p class=\"muted\">Log in as an Operator or Company to post a replacement job.</p>"
+        : "";
+
+  content.innerHTML = `
+    <h2>Jobs</h2>
+    ${categoryTabs}
+    ${companyForm}
+    ${replacementForm}
+    ${roleMessage}
+    <input type="search" id="jobSearch" placeholder="Search jobs by title, operator type or location" oninput="filterJobs(this.value)" aria-label="Search jobs" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
+    <div id="jobResults"></div>
+  `;
+  renderJobs();
+  if (focusJobId) setTimeout(() => document.getElementById(`job-${Number(focusJobId)}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 0);
+}
+
+function filterJobCategory(category) {
+  if (!["all", "regular", "replacement"].includes(category)) return;
+  currentJobCategory = category;
+  showJobs(category);
+}
+
+function toggleReplacementJobForm(button) {
+  const form = document.getElementById("replacementJobFormContainer");
+  if (!form || !button) return;
+  const expanded = form.classList.toggle("hidden") === false;
+  button.setAttribute("aria-expanded", String(expanded));
+  const icon = button.querySelector(".replacement-toggle-icon");
+  if (icon) icon.textContent = expanded ? "−" : "＋";
+}
+
+function filterJobs(query) {
+  currentJobSearchTerm = String(query || "").trim().toLocaleLowerCase();
+  renderJobs();
+}
+
+function renderJobs() {
+  const results = document.getElementById("jobResults");
+  if (!results) return;
+  const jobs = availableJobs.filter(job => {
+    if (job.created_by && job.created_by === currentViewingUserId) return false;
+    const type = job.job_type || "regular";
+    const categoryMatches = currentJobCategory === "all" || type === currentJobCategory;
+    const searchMatches = [job.title, job.operator_type, job.company, job.city, job.country, job.description, job.salary]
+      .some(value => String(value || "").toLocaleLowerCase().includes(currentJobSearchTerm));
+    return categoryMatches && searchMatches;
+  });
+  if (!jobs.length) {
+    results.innerHTML = `<p class="muted">${currentJobSearchTerm ? "No jobs match your search." : "No jobs available in this category yet."}</p>`;
+    return;
+  }
+  results.innerHTML = jobs.map(job => {
+    const isReplacement = job.job_type === "replacement";
+    if (isReplacement) {
+      const formatJobDate = value => value
+        ? new Date(`${value}T00:00:00`).toLocaleDateString("ka-GE", { day: "2-digit", month: "short" })
+        : "თარიღი მითითებული არ არის";
+      const dateRange = job.replacement_date
+        ? `${formatJobDate(job.replacement_date)}${job.replacement_end_date && job.replacement_end_date !== job.replacement_date ? ` – ${formatJobDate(job.replacement_end_date)} (ჩათვლით)` : ""}`
+        : "თარიღი მითითებული არ არის";
+      return `
+        <article class="card job-card job-card-replacement" id="job-${Number(job.id)}">
+          <header class="job-card-header">
+            <div class="job-card-title-wrap"><span class="job-card-kind">შემცვლელის ვაკანსია</span><h3>🔄 <span data-user-content>${escapeHtml(job.title || "შემცვლელი საჭიროა")}</span></h3></div>
+            ${job.created_by_type === "operator" ? `<button class="job-card-calendar" type="button" aria-label="ვაკანსიის ავტორის დაკავებული დღეების კალენდრის ნახვა" title="დაკავებული დღეების კალენდრის ნახვა" onclick="showOperatorBusyCalendar('${escapeHtml(job.created_by || "")}')">📅</button>` : ""}
+          </header>
+          <div class="job-card-facts">
+            <div class="job-card-fact"><span class="job-card-fact-label">სამუშაო დღეები</span><strong class="job-card-fact-value">${escapeHtml(dateRange)}</strong></div>
+            <div class="job-card-fact"><span class="job-card-fact-label">ტექნიკა</span><strong class="job-card-fact-value">${escapeHtml(job.operator_type || "მითითებული არ არის")}</strong></div>
+            <div class="job-card-fact"><span class="job-card-fact-label">ადგილმდებარეობა</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</strong></div>
+            <div class="job-card-fact"><span class="job-card-fact-label">ანაზღაურება</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</strong></div>
+          </div>
+          ${job.description ? `<p class="job-card-description" data-user-content>${escapeHtml(job.description)}</p>` : ""}
+          <footer class="job-card-footer">გამოაქვეყნა <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "ოპერატორი")}</button></footer>
+        </article>
+      `;
+    }
+    return `
+      <article class="card job-card" id="job-${Number(job.id)}">
+        <header class="job-card-header"><div class="job-card-title-wrap"><span class="job-card-kind">მუდმივი ვაკანსია</span><h3 data-user-content>${escapeHtml(job.title || "უსათაურო ვაკანსია")}</h3><p class="job-card-company">კომპანია: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(job.created_by || "")}')">${escapeHtml(job.company || "კომპანია")}</button></p></div></header>
+        <div class="job-card-facts">
+          <div class="job-card-fact"><span class="job-card-fact-label">ეძებენ</span><strong class="job-card-fact-value">${escapeHtml(job.operator_type || "მითითებული არ არის")}</strong></div>
+          <div class="job-card-fact"><span class="job-card-fact-label">ადგილმდებარეობა</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.city || "")}${job.country ? ", " + escapeHtml(job.country) : ""}</strong></div>
+          <div class="job-card-fact"><span class="job-card-fact-label">ანაზღაურება</span><strong class="job-card-fact-value" data-user-content>${escapeHtml(job.salary || "მითითებული არ არის")}</strong></div>
+        </div>
+        ${job.description ? `<p class="job-card-description" data-user-content>${escapeHtml(job.description)}</p>` : ""}
+      </article>
+    `;
+  }).join("");
+}
+
+async function publishJob() {
+  const status = document.getElementById("jobStatus");
+  const title = document.getElementById("jobTitle").value.trim();
+  if (!title) { status.textContent = "Please enter a job title."; return; }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { status.textContent = "Please log in to publish a job."; return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "company") {
+    status.textContent = "Only Company accounts can publish regular jobs.";
+    return;
+  }
+  const operatorType = document.getElementById("jobOperatorType").value;
+  if (!operatorType) { status.textContent = "Please select the type of operator you are looking for."; return; }
+
+  status.textContent = "Publishing job...";
+  const { error } = await supabaseClient.from("jobs").insert({
+    title,
+    job_type: "regular",
+    company: document.getElementById("jobCompany").value.trim(),
+    city: document.getElementById("jobCity").value.trim(),
+    country: document.getElementById("jobCountry").value.trim(),
+    description: document.getElementById("jobDescription").value.trim(),
+    salary: document.getElementById("jobSalary").value.trim(),
+    operator_type: operatorType,
+    created_by: user.id
+  });
+  if (error) { console.error("Could not publish job:", error); status.textContent = "Could not publish job: " + error.message; return; }
+  await showJobs("regular");
+}
+
+async function publishReplacementJob() {
+  const status = document.getElementById("replacementJobStatus");
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { status.textContent = "Please log in as an Operator."; return; }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type, phone, full_name").eq("id", user.id).maybeSingle();
+  if (!["operator", "company"].includes(profile?.account_type)) {
+    status.textContent = "Only Operator and Company accounts can post replacement jobs.";
+    return;
+  }
+
+  const title = document.getElementById("replacementTitle").value.trim() || "Replacement Needed";
+  const date = document.getElementById("replacementDate").value;
+  const endDate = document.getElementById("replacementEndDate").value;
+  const city = document.getElementById("replacementCity").value.trim();
+  const country = document.getElementById("replacementCountry").value.trim() || "Georgia";
+  const operatorType = document.getElementById("replacementOperatorType").value;
+  const payment = Number(document.getElementById("replacementPayment").value);
+  const description = document.getElementById("replacementDescription").value.trim();
+
+  if (!date || !endDate || endDate < date || !city || !operatorType || !Number.isFinite(payment) || payment < 0) {
+    status.textContent = "Select valid start and end dates, location, operator type and payment.";
+    return;
+  }
+
+  status.textContent = "Publishing replacement request...";
+  const { error } = await supabaseClient.from("jobs").insert({
+    title,
+    job_type: "replacement",
+    replacement_date: date,
+    replacement_end_date: endDate,
+    city,
+    country,
+    operator_type: operatorType,
+    salary: `${payment} GEL`,
+    description,
+    company: profile.account_type === "company" ? (profile.full_name || "Company") : null,
+    contact_phone: profile.phone || null,
+    created_by: user.id
+  });
+  if (error) {
+    console.error("Could not publish replacement request:", error);
+    status.textContent = "Could not publish replacement request: " + error.message;
+    return;
+  }
+  await showJobs("replacement");
+}
+
+async function applyToJob(jobId) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    showLogin();
+    return;
+  }
+  const { data: profile } = await supabaseClient.from("profiles")
+    .select("account_type, is_employed").eq("id", user.id).maybeSingle();
+  if (profile?.account_type !== "operator") {
+    alert("Only operator accounts can apply to jobs.");
+    return;
+  }
+  if (profile.is_employed === true) {
+    alert("Currently employed Operators cannot apply to jobs.");
+    return;
+  }
+  const selectedJob = availableJobs.find(job => String(job.id) === String(jobId));
+  if (selectedJob?.created_by === user.id) {
+    alert("You cannot apply to a job you posted yourself.");
+    return;
+  }
+  const { data: existing, error: existingError } = await supabaseClient.from("applications")
+    .select("id, status").eq("job_id", jobId).eq("applicant_id", user.id)
+    .in("status", ["Pending", "Reviewed"]).limit(1);
+  if (existingError) { alert("Could not check your previous application: " + existingError.message); return; }
+  if (existing?.length) {
+    alert("You already applied. You can apply again after the job owner responds.");
+    return;
+  }
+  const message = prompt("Add a short message to your application (optional):") || "";
+  const { error } = await supabaseClient.from("applications").insert({
+    job_id: jobId,
+    applicant_id: user.id,
+    message
+  });
+  if (error) {
+    alert(error.code === "23505" ? "You have already applied to this job." : "Could not submit application: " + error.message);
+    return;
+  }
+  alert("Application submitted.");
+  activeApplications.add(String(jobId));
+  renderJobs();
+}
+
+let currentNotificationCategory = "all";
+
+function filterApplicationsCategory(category) {
+  if (!["all", "job_application", "replacement", "system"].includes(category)) return;
+  currentNotificationCategory = category;
+  showApplications(category);
+}
+
+function formatNotificationTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("ka-GE");
+}
+
+async function markNotificationRead(notificationId) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+  const { error } = await supabaseClient.from("notifications")
+    .update({ is_read: true }).eq("id", notificationId).eq("recipient_user_id", user.id);
+  if (error) console.error("Could not mark notification read:", error);
+  await refreshUnreadNotificationCount(user.id);
+}
+
+async function openNotificationApplication(notificationId, applicationId) {
+  await markNotificationRead(notificationId);
+  await showApplications("all", applicationId);
+}
+
+async function openNotificationJob(notificationId, jobId, category) {
+  await markNotificationRead(notificationId);
+  await showJobs(category === "replacement" ? "replacement" : "all", jobId);
+}
+
+async function openNotificationProfile(notificationId, profileId) {
+  await markNotificationRead(notificationId);
+  await showPublicProfile(profileId);
+}
+
+async function showApplications(category = "all", focusApplicationId = null) {
+  currentNotificationCategory = ["all", "job_application", "replacement", "system"].includes(category) ? category : "all";
+  saveAppView("applications", [currentNotificationCategory, focusApplicationId]);
+  hideAll();
+  const mainContent = document.getElementById("mainContent");
+  const content = document.getElementById("content");
+  mainContent.classList.remove("hidden");
+  content.innerHTML = "<h2>Applications</h2><p class='muted'>Loading...</p>";
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+
+  const [notificationResult, applicationResult] = await Promise.all([
+    supabaseClient.from("notifications").select("*").eq("recipient_user_id", user.id).order("created_at", { ascending: false }),
+    supabaseClient.from("applications").select("id, status, message, created_at, applicant_id, job_id, jobs(title, company, city, country, job_type, created_by), profiles!applications_applicant_id_fkey(full_name)").order("created_at", { ascending: false })
+  ]);
+  const { data: notifications, error: notificationError } = notificationResult;
+  const { data: applications, error: applicationError } = applicationResult;
+  if (notificationError || applicationError) {
+    console.error("Could not load Applications history:", notificationError || applicationError);
+    content.innerHTML = "<h2>Applications</h2><p class='muted'>Could not load your history. Check that the notifications migration and access policies are installed.</p>";
+    return;
+  }
+
+  const notificationRows = notifications || [];
+  const applicationRows = applications || [];
+  const filteredNotifications = notificationRows.filter(item => currentNotificationCategory === "all" || item.category === currentNotificationCategory);
+  const filteredApplications = applicationRows.filter(item => {
+    const itemCategory = item.jobs?.job_type === "replacement" ? "replacement" : "job_application";
+    return currentNotificationCategory === "all" || currentNotificationCategory === itemCategory;
+  });
+  const appById = new Map(applicationRows.map(application => [String(application.id), application]));
+  const categories = [["all", "All"], ["job_application", "Job Applications"], ["replacement", "Replacement"], ["system", "System"]];
+  const categoryTabs = `<div class="buttons" style="margin:16px 0;">${categories.map(([key, label]) => `<button class="${currentNotificationCategory === key ? "" : "secondary"}" onclick="filterApplicationsCategory('${key}')">${label}</button>`).join("")}</div>`;
+
+  const notificationCards = filteredNotifications.length ? filteredNotifications.map(notification => {
+    const application = notification.related_application_id == null ? null : appById.get(String(notification.related_application_id));
+    const canRespond = application
+      && application.jobs?.created_by === user.id
+      && ["Pending", "Reviewed"].includes(application.status)
+      && ["application_sent", "replacement_request_sent"].includes(notification.event_type);
+    const profileAction = notification.related_profile_id
+      ? `<button class="secondary" onclick="openNotificationProfile(${Number(notification.id)}, '${escapeHtml(notification.related_profile_id)}')">View Profile</button>`
+      : "";
+    const responseActions = canRespond
+      ? `<button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${Number(notification.id)})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${Number(notification.id)})">Decline</button>`
+      : "";
+    const markReadAction = !notification.is_read && !profileAction
+      ? `<button class="secondary" onclick="markNotificationRead(${Number(notification.id)})">Mark read</button>`
+      : "";
+    return `<article class="card notification-card ${notification.is_read ? "read" : "unread"}">
+      <h3 data-user-content>${escapeHtml(localizeNotificationText(notification.title))}</h3><p data-user-content>${escapeHtml(localizeNotificationText(notification.message))}</p>
+      <p class="muted">${escapeHtml(formatNotificationTime(notification.created_at))}</p>
+      <div class="notification-actions">${profileAction}${responseActions}${markReadAction}</div>
+    </article>`;
+  }).join("") : `<p class="muted">No ${currentNotificationCategory === "all" ? "history" : "events in this category"} yet.</p>`;
+
+  const applicationCards = filteredApplications.map(application => {
+    const isOwner = application.jobs?.created_by === user.id;
+    const isApplicant = application.applicant_id === user.id;
+    if (!isOwner && !isApplicant) return "";
+    const isReplacement = application.jobs?.job_type === "replacement";
+    const status = application.status || "Pending";
+    const applicantName = application.profiles?.full_name || "ოპერატორი";
+    const inboxNotification = notificationRows.find(item =>
+      item.recipient_user_id === user.id
+      && String(item.related_application_id) === String(application.id)
+      && ["application_sent", "replacement_request_sent"].includes(item.event_type)
+      && !item.is_read
+    );
+    const inboxNotificationId = inboxNotification ? Number(inboxNotification.id) : "null";
+    const actions = isOwner && ["Pending", "Reviewed"].includes(status)
+      ? `<div class="notification-actions"><button onclick="updateApplicationStatus(${Number(application.id)}, 'Accepted', ${inboxNotificationId})">Accept / Confirm</button><button class="secondary" onclick="updateApplicationStatus(${Number(application.id)}, 'Rejected', ${inboxNotificationId})">Decline</button><label>Status <select onchange="updateApplicationStatus(${Number(application.id)}, this.value, ${inboxNotificationId})"><option value="Pending" ${status === "Pending" ? "selected" : ""}>Pending</option><option value="Reviewed" ${status === "Reviewed" ? "selected" : ""}>Reviewed</option></select></label></div>`
+      : "";
+    return `<article class="card" id="application-${Number(application.id)}">
+      <h3 data-user-content>${escapeHtml(application.jobs?.title || "ვაკანსია")}</h3>
+      <p>${isOwner ? `From: <button class="text-link" data-user-content onclick="showPublicProfile('${escapeHtml(application.applicant_id)}')">${escapeHtml(applicantName)}</button>` : `To: <span data-user-content>${escapeHtml(application.jobs?.company || "ვაკანსიის ავტორი")}</span>`}</p>
+      <p>${application.message ? `<span data-user-content>${escapeHtml(application.message)}</span>` : (isReplacement ? "Replacement request" : "No message")}</p>
+      <p class="muted"><span>${isReplacement ? "Replacement" : "Job application"}</span> · <span>${escapeHtml(status)}</span> · <span>${escapeHtml(formatNotificationTime(application.created_at))}</span></p>${actions}
+    </article>`;
+  }).join("");
+
+  content.innerHTML = `<h2>Applications & History</h2>${categoryTabs}<h3>Notifications</h3>${notificationCards}<h3 style="margin-top:24px;">Applications and requests</h3>${applicationCards || `<p class="muted">No applications or replacement requests in this category.</p>`}`;
+  await refreshUnreadNotificationCount(user.id);
+  if (focusApplicationId) setTimeout(() => document.getElementById(`application-${Number(focusApplicationId)}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" }), 0);
+}
+
+async function updateApplicationStatus(applicationId, status, notificationId = null) {
+  if (!["Pending", "Reviewed", "Accepted", "Rejected"].includes(status)) return;
+  const { error } = await supabaseClient.from("applications")
+    .update({ status }).eq("id", applicationId);
+  if (error) {
+    alert("Could not update application status: " + error.message);
+    await showApplications(currentNotificationCategory);
+    return;
+  }
+  if (notificationId) await markNotificationRead(notificationId);
+  await refreshUnreadNotificationCount();
+  await showApplications(currentNotificationCategory);
+}
 function escapeHtml(value) {
 
   return String(value)
@@ -668,15 +2880,286 @@ function escapeHtml(value) {
 
 }
 
+// Translate application-owned copy only. User-provided values are marked with
+// data-user-content in the templates and are deliberately skipped.
+const operoKaCopy = {
+  "OPERO": "OPERO", "Operators": "ოპერატორები", "Jobs": "ვაკანსიები", "Applications": "განაცხადები",
+  "Applications & History": "განაცხადები და ისტორია", "Applications and requests": "განაცხადები და მოთხოვნები",
+  "Dashboard": "სამუშაო პანელი", "My Profile": "ჩემი პროფილი", "Login": "შესვლა", "Register": "რეგისტრაცია", "Logout": "გასვლა",
+  "Build better teams. Move work forward.": "შევქმნათ ძლიერი გუნდები. წავიყვანოთ საქმე წინ.",
+  "A trusted network connecting construction operators, companies and new opportunities.": "სანდო პლატფორმა, რომელიც სამშენებლო ოპერატორებს, კომპანიებსა და ახალ შესაძლებლობებს აკავშირებს.",
+  "My Profile": "ჩემი პროფილი", "Account type:": "ანგარიშის ტიპი:", "Professional operator profile": "ოპერატორის პროფესიული პროფილი",
+  "Edit profile": "პროფილის რედაქტირება", "Age": "ასაკი", "Phone": "ტელეფონი", "City": "ქალაქი", "Country": "ქვეყანა",
+  "Edit personal information": "პირადი ინფორმაციის რედაქტირება", "Update your contact details and profile photo.": "განაახლეთ საკონტაქტო ინფორმაცია და პროფილის ფოტო.",
+  "Close": "დახურვა", "Full name": "სახელი და გვარი", "Company name": "კომპანიის სახელი", "Company address": "კომპანიის მისამართი",
+  "Company email": "კომპანიის ელფოსტა", "Profile photo": "პროფილის ფოტო", "Save profile": "პროფილის შენახვა",
+  "Operator card information": "ინფორმაცია ოპერატორის ბარათისთვის", "This is the professional information people see on your operator card.": "ეს ინფორმაცია გამოჩნდება ოპერატორის ბარათზე.",
+  "Equipment type": "ტექნიკის ტიპი", "Select operator type": "აირჩიეთ ტექნიკის ტიპი", "Tower Crane Operator": "კოშკურა ამწის ოპერატორი",
+  "Mobile Crane Operator": "მობილური ამწის ოპერატორი", "Excavator Operator": "ექსკავატორის ოპერატორი", "Loader Operator": "დამტვირთველის ოპერატორი",
+  "Forklift Operator": "ავტოფორკლიფტის ოპერატორი", "Other": "სხვა", "Tower crane operation": "კოშკურა ამწის მართვა",
+  "Select operation type": "აირჩიეთ მართვის ტიპი", "From the ground with remote control": "მიწიდან პულტით", "From the cabin": "კაბინიდან", "Both": "ორივე",
+  "Years of experience": "გამოცდილება (წელი)", "Experience years": "გამოცდილება (წელი)", "Currently employed?": "ამჟამად დასაქმებული ხართ?",
+  "Select yes or no": "აირჩიეთ პასუხი", "Yes": "დიახ", "No": "არა", "About you": "ჩემ შესახებ", "Call me anytime": "დამირეკეთ ნებისმიერ დროს",
+  "Mark your busy days": "მონიშნეთ დაკავებული დღეები", "Choose dates when you are unavailable for replacement work.": "მონიშნეთ დღეები, როცა შემცვლელად მუშაობას ვერ შეძლებთ.",
+  "Previous": "წინა", "Next": "შემდეგი", "Save busy days": "დაკავებული დღეების შენახვა", "Login": "შესვლა",
+  "Phone number": "ტელეფონის ნომერი", "Password": "პაროლი", "Need an account?": "ჯერ არ გაქვთ ანგარიში?", "Create your Opero account": "შექმენით Opero ანგარიში",
+  "I am an operator": "მე ვარ ოპერატორი", "I represent a company": "მე წარმოვადგენ კომპანიას", "Email": "ელფოსტა", "Repeat password": "გაიმეორეთ პაროლი",
+  "Are you currently employed?": "ამჟამად დასაქმებული ხართ?", "Age": "ასაკი", "Experience (years)": "გამოცდილება (წელი)",
+  "What type of equipment do you operate?": "რა ტიპის ტექნიკაზე მუშაობთ?", "Select equipment type": "აირჩიეთ ტექნიკის ტიპი",
+  "Bulldozer Operator": "ბულდოზერის ოპერატორი", "Telehandler Operator": "ტელესკოპური დამტვირთველის ოპერატორი", "Road Roller Operator": "საგზაო სატკეპნის ოპერატორი",
+  "Motor Grader Operator": "ავტოგრეიდერის ოპერატორი", "Concrete Pump Operator": "ბეტონის ტუმბოს ოპერატორი", "Backhoe Loader Operator": "ექსკავატორ-დამტვირთველის ოპერატორი",
+  "How do you operate the crane?": "როგორ მართავთ ამწეს?", "Select operation type": "აირჩიეთ მართვის ტიპი", "Profile photo (required)": "პროფილის ფოტო (სავალდებულოა)",
+  "Tower crane certificate photo (required)": "კოშკურა ამწის სერტიფიკატის ფოტო (სავალდებულოა)", "Take photo": "ფოტოს გადაღება", "Upload photo": "ფოტოს ატვირთვა",
+  "Create Account": "ანგარიშის შექმნა", "Already have an account?": "უკვე გაქვთ ანგარიში?", "Permanent Jobs": "მუდმივი ვაკანსიები",
+  "Replacement Jobs": "შემცვლელის ვაკანსიები", "All Jobs": "ყველა ვაკანსია", "Post a regular job": "განათავსეთ მუდმივი ვაკანსია",
+  "Post a replacement job": "განათავსეთ შემცვლელის ვაკანსია", "Need a replacement?": "შემცვლელი გჭირდებათ?", "Post a Replacement Job": "შემცვლელის ვაკანსიის განთავსება",
+  "Back to Jobs": "ვაკანსიებზე დაბრუნება", "Job title": "ვაკანსიის დასახელება", "What type of operator are you looking for?": "რა ტიპის ოპერატორს ეძებთ?",
+  "Select operator type": "აირჩიეთ ოპერატორის ტიპი", "Job description": "ვაკანსიის აღწერა", "Salary (optional)": "ანაზღაურება (არასავალდებულო)",
+  "Publish job": "ვაკანსიის გამოქვეყნება", "Publish replacement request": "შემცვლელის მოთხოვნის გამოქვეყნება", "Work dates (select start and end)": "სამუშაო დღეები (აირჩიეთ დაწყებისა და დასრულების თარიღი)",
+  "Select start and end dates": "აირჩიეთ დაწყებისა და დასრულების თარიღები", "Location / city": "ადგილმდებარეობა / ქალაქი", "Country": "ქვეყანა",
+  "Crane / operator type": "ამწის / ოპერატორის ტიპი", "Select type": "აირჩიეთ ტიპი", "Payment (GEL)": "ანაზღაურება (ლარი)",
+  "Description / additional information": "აღწერა / დამატებითი ინფორმაცია", "Search jobs by title, operator type or location": "ვაკანსიის ძიება დასახელებით, ტექნიკის ტიპით ან ადგილმდებარეობით",
+  "No jobs match your search.": "ვაკანსია ვერ მოიძებნა.", "No jobs available in this category yet.": "ამ კატეგორიაში ვაკანსიები ჯერ არ არის.",
+  "Log in as an Operator or Company to post a replacement job.": "შემცვლელის ვაკანსიის განსათავსებლად შედით ოპერატორის ან კომპანიის ანგარიშით.",
+  "Search by name, profession or location": "ძიება სახელით, პროფესიით ან ადგილმდებარეობით", "No operators match your search.": "ოპერატორი ვერ მოიძებნა.", "No operators are currently available.": "ამჟამად ოპერატორები არ არიან.",
+  "Open profile · Check free days 📅": "პროფილის ნახვა · თავისუფალი დღეების შემოწმება 📅", "Check free days": "შეამოწმეთ თავისუფალი დღეები", "📅 View calendar": "📅 კალენდრის ნახვა",
+  "Show phone number": "ნომრის ჩვენება", "No phone number provided.": "ტელეფონის ნომერი მითითებული არ არის.", "Crane certificate · tap to enlarge": "ამწის სერტიფიკატი · გასადიდებლად დააჭირეთ",
+  "Back to Operators": "ოპერატორებზე დაბრუნება", "Operator Profile": "ოპერატორის პროფილი", "Company Profile": "კომპანიის პროფილი",
+  "Find Operators": "ოპერატორების მოძებნა", "Post a Job": "ვაკანსიის განთავსება", "Welcome, ": "მოგესალმებით, ",
+  "Company Dashboard": "კომპანიის სამუშაო პანელი", "Operator Dashboard": "ოპერატორის სამუშაო პანელი", "Post a job": "ვაკანსიის განთავსება",
+  "Publish an opening for operators.": "გამოაქვეყნეთ ვაკანსია ოპერატორებისთვის.", "Create a job": "ვაკანსიის შექმნა", "My jobs": "ჩემი ვაკანსიები",
+  "Manage jobs posted by this account.": "მართეთ ამ ანგარიშიდან გამოქვეყნებული ვაკანსიები.", "View my jobs": "ჩემი ვაკანსიების ნახვა", "Review applicants and update their status.": "იხილეთ კანდიდატები და განაახლეთ მათი სტატუსი.",
+  "View applications": "განაცხადების ნახვა", "Find operators": "ოპერატორების მოძებნა", "Browse operators": "ოპერატორების დათვალიერება",
+  "Company profile": "კომპანიის პროფილი", "View profile": "პროფილის ნახვა", "Profile completion: ": "პროფილის შევსება: ", "Complete your profile so companies can learn about your experience.": "შეავსეთ პროფილი, რომ კომპანიებმა თქვენი გამოცდილების შესახებ გაიგონ.",
+  "Browse jobs": "ვაკანსიების დათვალიერება", "Find jobs": "ვაკანსიების ძიება", "My replacement requests": "ჩემი შემცვლელის მოთხოვნები", "Manage replacement posts you have published.": "მართეთ გამოქვეყნებული შემცვლელის მოთხოვნები.",
+  "View my posts": "ჩემი გამოქვეყნებული მოთხოვნები", "Need a replacement?": "შემცვლელი გჭირდებათ?", "Post the dates and details for an operator to cover your shift.": "მიუთითეთ თარიღები და პირობები, რომ ოპერატორმა თქვენი ცვლა ჩაანაცვლოს.",
+  "Need a Replacement": "შემცვლელი მჭირდება", "My applications": "ჩემი განაცხადები", "Discover operators": "ოპერატორების აღმოჩენა", "Open operator directory": "ოპერატორების სიის გახსნა",
+  "Loading...": "იტვირთება...", "Loading your options...": "იტვირთება...", "Could not load jobs. Please try again later.": "ვაკანსიების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.",
+  "Could not load operators. Please try again later.": "ოპერატორების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.", "No applications or replacement requests in this category.": "ამ კატეგორიაში განაცხადები ან შემცვლელის მოთხოვნები არ არის.",
+  "Notifications": "შეტყობინებები", "View Profile": "პროფილის ნახვა", "Accept / Confirm": "მიღება / დადასტურება", "Decline": "უარყოფა", "Mark read": "წაკითხულად მონიშვნა", "Status": "სტატუსი",
+  "Pending": "მოლოდინში", "Reviewed": "განხილულია", "Accepted": "მიღებულია", "Rejected": "უარყოფილია", "No history yet.": "ისტორია ჯერ არ არის.",
+  "Job application": "ვაკანსიაზე განაცხადი", "Replacement": "შემცვლელი", "Replacement request": "შემცვლელის მოთხოვნა", "Job owner": "ვაკანსიის ავტორი", "No message": "შეტყობინება არ არის",
+  "Edit": "რედაქტირება", "Delete": "წაშლა", "Save changes": "ცვლილებების შენახვა", "Cancel": "გაუქმება", "Job title": "ვაკანსიის დასახელება",
+  "Operator type sought": "საძიებელი ოპერატორის ტიპი", "Work dates (select start and end)": "სამუშაო დღეები (დაწყებისა და დასრულების თარიღი)",
+  "Description and conditions": "აღწერა და პირობები", "Back to Dashboard": "სამუშაო პანელზე დაბრუნება", "No description provided.": "აღწერა მითითებული არ არის.",
+  "Tower crane certificate photo": "კოშკურა ამწის სერტიფიკატის ფოტო", "Select yes or no": "აირჩიეთ დიახ ან არა", "Save operator card": "ოპერატორის ბარათის შენახვა",
+  "All": "ყველა", "History": "ისტორია", "Inbox": "შემოსული", "Search": "ძიება", "Location": "ადგილმდებარეობა", "Salary": "ანაზღაურება", "Payment": "ანაზღაურება",
+  "years": "წელი", "years old": "წლის", "Busy / unavailable": "დაკავებულია / მიუწვდომელია", "Mark as a busy day": "მონიშნეთ დაკავებულ დღედ",
+  "No applications or replacement requests in this category.": "ამ კატეგორიაში განაცხადები ან შემცვლელის მოთხოვნები არ არის.", "View busy-days calendar": "დაკავებული დღეების კალენდრის ნახვა",
+  "Job Applications": "ვაკანსიაზე განაცხადები", "System": "სისტემა", "Events in this category": "ამ კატეგორიის მოვლენები", "Notifications": "შეტყობინებები",
+  "Loading...": "იტვირთება...", "Saving busy days...": "დაკავებული დღეები ინახება...", "Busy days saved.": "დაკავებული დღეები შენახულია.",
+  "Regular job": "მუდმივი ვაკანსია", "Untitled post": "უსათაურო განცხადება", "Untitled job": "უსათაურო ვაკანსია", "Not specified": "მითითებული არ არის",
+  "Payment / salary": "ანაზღაურება", "Select start and end dates": "აირჩიეთ დაწყებისა და დასრულების თარიღები", "Company member": "კომპანიის წარმომადგენელი",
+  "Operator": "ოპერატორი", "Company": "კომპანია", "From the ground with remote control": "მიწიდან პულტით", "From the cabin": "კაბინიდან",
+  "Show phone number": "ნომრის ჩვენება", "Apply": "განაცხადის გაგზავნა", "Apply now": "განაცხადის გაგზავნა", "Application sent": "განაცხადი გაგზავნილია",
+  "You already applied to this job.": "ამ ვაკანსიაზე განაცხადი უკვე გაგზავნეთ.", "Application submitted.": "განაცხადი გაიგზავნა.",
+  "You cannot apply to a job you posted yourself.": "საკუთარ ვაკანსიაზე განაცხადს ვერ გაგზავნით.", "Only operator accounts can apply to jobs.": "ვაკანსიებზე განაცხადის გაგზავნა მხოლოდ ოპერატორს შეუძლია.",
+  "Currently employed Operators cannot apply to jobs.": "ამჟამად დასაქმებულ ოპერატორებს ვაკანსიებზე განაცხადის გაგზავნა არ შეუძლიათ.",
+  "Only Company accounts can publish regular jobs.": "მუდმივი ვაკანსიის გამოქვეყნება მხოლოდ კომპანიის ანგარიშით შეიძლება.", "Only Operator and Company accounts can post replacement jobs.": "შემცვლელის ვაკანსიის გამოქვეყნება ოპერატორსა და კომპანიას შეუძლიათ.",
+  "Search jobs by title, operator type or location": "ვაკანსიის ძიება დასახელებით, ოპერატორის ტიპით ან ადგილმდებარეობით", "No jobs match your search.": "ვაკანსია ვერ მოიძებნა.",
+  "No jobs available in this category yet.": "ამ კატეგორიაში ვაკანსიები ჯერ არ არის.", "No operators match your search.": "ოპერატორი ვერ მოიძებნა.",
+  "No operators are currently available.": "ამჟამად ოპერატორები არ არიან.", "Profile not found.": "პროფილი ვერ მოიძებნა.", "Operator profile not found.": "ოპერატორის პროფილი ვერ მოიძებნა.",
+  "Company profile not found.": "კომპანიის პროფილი ვერ მოიძებნა.", "No phone number provided.": "ტელეფონის ნომერი მითითებული არ არის.",
+  "Choose dates when you are unavailable for replacement work.": "მონიშნეთ დღეები, როცა შემცვლელად მუშაობას ვერ შეძლებთ.", "Mark your busy days": "მონიშნეთ დაკავებული დღეები",
+  "Back to Jobs": "ვაკანსიებზე დაბრუნება", "Back to Operators": "ოპერატორებზე დაბრუნება", "Back to Dashboard": "პანელზე დაბრუნება",
+  "Check free days": "თავისუფალი დღეების ნახვა", "View calendar": "კალენდრის ნახვა", "Call me anytime": "დამირეკეთ ნებისმიერ დროს",
+  "Create a job": "ვაკანსიის შექმნა", "Post a job": "ვაკანსიის განთავსება", "Manage jobs posted by this account.": "მართეთ ამ ანგარიშიდან გამოქვეყნებული ვაკანსიები.",
+  "Review applicants and update their status.": "იხილეთ კანდიდატები და განაახლეთ მათი სტატუსი.", "Complete your profile so companies can learn about your experience.": "შეავსეთ პროფილი, რომ კომპანიებმა თქვენი გამოცდილება ნახონ.",
+  "Need a replacement?": "შემცვლელი გჭირდებათ?", "Save profile": "პროფილის შენახვა", "Save operator card": "ოპერატორის ბარათის შენახვა",
+  "Take photo": "ფოტოს გადაღება", "Upload photo": "ფოტოს ატვირთვა", "Crane certificate · tap to enlarge": "ამწის სერტიფიკატი · გასადიდებლად დააჭირეთ",
+  "Date not set": "თარიღი მითითებული არ არის", "Replacement Needed": "შემცვლელი საჭიროა", "Replacement Request Sent": "შემცვლელის მოთხოვნა გაიგზავნა",
+  "New Replacement Request": "ახალი მოთხოვნა შემცვლელზე", "New Job Application": "ახალი განაცხადი ვაკანსიაზე", "Application Sent": "განაცხადი გაიგზავნა",
+  "Replacement Confirmed": "შემცვლელი დადასტურებულია", "Replacement Request Declined": "შემცვლელის მოთხოვნა უარყოფილია", "Application Accepted": "განაცხადი მიღებულია", "Application Declined": "განაცხადი უარყოფილია",
+  "Account created. You can now continue.": "ანგარიში შეიქმნა. შეგიძლიათ გააგრძელოთ.", "Account created. Log in with your phone number and password.": "ანგარიში შეიქმნა. შედით ტელეფონის ნომრითა და პაროლით.",
+  "Login successful!": "შესვლა წარმატებულია!", "Logging in...": "მიმდინარეობს შესვლა...", "Creating account...": "ანგარიში იქმნება...", "Publishing job...": "ვაკანსია ქვეყნდება...",
+  "Publishing replacement request...": "შემცვლელის მოთხოვნა ქვეყნდება...", "Profile updated successfully!": "პროფილი განახლდა.", "Please complete all required fields.": "შეავსეთ ყველა სავალდებულო ველი.",
+  "Passwords do not match.": "პაროლები ერთმანეთს არ ემთხვევა.", "Enter a valid 9-digit Georgian mobile number beginning with 5.": "შეიყვანეთ 9-ნიშნა ქართული მობილურის ნომერი, რომელიც 5-ით იწყება.",
+  "Enter a valid company email address.": "შეიყვანეთ კომპანიის სწორი ელფოსტის მისამართი.", "Please select whether you are currently employed.": "მიუთითეთ, ამჟამად დასაქმებული ხართ თუ არა.",
+  "Please select the equipment type you operate.": "აირჩიეთ ტექნიკის ტიპი, რომელზეც მუშაობთ.", "Please enter an age from 16 to 100.": "შეიყვანეთ ასაკი 16-დან 100 წლამდე.",
+  "Please select how you operate the crane.": "აირჩიეთ, როგორ მართავთ ამწეს.", "Please enter your years of experience.": "მიუთითეთ მუშაობის გამოცდილება.",
+  "Please add both a profile photo and a tower crane certificate photo.": "ატვირთეთ პროფილისა და კოშკურა ამწის სერტიფიკატის ფოტოები.", "Experience must be a whole number of zero or more.": "გამოცდილების წელი უნდა იყოს ნული ან მეტი მთელი რიცხვი.",
+  "Please login first": "ჯერ შედით სისტემაში.", "Please login first.": "ჯერ შედით სისტემაში.", "Could not load profile": "პროფილის ჩატვირთვა ვერ მოხერხდა.",
+  "Could not load this operator profile.": "ოპერატორის პროფილის ჩატვირთვა ვერ მოხერხდა.", "Could not load this company profile.": "კომპანიის პროფილის ჩატვირთვა ვერ მოხერხდა.",
+  "Could not load your history. Check that the notifications migration and access policies are installed.": "ისტორიის ჩატვირთვა ვერ მოხერხდა. გადაამოწმეთ შეტყობინებების მიგრაცია და წვდომის წესები.",
+  "You already applied. You can apply again after the job owner responds.": "განაცხადი უკვე გაგზავნეთ. ხელახლა გაგზავნას ვაკანსიის მფლობელის პასუხის შემდეგ შეძლებთ.",
+  "You have already applied to this job.": "ამ ვაკანსიაზე განაცხადი უკვე გაგზავნეთ.", "Select a valid start and end date.": "აირჩიეთ დაწყებისა და დასრულების სწორი თარიღები.",
+  "Select valid start and end dates, location, operator type and payment.": "აირჩიეთ სწორი დაწყებისა და დასრულების თარიღები, ადგილმდებარეობა, ოპერატორის ტიპი და ანაზღაურება.",
+  "Please enter a job title.": "შეიყვანეთ ვაკანსიის დასახელება.", "Please log in to publish a job.": "ვაკანსიის გამოსაქვეყნებლად შედით სისტემაში.",
+  "Please select the type of operator you are looking for.": "აირჩიეთ, რა ტიპის ოპერატორს ეძებთ.", "Only Company accounts can publish regular jobs.": "მუდმივი ვაკანსიის გამოქვეყნება მხოლოდ კომპანიის ანგარიშს შეუძლია.",
+  "Only Operator and Company accounts can post replacement jobs.": "შემცვლელის ვაკანსიის განთავსება ოპერატორსა და კომპანიას შეუძლიათ.", "Only operator accounts can apply to jobs.": "ვაკანსიაზე განაცხადის გაგზავნა მხოლოდ ოპერატორს შეუძლია.",
+  "Currently employed Operators cannot apply to jobs.": "დასაქმებულ ოპერატორებს ვაკანსიაზე განაცხადის გაგზავნა არ შეუძლიათ.", "You cannot apply to a job you posted yourself.": "საკუთარ ვაკანსიაზე განაცხადს ვერ გაგზავნით.", "Application submitted.": "განაცხადი გაიგზავნა.",
+  "No applications or replacement requests in this category.": "ამ კატეგორიაში განაცხადები ან შემცვლელის მოთხოვნები არ არის.", "No events in this category yet.": "ამ კატეგორიაში მოვლენები ჯერ არ არის.", "No history": "ისტორია არ არის",
+  "Wide view of tower cranes with long horizontal booms above a construction site": "შორი ხედი სამშენებლო ობიექტზე, ჰორიზონტალური ისრიანი კოშკურა ამწეებით",
+  "Account type": "ანგარიშის ტიპი", "New profile photo preview": "პროფილის ახალი ფოტოს წინასწარი ნახვა", "Company details": "კომპანიის მონაცემები",
+  "Choose a JPG, PNG or WEBP image smaller than 5 MB.": "აირჩიეთ JPG, PNG ან WEBP ფორმატის, 5 მბ-ზე ნაკლები ფოტო.",
+  "Photos uploaded, but profile could not be updated: ": "ფოტოები აიტვირთა, თუმცა პროფილის განახლება ვერ მოხერხდა: ",
+  "Your account profile is not available yet.": "თქვენი ანგარიშის პროფილი ჯერ ხელმისაწვდომი არ არის.",
+  "Not currently employed": "ამჟამად არ არის დასაქმებული", "Looking for replacement shifts": "ეძებს შემცვლელის სამუშაოს",
+  "Could not load availability: ": "თავისუფალი დღეების ჩატვირთვა ვერ მოხერხდა: ", "View poster busy-days calendar": "ვაკანსიის ავტორის დაკავებული დღეების კალენდრის ნახვა",
+  "View busy-days calendar": "დაკავებული დღეების კალენდრის ნახვა", "Title": "დასახელება",
+  "Add a short message to your application (optional):": "დაურთეთ მოკლე შეტყობინება განაცხადს (არასავალდებულო):",
+  "Please log in as an Operator.": "შედით ოპერატორის ანგარიშით.", "Please select whether you are currently employed.": "მიუთითეთ, ამჟამად დასაქმებული ხართ თუ არა.",
+  "Job not found or you do not have permission to edit it.": "ვაკანსია ვერ მოიძებნა ან მისი რედაქტირების უფლება არ გაქვთ.",
+  "Please complete the title and operator type; replacement requests also need a city and payment.": "შეავსეთ ვაკანსიის დასახელება და ოპერატორის ტიპი; შემცვლელის მოთხოვნისთვის ასევე მიუთითეთ ქალაქი და ანაზღაურება.",
+  "The database did not allow this update. Apply the Opero job-management migration in Supabase, then try again.": "მონაცემთა ბაზამ ცვლილება არ დაუშვა. Supabase-ში გაუშვით Opero-ს ვაკანსიების მართვის მიგრაცია და სცადეთ ხელახლა.",
+  "The database did not allow this deletion. Apply the Opero job-management migration in Supabase, then try again.": "მონაცემთა ბაზამ წაშლა არ დაუშვა. Supabase-ში გაუშვით Opero-ს ვაკანსიების მართვის მიგრაცია და სცადეთ ხელახლა.",
+  "Delete this job? This cannot be undone.": "წავშალოთ ეს ვაკანსია? ამ მოქმედების გაუქმება შეუძლებელია.", "You are not allowed to manage this post.": "ამ განცხადების მართვის უფლება არ გაქვთ.",
+  "Could not load account type. Please reload and try again.": "ანგარიშის ტიპის ჩატვირთვა ვერ მოხერხდა. განაახლეთ გვერდი და სცადეთ ხელახლა.",
+  "Please log in as an Operator or Company.": "შედით ოპერატორის ან კომპანიის ანგარიშით."
+};
 
-supabaseClient.auth.onAuthStateChange(() => {
+const operoKaPrefixes = {
+  "Welcome, ": "მოგესალმებით, ", "Profile completion: ": "პროფილის შევსება: ", "Experience: ": "გამოცდილება: ",
+  "Age: ": "ასაკი: ", "Crane operation: ": "ამწის მართვა: ", "Dates: ": "თარიღები: ", "Location: ": "ადგილმდებარეობა: ",
+  "Crane: ": "ამწე: ", "Payment: ": "ანაზღაურება: ", "Posted by: ": "გამომქვეყნებელი: ", "Looking for: ": "ეძებს: ",
+  "Salary: ": "ანაზღაურება: ", "Address: ": "მისამართი: ", "Phone: ": "ტელეფონი: ", "From: ": "ვისგან: ", "To: ": "ვის: ",
+  "Could not upload profile photo: ": "პროფილის ფოტოს ატვირთვა ვერ მოხერხდა: ", "Could not update job: ": "ვაკანსიის განახლება ვერ მოხერხდა: ",
+  "Could not delete job: ": "ვაკანსიის წაშლა ვერ მოხერხდა: ", "Could not publish job: ": "ვაკანსიის გამოქვეყნება ვერ მოხერხდა: ",
+  "Could not publish replacement request: ": "შემცვლელის მოთხოვნის გამოქვეყნება ვერ მოხერხდა: ", "Could not submit application: ": "განაცხადის გაგზავნა ვერ მოხერხდა: ",
+  "Could not update application status: ": "განაცხადის სტატუსის განახლება ვერ მოხერხდა: ", "Could not save busy days: ": "დაკავებული დღეების შენახვა ვერ მოხერხდა: ",
+  "Account created, but ": "ანგარიში შეიქმნა, თუმცა ", "Could not load the busy-days calendar: ": "დაკავებული დღეების კალენდარი ვერ ჩაიტვირთა: ",
+  "No ": "არ არის ", "You have not posted any ": "თქვენ არ გაქვთ გამოქვეყნებული ", "Posted by: ": "გამომქვეყნებელი: "
+};
 
-  updateAuthUI();
+function translateOperoText(value) {
+  const original = String(value ?? "");
+  const trimmed = original.trim();
+  if (Object.prototype.hasOwnProperty.call(operoKaCopy, trimmed)) {
+    return original.replace(trimmed, operoKaCopy[trimmed]);
+  }
+  const prefix = Object.keys(operoKaPrefixes).sort((a, b) => b.length - a.length).find(key => trimmed.startsWith(key));
+  let translated = prefix ? operoKaPrefixes[prefix] + trimmed.slice(prefix.length) : trimmed;
+  const suffixes = [[" years old", " წლის"], [" years", " წელი"]];
+  for (const [english, georgian] of suffixes) {
+    if (translated.endsWith(english)) {
+      translated = translated.slice(0, -english.length) + georgian;
+      break;
+    }
+  }
+  return original.replace(trimmed, translated);
+}
 
+function localizeNotificationText(value) {
+  const original = String(value || "");
+  const title = translateOperoText(original);
+  if (title !== original) return title;
+  const patterns = [
+    [/^(.+) is available to cover your shift\.$/, name => `${name} ხელმისაწვდომია თქვენი ცვლის შესაცვლელად.`],
+    [/^You offered to cover (.+)\.$/, job => `თქვენ შესთავაზეთ ვაკანსიაზე მუშაობა: ${job}.`],
+    [/^(.+) applied for (.+)\.$/, (name, job) => `${name} გამოეხმაურა ვაკანსიას „${job}“.`],
+    [/^You applied for (.+)\.$/, job => `თქვენ გამოეხმაურეთ ვაკანსიას „${job}“.`],
+    [/^You confirmed (.+) to cover your shift\.$/, name => `თქვენ დაადასტურეთ ${name}-ის მიერ თქვენი ცვლის ჩანაცვლება.`],
+    [/^Your offer to cover (.+) was confirmed\.$/, job => `თქვენი შეთავაზება ვაკანსიაზე „${job}“ დადასტურდა.`],
+    [/^You declined (.+)'s offer to cover your shift\.$/, name => `თქვენ უარი უთხარით ${name}-ს თქვენი ცვლის ჩანაცვლებაზე.`],
+    [/^Your offer to cover (.+) was declined\.$/, job => `თქვენი შეთავაზება ვაკანსიაზე „${job}“ უარყოფილია.`],
+    [/^You accepted (.+)'s application for (.+)\.$/, (name, job) => `თქვენ მიიღეთ ${name}-ის განაცხადი ვაკანსიაზე „${job}“.`],
+    [/^Your application for (.+) was accepted\.$/, job => `თქვენი განაცხადი ვაკანსიაზე „${job}“ მიღებულია.`],
+    [/^You declined (.+)'s application for (.+)\.$/, (name, job) => `თქვენ უარყავით ${name}-ის განაცხადი ვაკანსიაზე „${job}“.`],
+    [/^Your application for (.+) was declined\.$/, job => `თქვენი განაცხადი ვაკანსიაზე „${job}“ უარყოფილია.`]
+  ];
+  for (const [pattern, format] of patterns) {
+    const match = original.match(pattern);
+    if (match) return format(...match.slice(1));
+  }
+  return original;
+}
+
+function translateOperoElement(element) {
+  if (!(element instanceof Element) || element.closest('[data-user-content], [translate="no"]')) return;
+  for (const attribute of ["placeholder", "aria-label", "title", "alt"]) {
+    if (element.hasAttribute(attribute)) {
+      const before = element.getAttribute(attribute);
+      const after = translateOperoText(before);
+      if (before !== after) element.setAttribute(attribute, after);
+    }
+  }
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  for (const node of textNodes) {
+    if (node.parentElement?.closest('[data-user-content], [translate="no"]')) continue;
+    const translated = translateOperoText(node.nodeValue);
+    if (translated !== node.nodeValue) node.nodeValue = translated;
+  }
+}
+
+function installOperoGeorgianUi() {
+  document.title = translateOperoText(document.title);
+  translateOperoElement(document.body);
+  new MutationObserver(records => {
+    for (const record of records) {
+      if (record.type === "characterData") {
+        const node = record.target;
+        if (!node.parentElement?.closest('[data-user-content], [translate="no"]')) {
+          const translated = translateOperoText(node.nodeValue);
+          if (translated !== node.nodeValue) node.nodeValue = translated;
+        }
+      } else if (record.type === "attributes") {
+        translateOperoElement(record.target);
+      } else {
+        record.addedNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            if (!node.parentElement?.closest('[data-user-content], [translate="no"]')) {
+              const translated = translateOperoText(node.nodeValue);
+              if (translated !== node.nodeValue) node.nodeValue = translated;
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE) translateOperoElement(node);
+        });
+      }
+    }
+  }).observe(document.body, { subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:["placeholder", "aria-label", "title", "alt"] });
+}
+
+installOperoGeorgianUi();
+
+const operoNativeAlert = window.alert.bind(window);
+window.alert = message => operoNativeAlert(translateOperoText(message));
+const operoNativePrompt = window.prompt.bind(window);
+window.prompt = (message, defaultValue) => operoNativePrompt(translateOperoText(message), defaultValue);
+
+
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  updateAuthUI(!!session);
+  setTimeout(() => updateHomeCTAs(session?.user || null), 0);
+  setTimeout(() => configureNotificationUpdates(session?.user || null), 0);
 });
 
+supabaseClient.auth.getSession().then(async ({ data }) => {
+  const session = data?.session;
+  updateAuthUI(!!session);
+  updateHomeCTAs(session?.user || null);
+  configureNotificationUpdates(session?.user || null);
 
-updateAuthUI();
+  let returnToHome = false;
+  let savedView = null;
+  try {
+    returnToHome = sessionStorage.getItem("operoReturnHome") === "1";
+    sessionStorage.removeItem("operoReturnHome");
+    savedView = JSON.parse(sessionStorage.getItem("operoLastView") || "null");
+  } catch (_) {}
+
+  const navigationType = performance.getEntriesByType("navigation")[0]?.type;
+  let state = window.history.state;
+  if (returnToHome) {
+    state = { [OPERO_HISTORY_KEY]: true, view: "home", args: [] };
+    window.history.replaceState(state, "", window.location.href);
+  } else if (["reload", "back_forward"].includes(navigationType)) {
+    if (!state?.[OPERO_HISTORY_KEY] && savedView?.view) state = { ...savedView, [OPERO_HISTORY_KEY]: true };
+    if (state?.view === "home" && savedView?.view && savedView.view !== "home") {
+      state = { ...savedView, [OPERO_HISTORY_KEY]: true };
+      window.history.replaceState(state, "", window.location.href);
+    }
+  } else {
+    state = { [OPERO_HISTORY_KEY]: true, view: session ? "dashboard" : "home", args: [] };
+    window.history.replaceState(state, "", window.location.href);
+  }
+
+  if (!state?.[OPERO_HISTORY_KEY] || !state.view) {
+    state = { [OPERO_HISTORY_KEY]: true, view: session ? "dashboard" : "home", args: [] };
+    window.history.replaceState(state, "", window.location.href);
+  }
+  await restoreAppView(state);
+});
 
 </script>
 
