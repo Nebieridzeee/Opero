@@ -865,7 +865,7 @@
         </div>
       </div>
       <label class="registration-field">რომელ ტექნიკას მართავ?
-        <select id="operatorType" required onchange="toggleRegistrationCraneControls(this.value)">
+        <select id="operatorType" required>
         <option value="">აირჩიე ტექნიკა</option>
         <option value="Tower Crane Operator">კოშკურა ამწის ოპერატორი</option>
         <option value="Mobile Crane Operator">მობილური ამწის ოპერატორი</option>
@@ -881,14 +881,6 @@
         <option value="Other">სხვა</option>
         </select>
       </label>
-      <div id="registrationCraneControlField" class="registration-field hidden">
-        <span class="registration-question">ამწე კოშკურაზე მუშაობა</span>
-        <span class="muted" style="font-size:12px;font-weight:400;">მონიშნე კაბინიდან ან ქვემოდან პულტით მუშაობა — შეიძლება ორივე</span>
-        <div class="registration-choice-row">
-          <label class="registration-choice"><input id="registrationCabinControl" type="checkbox" value="Cabin"> კაბინიდან</label>
-          <label class="registration-choice"><input id="registrationRemoteControl" type="checkbox" value="Remote control"> ქვემოდან პულტით</label>
-        </div>
-      </div>
       <label class="registration-field">გამოცდილება (წლები)
         <input id="experience" type="number" min="0" placeholder="გამოცდილება (წლები)" required>
       </label>
@@ -1066,16 +1058,6 @@ function setRegistrationEmploymentChoice(value, checkbox) {
   document.getElementById(value === "yes" ? "registerEmployedNo" : "registerEmployedYes").checked = false;
 }
 
-function toggleRegistrationCraneControls(operatorType) {
-  const isTowerCrane = operatorType === "Tower Crane Operator";
-  document.getElementById("registrationCraneControlField").classList.toggle("hidden", !isTowerCrane);
-  if (!isTowerCrane) {
-    document.getElementById("registrationCabinControl").checked = false;
-    document.getElementById("registrationRemoteControl").checked = false;
-  }
-}
-
-
 let registrationOperatorPhotos = { certificate: null };
 let pendingOperatorRegistrationPhotos = null;
 
@@ -1121,11 +1103,6 @@ async function register() {
   const city = document.getElementById("city").value.trim();
   const country = document.getElementById("operatorCountry").value;
   const operatorType = document.getElementById("operatorType").value;
-  const cabinControl = document.getElementById("registrationCabinControl").checked;
-  const remoteControl = document.getElementById("registrationRemoteControl").checked;
-  const craneControlType = operatorType !== "Tower Crane Operator"
-    ? null
-    : cabinControl && remoteControl ? "Both" : cabinControl ? "Cabin" : remoteControl ? "Remote control" : "";
   const ageValue = document.getElementById("age").value.trim();
   const age = ageValue === "" ? null : Number(ageValue);
 
@@ -1216,7 +1193,6 @@ async function register() {
     city: city,
     country: country,
     operator_type: operatorType,
-    crane_control_type: craneControlType,
     age: age,
     experience_years: parsedExperience,
     is_employed: isEmployed,
