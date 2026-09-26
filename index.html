@@ -1861,18 +1861,8 @@ async function updateHomeCTAs(user) {
     return;
   }
 
-  if (profile.account_type === "operator") {
-    ctas.innerHTML = `
-      <button class="secondary" onclick="showOperators()">Operators</button>
-      <button onclick="showJobs()">Jobs</button>
-      <button onclick="showProfile()">My Profile</button>
-    `;
-    return;
-  }
-
   ctas.innerHTML = `
-    <button class="secondary" onclick="showOperators()">Find Operators</button>
-    <button onclick="showJobs()">Post a Job</button>
+    <button class="secondary" onclick="showOperators()">${profile.account_type === "operator" ? "ოპერატორები" : "ოპერატორების ნახვა"}</button>
     <button onclick="showProfile()">My Profile</button>
   `;
 }
@@ -1882,7 +1872,6 @@ async function showAccountHome() {
   if (!user) { showLogin(); return; }
   const { data: profile } = await supabaseClient.from("profiles")
     .select("account_type").eq("id", user.id).maybeSingle();
-  if (profile?.account_type === "company") return showJobs("regular");
   return showOperators();
 }
 
@@ -1933,6 +1922,7 @@ async function showDashboard() {
 }
 
 async function showMyJobs() {
+  if (JOBS_TEMPORARILY_HIDDEN) return showOperators();
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
   const { data: profile, error: profileError } = await supabaseClient.from("profiles")
@@ -2073,6 +2063,7 @@ async function deleteJob(jobId) {
   if (!data) { alert("The database did not allow this deletion. Apply the Opero job-management migration in Supabase, then try again."); return; }
   await showMyJobs();
 }
+const JOBS_TEMPORARILY_HIDDEN = true;
 let operatorDirectory = [];
 
 async function showOperators() {
@@ -2415,6 +2406,7 @@ function replacementJobFormMarkup(accountType) {
 }
 
 async function showOperatorReplacementForm() {
+  if (JOBS_TEMPORARILY_HIDDEN) return showOperators();
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) { showLogin(); return; }
   const { data: profile } = await supabaseClient.from("profiles")
@@ -2431,6 +2423,7 @@ async function showOperatorReplacementForm() {
 }
 
 async function showJobs(category = "all", focusJobId = null) {
+  if (JOBS_TEMPORARILY_HIDDEN) return showOperators();
 
   currentJobCategory = ["all", "regular", "replacement"].includes(category) ? category : "regular";
   currentJobSearchTerm = "";
