@@ -87,7 +87,7 @@
     #home .hero { max-width: 1120px; margin: 0 auto; padding: 38px 20px 54px; }
     .home-hero-photo { position:relative; width: min(100%, 940px); height: clamp(260px, 38vw, 420px); margin: 0 auto; overflow: hidden; border: 1px solid #303945; border-radius: 16px; background: #121820; }
     .home-hero-photo::after { position:absolute; inset:0; background:linear-gradient(90deg, rgb(7 10 14 / 46%), rgb(7 10 14 / 28%)); content:""; }
-    .home-hero-photo > img { display:block; width:100%; height:100%; object-fit:cover; object-position:center 52%; filter:blur(.6px) brightness(.9); transform:scale(1.015); }
+    .home-hero-art { position:absolute; inset:0; display:block; width:100%; height:100%; }
     .home-hero-overlay { position:absolute; z-index:1; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; }
     .home-hero-overlay { font-family:"Noto Sans Georgian", Inter, ui-sans-serif, system-ui, sans-serif; }
     #home .hero h1 { max-width:760px; margin:0; color:#fff; font-family:"Bahnschrift", "Manrope", "Arial Black", Inter, ui-sans-serif, system-ui, sans-serif; font-size:clamp(48px, 6vw, 60px); font-weight:800; line-height:1; letter-spacing:.7px; text-shadow:0 2px 14px rgb(0 0 0 / 24%); }
@@ -673,7 +673,40 @@
   <div class="hero">
 
     <figure class="home-hero-photo">
-      <img src="https://images.unsplash.com/photo-1638873662638-77062e9788d4?auto=format&amp;fit=crop&amp;fm=jpg&amp;q=85&amp;w=1800" alt="Wide view of tower cranes with long horizontal booms above a construction site" fetchpriority="high">
+      <svg class="home-hero-art" viewBox="0 0 1600 760" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Opero-ს სამშენებლო ტექნოლოგიის ილუსტრაცია ჰორიზონტალური ისრის მქონე კოშკურა ამწით" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="operoHeroSky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111820"/><stop offset=".52" stop-color="#1b2630"/><stop offset="1" stop-color="#10171e"/></linearGradient>
+          <linearGradient id="operoHeroBeam" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#c6d0da" stop-opacity=".24"/><stop offset=".62" stop-color="#f0f4f7" stop-opacity=".78"/><stop offset="1" stop-color="#e5252a" stop-opacity=".92"/></linearGradient>
+          <radialGradient id="operoHeroGlow"><stop stop-color="#e5252a" stop-opacity=".22"/><stop offset="1" stop-color="#e5252a" stop-opacity="0"/></radialGradient>
+          <pattern id="operoHeroGrid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#a9b7c4" stroke-opacity=".055" stroke-width="1"/><circle cx="1" cy="1" r="1.5" fill="#d8e0e7" fill-opacity=".16"/></pattern>
+          <pattern id="operoHeroDots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.25" fill="#e5252a" fill-opacity=".45"/></pattern>
+        </defs>
+        <rect width="1600" height="760" fill="url(#operoHeroSky)"/>
+        <rect width="1600" height="760" fill="url(#operoHeroGrid)"/>
+        <ellipse cx="1190" cy="245" rx="440" ry="360" fill="url(#operoHeroGlow)"/>
+        <path d="M0 626H1600" stroke="#9aa8b5" stroke-opacity=".2"/>
+        <path d="M0 668L220 632 390 658 600 620 770 646 1000 614 1200 648 1400 617 1600 641V760H0Z" fill="#0b1117" fill-opacity=".58"/>
+        <path d="M0 688H1600M80 728H1530" stroke="#8796a3" stroke-opacity=".12"/>
+        <path d="M1010 626V255M1010 255L410 171M1010 255L1434 196" fill="none" stroke="url(#operoHeroBeam)" stroke-width="9" stroke-linecap="square"/>
+        <path d="M1010 267L410 183M1010 267L1434 208" fill="none" stroke="#e8edf1" stroke-opacity=".24" stroke-width="2"/>
+        <path d="M410 171V193M1434 196V218M430 174L458 183M478 181L506 190M526 187L554 196M574 194L602 203M622 200L650 210M670 207L698 216M718 213L746 222M766 219L794 229M814 226L842 235M862 232L890 241M910 239L938 248M958 245L986 254M1032 251L1060 244M1080 245L1108 238M1128 238L1156 231M1176 232L1204 225M1224 225L1252 219M1272 218L1300 212M1320 211L1348 205M1368 204L1396 199" stroke="#d5dde4" stroke-opacity=".44" stroke-width="2"/>
+        <path d="M1010 255V626M994 270H1026M994 310H1026M994 350H1026M994 390H1026M994 430H1026M994 470H1026M994 510H1026M994 550H1026M994 590H1026" stroke="#c5d0d9" stroke-opacity=".54" stroke-width="5"/>
+        <path d="M996 270L1024 310 996 350 1024 390 996 430 1024 470 996 510 1024 550 996 590 1010 626M1024 270L996 310 1024 350 996 390 1024 430 996 470 1024 510 996 550 1024 590 1010 626" fill="none" stroke="#d8e0e7" stroke-opacity=".37" stroke-width="2"/>
+        <path d="M410 171L510 254M510 185L610 269M610 199L710 283M710 213L810 297M810 227L910 311M910 241L1010 325M1434 196L1344 278M1344 211L1254 293M1254 226L1164 308M1164 241L1074 323" fill="none" stroke="#c8d1da" stroke-opacity=".25" stroke-width="2"/>
+        <path d="M765 221V278M752 278H778L772 288H758Z" fill="#e5252a" fill-opacity=".9"/>
+        <path d="M765 288V400Q765 420 782 420Q799 420 799 401" fill="none" stroke="#e7edf2" stroke-opacity=".7" stroke-width="3"/>
+        <path d="M1010 626L905 690H1115ZM1010 626L1115 690H905Z" fill="none" stroke="#c5d0d9" stroke-opacity=".26" stroke-width="3"/>
+        <path d="M0 602H1600" stroke="#e5252a" stroke-opacity=".7" stroke-width="2"/>
+        <path d="M0 603H660M1080 603H1600" stroke="#e5252a" stroke-opacity=".25" stroke-width="9"/>
+        <circle cx="410" cy="171" r="8" fill="#e5252a"/><circle cx="1434" cy="196" r="8" fill="#e5252a"/><circle cx="1010" cy="255" r="7" fill="#f2f5f7"/>
+        <path d="M146 180C266 92 370 96 478 147M1172 472C1290 532 1388 518 1500 450M200 498C286 438 364 437 450 477" fill="none" stroke="#9eb0bf" stroke-opacity=".24" stroke-width="2" stroke-dasharray="5 10"/>
+        <path d="M180 148h180v180H180z" fill="url(#operoHeroDots)" opacity=".58"/>
+        <circle cx="260" cy="238" r="116" fill="none" stroke="#e5252a" stroke-opacity=".2" stroke-width="2" stroke-dasharray="146 46 84 40"/>
+        <circle cx="260" cy="238" r="88" fill="none" stroke="#e8edf1" stroke-opacity=".12" stroke-width="1"/>
+        <path d="M260 122V142M376 238H356M260 354V334M144 238H164" stroke="#e5252a" stroke-opacity=".68" stroke-width="3"/>
+        <g fill="#dce4ea" fill-opacity=".72"><circle cx="146" cy="180" r="4"/><circle cx="478" cy="147" r="4"/><circle cx="1172" cy="472" r="4"/><circle cx="1500" cy="450" r="4"/><circle cx="200" cy="498" r="4"/><circle cx="450" cy="477" r="4"/></g>
+        <rect width="1600" height="760" fill="url(#operoHeroDots)" opacity=".1"/>
+      </svg>
       <figcaption class="home-hero-overlay">
         <h1 aria-label="Opero"><span class="home-brand-o">O</span><span class="home-brand-rest">PERO</span></h1>
         <p>სამშენებლო სფეროს შესაძლებლობები ერთ სივრცეში</p>
