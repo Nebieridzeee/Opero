@@ -96,10 +96,14 @@
     #home .home-brand-rest { font-size:.84em; }
     #home .hero p { max-width:680px; margin:0; color:#cbd1d8; font-family:"Noto Sans Georgian", sans-serif; font-size:clamp(15px, 1.6vw, 18px); font-weight:400; line-height:1.6; text-shadow:0 2px 10px rgb(0 0 0 / 35%); }
     .home-hero-overlay h1, .home-hero-overlay p, #homeCtas .home-cta-button { font-family:"Noto Sans Georgian", Inter, ui-sans-serif, system-ui, sans-serif; }
-    #homeCtas { display:flex; justify-content:center; gap:10px; }
-    #homeCtas .home-cta-button { min-width:150px; min-height:46px; margin:0; padding:11px 20px; }
-    #homeCtas .home-cta-primary { border-color:#e5252a; background:#e5252a; color:#fff; }
-    #homeCtas .home-cta-secondary { border-color:#3b434d; background:#1b222c; color:#fff; }
+    #homeCtas { display:flex; justify-content:center; gap:12px; width:min(100%, 390px); margin:4px auto 0; }
+    #homeCtas .home-cta-button { flex:1 1 0; min-width:0; min-height:50px; margin:0; padding:12px 20px; border:1px solid transparent; border-radius:12px; font-size:15px; font-weight:700; letter-spacing:.01em; transition:background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; }
+    #homeCtas .home-cta-primary { border-color:#e5252a; background:#e5252a; color:#fff; box-shadow:0 5px 18px rgb(229 37 42 / 24%); }
+    #homeCtas .home-cta-secondary { border-color:rgb(255 255 255 / 74%); background:rgb(18 24 32 / 72%); color:#fff; }
+    #homeCtas .home-cta-button:hover, #homeCtas .home-cta-button:focus-visible { filter:none; transform:translateY(-1px); }
+    #homeCtas .home-cta-primary:hover, #homeCtas .home-cta-primary:focus-visible { border-color:#fff; background:#e5252a; }
+    #homeCtas .home-cta-secondary:hover, #homeCtas .home-cta-secondary:focus-visible { border-color:#fff; background:rgb(18 24 32 / 88%); }
+    #homeCtas .home-cta-button:focus-visible { outline:2px solid #fff; outline-offset:3px; }
 
     .buttons button,
     .form button {
@@ -697,19 +701,16 @@
 
   <div class="hero">
 
-   <figure class="home-hero-photo">
-  <img
-    src="./assets/opero-home-hero-v3.jpg"
-    alt="სამშენებლო ობიექტი ჰორიზონტალური ისრიანი ამწეებით"
-  >
-  <figcaption class="home-hero-overlay">
-    <p>სამშენებლო სფეროს შესაძლებლობები ერთ სივრცეში</p>
-    <div class="buttons" id="homeCtas" aria-live="polite">
-      <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
-      <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
-    </div>
-  </figcaption>
-</figure>
+    <figure class="home-hero-photo">
+      <img src="./assets/opero-home-hero-v3.jpg" alt="შორი ხედი სამშენებლო ობიექტზე რამდენიმე ჰორიზონტალურ ისრიანი კოშკურა ამწით, რადიოსიგნალების ციფრული ხაზებით" fetchpriority="high" loading="eager" decoding="sync">
+      <figcaption class="home-hero-overlay">
+        <p>სამშენებლო სფეროს შესაძლებლობები ერთ სივრცეში</p>
+        <div class="buttons" id="homeCtas" aria-live="polite">
+          <button class="home-cta-button home-cta-secondary" onclick="showLogin()">Login</button>
+          <button class="home-cta-button home-cta-primary" onclick="showRegister()">Register</button>
+        </div>
+      </figcaption>
+    </figure>
 
   </div>
 
