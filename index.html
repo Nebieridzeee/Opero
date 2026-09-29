@@ -589,6 +589,7 @@
     .registration-account-option:hover:not(:disabled), .registration-account-option:focus-visible:not(:disabled) { filter:none; border-color:#fff; background-color:transparent; color:#fff; }
     .registration-account-option.is-selected:hover:not(:disabled), .registration-account-option.is-selected:focus-visible:not(:disabled) { background:#e5252a; }
     .registration-fields { display:grid; gap:0; }
+    .registration-fields.hidden, .registration-field.hidden { display:none; }
     .registration-field { display:grid; gap:6px; margin-bottom:11px; color:#d9dee5; font-size:13px; font-weight:600; }
     .registration-field > input, .registration-field > select { margin:0; min-height:43px; padding:10px 12px; font-size:14px; }
     .registration-question { margin-bottom:7px; color:#d9dee5; font-size:13px; font-weight:650; }
@@ -882,7 +883,7 @@
 
     <div class="registration-account-choice" role="group" aria-label="ანგარიშის ტიპი">
       <button id="registerOperatorChoice" type="button" class="registration-account-option is-selected" aria-pressed="true" onclick="setRegistrationAccountType('operator')">ოპერატორი</button>
-      <button id="registerCompanyChoice" type="button" class="registration-account-option" aria-pressed="false" onclick="setRegistrationAccountType('company')">კომპანია</button>
+      <button id="registerUserChoice" type="button" class="registration-account-option" aria-pressed="false" onclick="setRegistrationAccountType('user')">მომხმარებელი</button>
     </div>
     <label id="registerNameLabel" class="registration-field">სახელი გვარი
       <input id="fullName" placeholder="სახელი გვარი" autocomplete="name" required>
@@ -932,16 +933,6 @@
         <input id="experience" type="number" min="0" step="1" placeholder="გამოცდილება (წლები)" required>
       </label>
       <div class="registration-field">
-        <span class="registration-question">პროფილის ფოტო (სავალდებულო)</span>
-        <div class="registration-image-actions">
-          <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoCamera').click()" aria-label="პროფილის ფოტოს გადაღება"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c.8-3.5 3.1-5.3 7-5.3s6.2 1.8 7 5.3"/></svg>ფოტოს გადაღება</button>
-          <button type="button" class="secondary" onclick="document.getElementById('registrationProfilePhotoUpload').click()" aria-label="პროფილის ფოტოს ატვირთვა"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v5h14v-5"/></svg>ფოტოს ატვირთვა</button>
-        </div>
-        <span id="registrationProfilePhotoName" class="muted" aria-live="polite"></span>
-      </div>
-      <input id="registrationProfilePhotoCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="user" hidden onchange="setRegistrationPhoto('profile', this.files?.[0])">
-      <input id="registrationProfilePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('profile', this.files?.[0])">
-      <div class="registration-field">
         <span class="registration-question">სერტიფიკატის ფოტო (სავალდებულო)</span>
         <div class="registration-image-actions">
           <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoCamera').click()" aria-label="სერტიფიკატის ფოტოს გადაღება"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>ფოტოს გადაღება</button>
@@ -953,21 +944,21 @@
       <input id="registrationCertificatePhotoUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="setRegistrationPhoto('certificate', this.files?.[0])">
     </div>
 
-    <div id="companyRegistrationFields" class="registration-fields hidden">
-      <label class="registration-field">კომპანიის ელფოსტა
-        <input id="registerCompanyEmail" type="email" placeholder="name@company.ge" autocomplete="email">
-      </label>
-      <label class="registration-field">კომპანიის მისამართი
-        <input id="registerCompanyAddress" type="text" placeholder="მისამართი" autocomplete="street-address">
-      </label>
-    </div>
-    <label class="registration-field">ტელეფონის ნომერი
+    <label id="registrationPhoneField" class="registration-field">ტელეფონის ნომერი
       <div id="registrationPhoneRow" class="registration-phone-row">
         <span id="registrationPhonePrefix">+995</span>
         <input id="phone" type="tel" inputmode="tel" placeholder="5XX XX XX XX" autocomplete="tel-national" required>
       </div>
     </label>
-    <div class="registration-fields registration-password-fields">
+    <div id="userRegistrationFields" class="registration-fields hidden">
+      <label class="registration-field">ელფოსტა (სავალდებულო)
+        <input id="registerEmail" type="email" placeholder="name@example.com" autocomplete="email" required>
+      </label>
+      <label class="registration-field">რას ეძებთ? <span class="muted">(არასავალდებულო)</span>
+        <textarea id="registerLookingFor" placeholder="მოკლედ აღწერეთ, რას ეძებთ"></textarea>
+      </label>
+    </div>
+    <div id="registrationPasswordFields" class="registration-fields registration-password-fields">
       <label class="registration-field">პაროლი
         <input id="registerPassword" type="password" placeholder="პაროლი" autocomplete="new-password" required>
       </label>
@@ -1125,21 +1116,22 @@ function setRegistrationEmploymentChoice(value, checkbox) {
 }
 
 let registrationAccountType = "operator";
-let registrationOperatorPhotos = { profile: null, certificate: null };
+let registrationOperatorPhotos = { certificate: null };
 let pendingOperatorRegistrationPhotos = null;
 
 function setRegistrationAccountType(accountType) {
-  if (!["operator", "company"].includes(accountType)) return;
+  if (!["operator", "user"].includes(accountType)) return;
   registrationAccountType = accountType;
   const isOperator = accountType === "operator";
   document.getElementById("operatorRegistrationFields").classList.toggle("hidden", !isOperator);
-  document.getElementById("companyRegistrationFields").classList.toggle("hidden", isOperator);
-  document.getElementById("registerNameLabel").firstChild.textContent = isOperator ? "სახელი გვარი" : "კომპანიის სახელი";
-  document.getElementById("fullName").placeholder = isOperator ? "სახელი გვარი" : "კომპანიის სახელი";
+  document.getElementById("userRegistrationFields").classList.toggle("hidden", isOperator);
   document.getElementById("registerOperatorChoice").classList.toggle("is-selected", isOperator);
   document.getElementById("registerOperatorChoice").setAttribute("aria-pressed", String(isOperator));
-  document.getElementById("registerCompanyChoice").classList.toggle("is-selected", !isOperator);
-  document.getElementById("registerCompanyChoice").setAttribute("aria-pressed", String(!isOperator));
+  document.getElementById("registerUserChoice").classList.toggle("is-selected", !isOperator);
+  document.getElementById("registerUserChoice").setAttribute("aria-pressed", String(!isOperator));
+  const phoneField = document.getElementById("registrationPhoneField");
+  const nextField = document.getElementById(isOperator ? "registrationPasswordFields" : "userRegistrationFields");
+  nextField.parentNode.insertBefore(phoneField, nextField);
   toggleRegistrationCraneControls(document.getElementById("operatorType").value);
 }
 
@@ -1154,7 +1146,7 @@ function toggleRegistrationCraneControls(operatorType = document.getElementById(
 
 function setRegistrationPhoto(kind, file) {
   if (!file) return;
-  if (!["profile", "certificate"].includes(kind) || !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+  if (kind !== "certificate" || !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
     alert("Choose a JPG, PNG or WEBP image smaller than 5 MB.");
     return;
   }
@@ -1204,8 +1196,8 @@ async function register() {
 
   const isEmployed = document.getElementById("registerEmployedYes").checked
     ? true : document.getElementById("registerEmployedNo").checked ? false : null;
-  const companyEmail = document.getElementById("registerCompanyEmail").value.trim();
-  const companyAddress = document.getElementById("registerCompanyAddress").value.trim();
+  const email = document.getElementById("registerEmail").value.trim();
+  const lookingFor = document.getElementById("registerLookingFor").value.trim();
   const craneControlType = document.getElementById("registrationCraneControlType").value;
   const status = document.getElementById("registerStatus");
 
@@ -1263,8 +1255,8 @@ async function register() {
       status.textContent = "Experience must be a whole number of zero or more.";
       return;
     }
-    if (!registrationOperatorPhotos.profile || !registrationOperatorPhotos.certificate) {
-      status.textContent = "Please add both a profile photo and a tower crane certificate photo.";
+    if (!registrationOperatorPhotos.certificate) {
+      status.textContent = "ატვირთეთ სერტიფიკატის ფოტო.";
       return;
     }
     Object.assign(signupMetadata, {
@@ -1277,22 +1269,15 @@ async function register() {
       needs_replacement: isEmployed === true,
       available_for_replacement: isEmployed === false
     });
-    pendingOperatorRegistrationPhotos = {
-      profile: registrationOperatorPhotos.profile,
-      certificate: registrationOperatorPhotos.certificate
-    };
+    pendingOperatorRegistrationPhotos = { certificate: registrationOperatorPhotos.certificate };
   } else {
-    if (!companyEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(companyEmail)) {
-      status.textContent = "Enter a valid company email address.";
-      return;
-    }
-    if (!companyAddress) {
-      status.textContent = "Please complete all required fields.";
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      status.textContent = "Enter a valid email address.";
       return;
     }
     Object.assign(signupMetadata, {
-      company_email: companyEmail,
-      company_address: companyAddress
+      contact_email: email,
+      about: lookingFor || null
     });
     pendingOperatorRegistrationPhotos = null;
   }
@@ -1466,13 +1451,13 @@ async function showProfile() {
   }
 
   document.getElementById("profileAccountTypeLabel").textContent =
-    data.account_type === "company" ? "Company" : "Operator";
+    data.account_type === "operator" ? "Operator" : data.account_type === "company" ? "Company" : "User";
 
   const isOperator = data.account_type === "operator";
   document.getElementById("operatorProfileOverview").classList.toggle("hidden", !isOperator);
   document.getElementById("operatorCardDetails").classList.toggle("hidden", !isOperator);
   document.getElementById("profilePersonalEditor").classList.toggle("hidden", isOperator);
-  document.getElementById("personalEditorTitle").textContent = isOperator ? "Edit personal information" : "Company details";
+  document.getElementById("personalEditorTitle").textContent = isOperator ? "Edit personal information" : data.account_type === "company" ? "Company details" : "Personal information";
   document.getElementById("closePersonalEditor").classList.toggle("hidden", !isOperator);
   document.getElementById("profileAgeField").classList.toggle("hidden", !isOperator);
   document.getElementById("operatorPhotoProfileField").classList.toggle("hidden", !isOperator);
@@ -1933,7 +1918,7 @@ async function updateHomeCTAs(user) {
     .select("account_type").eq("id", user.id).maybeSingle();
   if (requestId !== homeCtaRequest) return;
 
-  if (error || !profile || !["operator", "company"].includes(profile.account_type)) {
+  if (error || !profile || !["operator", "company", "user"].includes(profile.account_type)) {
     ctas.innerHTML = "<span class=\"muted\">Your account profile is not available yet.</span>";
     return;
   }
@@ -2971,7 +2956,7 @@ function escapeHtml(value) {
 const operoKaCopy = {
   "OPERO": "OPERO", "Operators": "ოპერატორები", "Jobs": "ვაკანსიები", "Applications": "განაცხადები",
   "Applications & History": "განაცხადები და ისტორია", "Applications and requests": "განაცხადები და მოთხოვნები",
-  "Dashboard": "სამუშაო პანელი", "My Profile": "ჩემი პროფილი", "Login": "შესვლა", "Register": "რეგისტრაცია", "Logout": "გასვლა",
+  "Dashboard": "სამუშაო პანელი", "My Profile": "ჩემი პროფილი", "Login": "შესვლა", "Register": "რეგისტრაცია", "Logout": "გასვლა", "User": "მომხმარებელი",
   "Build better teams. Move work forward.": "შევქმნათ ძლიერი გუნდები. წავიყვანოთ საქმე წინ.",
   "A trusted network connecting construction operators, companies and new opportunities.": "სანდო პლატფორმა, რომელიც სამშენებლო ოპერატორებს, კომპანიებსა და ახალ შესაძლებლობებს აკავშირებს.",
   "My Profile": "ჩემი პროფილი", "Account type:": "ანგარიშის ტიპი:", "Professional operator profile": "ოპერატორის პროფესიული პროფილი",
@@ -3060,7 +3045,7 @@ const operoKaCopy = {
   "Login successful!": "შესვლა წარმატებულია!", "Logging in...": "მიმდინარეობს შესვლა...", "Creating account...": "ანგარიში იქმნება...", "Publishing job...": "ვაკანსია ქვეყნდება...",
   "Publishing replacement request...": "შემცვლელის მოთხოვნა ქვეყნდება...", "Profile updated successfully!": "პროფილი განახლდა.", "Please complete all required fields.": "შეავსეთ ყველა სავალდებულო ველი.",
   "Passwords do not match.": "პაროლები ერთმანეთს არ ემთხვევა.", "Enter a valid 9-digit Georgian mobile number beginning with 5.": "შეიყვანეთ 9-ნიშნა ქართული მობილურის ნომერი, რომელიც 5-ით იწყება.",
-  "Enter a valid company email address.": "შეიყვანეთ კომპანიის სწორი ელფოსტის მისამართი.", "Please select whether you are currently employed.": "მიუთითეთ, ამჟამად დასაქმებული ხართ თუ არა.",
+  "Enter a valid company email address.": "შეიყვანეთ კომპანიის სწორი ელფოსტის მისამართი.", "Enter a valid email address.": "შეიყვანეთ ელფოსტის სწორი მისამართი.", "Please select whether you are currently employed.": "მიუთითეთ, ამჟამად დასაქმებული ხართ თუ არა.",
   "Please select the equipment type you operate.": "აირჩიეთ ტექნიკის ტიპი, რომელზეც მუშაობთ.", "Please enter an age from 16 to 100.": "შეიყვანეთ ასაკი 16-დან 100 წლამდე.",
   "Please select how you operate the crane.": "აირჩიეთ, როგორ მართავთ ამწეს.", "Please enter your years of experience.": "მიუთითეთ მუშაობის გამოცდილება.",
   "Please add both a profile photo and a tower crane certificate photo.": "ატვირთეთ პროფილისა და კოშკურა ამწის სერტიფიკატის ფოტოები.", "Experience must be a whole number of zero or more.": "გამოცდილების წელი უნდა იყოს ნული ან მეტი მთელი რიცხვი.",
