@@ -599,6 +599,18 @@
     .registration-phone-row { display:flex; align-items:center; gap:8px; }
     .registration-phone-row > span { padding:11px 12px; border:1px solid #303945; border-radius:8px; background:#121820; color:white; }
     .registration-phone-row > input { flex:1; min-width:0; margin:0; }
+    #loginForm { display:flex; flex-direction:column; gap:12px; }
+    #loginForm h2 { margin:0 0 4px; }
+    #loginForm #loginPhoneRow { width:100%; min-height:46px; box-sizing:border-box; gap:0; margin:0; overflow:hidden; border:1px solid #303945; border-radius:8px; background:#0b0f14; }
+    #loginForm #loginPhoneRow > span { display:flex; align-items:center; min-height:44px; padding:0 13px; border:0; border-right:1px solid #303945; border-radius:0; background:#121820; }
+    #loginForm #loginPhoneRow > input, #loginForm > #loginPassword { width:100%; min-width:0; min-height:46px; box-sizing:border-box; margin:0; padding:11px 13px; border:1px solid #303945; border-radius:8px; }
+    #loginForm #loginPhoneRow > input { flex:1; min-height:44px; border:0; border-radius:0; background:transparent; }
+    #loginForm > button[type="submit"] { width:100%; min-height:46px; margin:0; }
+    #loginForm > .status, #loginForm > .muted { margin:0; }
+    .operator-category-filter { display:grid; grid-template-columns:auto minmax(190px, 270px); align-items:center; justify-content:start; gap:10px; width:fit-content; max-width:100%; margin:14px 0 10px; padding:9px 11px; border:1px solid #303945; border-radius:10px; background:#121820; }
+    .operator-category-filter label { color:#cbd1d8; font-size:13px; font-weight:600; }
+    .operator-category-filter select { min-width:0; min-height:38px; margin:0; padding:8px 30px 8px 10px; border:1px solid #3a4653; border-radius:7px; background:#0b0f14; color:#fff; }
+    @media (max-width:640px) { .operator-category-filter { grid-template-columns:1fr; width:100%; box-sizing:border-box; gap:6px; } .operator-category-filter select { width:100%; } }
     .registration-password-fields { margin-top:10px; }
     .operator-certificate { margin:16px 0; }
     .operator-certificate img { display:block; width:118px; max-height:84px; object-fit:contain; padding:4px; border:1px solid #303945; border-radius:8px; background:#fff; cursor:zoom-in; transition:width .18s ease, max-height .18s ease; }
@@ -693,7 +705,6 @@
 
   <nav class="hidden">
     <button id="operatorsNav" class="hidden" onclick="showOperators()">Operators</button>
-    <button id="jobsNav" class="hidden" onclick="showJobs()">Jobs</button>
     <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications <span id="applicationsUnreadBadge" class="unread-badge hidden">0</span></button>
     <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
     <button id="loginNav" class="hidden" onclick="showLogin()">Login</button>
@@ -1009,10 +1020,9 @@ function persistAppView(state) {
 
 function setActiveNavigation(view) {
   const activeId = view === "profile" ? "profileNav"
-    : ["operators", "operatorProfile"].includes(view) ? "operatorsNav"
-    : ["jobs", "replacementForm", "myJobs", "companyProfile"].includes(view) ? "jobsNav"
+    : ["operators", "operatorProfile", "companyProfile"].includes(view) ? "operatorsNav"
     : null;
-  ["operatorsNav", "jobsNav", "profileNav"].forEach(id => {
+  ["operatorsNav", "profileNav"].forEach(id => {
     document.getElementById(id)?.classList.toggle("active", id === activeId);
   });
 }
@@ -1048,7 +1058,7 @@ function restoreAppView(state) {
     operatorProfile: () => showOperatorProfile(args[0]),
     companyProfile: () => showCompanyProfile(args[0]),
     replacementForm: () => showOperatorReplacementForm(),
-    jobs: () => showJobs(args[0], args[1]),
+    jobs: () => showOperators(),
     applications: () => showAccountHome()
   };
   const restore = routes[state.view];
@@ -1842,7 +1852,6 @@ function updateAuthUI(loggedIn) {
   document.getElementById("loginNav").classList.add("hidden");
   document.querySelector("header nav")?.classList.toggle("hidden", !loggedIn);
   document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
-  document.getElementById("jobsNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("applicationsNav").classList.add("hidden");
   document.getElementById("dashboardNav").classList.add("hidden");
@@ -2121,10 +2130,12 @@ async function deleteJob(jobId) {
 }
 const JOBS_TEMPORARILY_HIDDEN = true;
 let operatorDirectory = [];
+let currentOperatorCategory = "Tower Crane Operator";
 
 async function showOperators() {
 
   saveAppView("operators");
+  currentOperatorCategory = "Tower Crane Operator";
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   const content = document.getElementById("content");
@@ -2150,15 +2161,27 @@ async function showOperators() {
   operatorDirectory.sort((a, b) => Number(b.is_own_profile) - Number(a.is_own_profile));
   content.innerHTML = `
     <h2>Operators</h2>
+    <div class="operator-category-filter">
+      <label for="operatorCategoryFilter">სასურველი ოპერატორი</label>
+      <select id="operatorCategoryFilter" onchange="filterOperatorCategory(this.value)" aria-label="სასურველი ოპერატორის კატეგორია">
+        <option value="Tower Crane Operator" selected>კოშკურა ამწის ოპერატორი</option>
+      </select>
+    </div>
     <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
     <div id="operatorResults"></div>
   `;
-  renderOperators(operatorDirectory);
+  filterOperators("");
+}
+
+function filterOperatorCategory(category) {
+  currentOperatorCategory = category || "Tower Crane Operator";
+  filterOperators(document.getElementById("operatorSearch")?.value || "");
 }
 
 function filterOperators(query) {
   const term = String(query || "").trim().toLocaleLowerCase();
   const matches = operatorDirectory.filter(operator =>
+    (operator.is_own_profile || operator.operator_type === currentOperatorCategory) &&
     [operator.full_name, operator.operator_type, operator.city, operator.country, operator.about]
       .some(value => String(value || "").toLocaleLowerCase().includes(term))
   );
