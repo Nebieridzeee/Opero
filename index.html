@@ -183,6 +183,12 @@
     .operator-card-type { margin:0 0 5px; color:#b7c0ca; font-size:13px; line-height:1.4; }
     .operator-card-experience { margin:0; color:#e3e7eb; font-size:13px; line-height:1.4; }
     .operator-card-location { margin:0; color:#aeb7c1; font-size:13px; }
+    .operator-drone-facts { display:grid; gap:3px; margin-top:6px; color:#e3e7eb; font-size:13px; line-height:1.35; }
+    .operator-drone-facts p { margin:0; }
+    .operator-drone-active { display:inline-flex; align-items:center; gap:7px; width:max-content; padding:5px 9px; border:1px solid #236a49; border-radius:999px; background:#10251b; color:#a7f5c5; font-size:12px; font-weight:650; }
+    .operator-drone-active-dot { width:9px; height:9px; flex:0 0 9px; border-radius:50%; background:#35f28a; box-shadow:0 0 8px #35f28a; animation:drone-active-pulse 1.2s ease-in-out infinite; }
+    @keyframes drone-active-pulse { 0%,100% { opacity:.55; transform:scale(.85); box-shadow:0 0 4px #35f28a; } 50% { opacity:1; transform:scale(1.12); box-shadow:0 0 11px #35f28a; } }
+    @media (prefers-reduced-motion: reduce) { .operator-drone-active-dot { animation:none; } }
     .operator-card .status-badges { margin:0; }
     .operator-card .status-badge-looking { border-color:#26784e; background:#123526; color:#8ef0b4; animation:operator-looking-pulse 1.8s ease-in-out infinite; }
     @keyframes operator-looking-pulse { 0%,100% { border-color:#26784e; box-shadow:0 0 0 0 rgb(66 216 135 / 0%); } 50% { border-color:#42d887; box-shadow:0 0 10px rgb(66 216 135 / 22%); } }
@@ -835,7 +841,7 @@
         <p class="muted">This is the professional information people see on your operator card.</p>
         <div class="profile-fields">
           <label id="operatorTypeProfileField" class="profile-field">Equipment type
-            <select id="profileOperatorType">
+            <select id="profileOperatorType" onchange="updateProfileAboutPrompt(this.value)">
               <option value="">Select operator type</option>
               <option value="Tower Crane Operator">Tower Crane Operator</option>
               <option value="Mobile Crane Operator">Mobile Crane Operator</option>
@@ -846,6 +852,9 @@
               <option value="Other">Other</option>
             </select>
           </label>
+          <label id="profileDroneEquipmentField" class="profile-field hidden">რა დრონით მუშაობ?
+            <input id="profileDroneEquipment" type="text" maxlength="120" placeholder="მაგალითად: DJI Mavic 3, Matrice 300 RTK">
+          </label>
           <label class="profile-field">Tower crane operation
             <select id="profileCraneControlType">
               <option value="">Select operation type</option>
@@ -855,7 +864,11 @@
             </select>
           </label>
           <label class="profile-field">Years of experience
-            <input id="profileExperience" type="number" min="0" placeholder="Experience years">
+            <select id="profileExperience" required>
+              <option value="">Select experience</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+              <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">10+</option>
+            </select>
           </label>
           <label id="operatorAvailabilityFields" class="profile-field">Currently employed?
             <select id="profileIsEmployed" onchange="toggleReplacementProfileFields()">
@@ -864,7 +877,7 @@
               <option value="no">No</option>
             </select>
           </label>
-          <label class="profile-field wide">About you
+          <label class="profile-field wide"><span id="profileAboutLabel">About you</span>
             <textarea id="profileAbout" placeholder="About you"></textarea>
           </label>
         <label class="profile-checkbox wide">
@@ -980,6 +993,9 @@
           <option value="Other">სხვა</option>
         </select>
       </label>
+      <label id="registrationDroneEquipmentField" class="registration-field hidden">რა დრონით მუშაობ?
+        <input id="registrationDroneEquipment" type="text" maxlength="120" placeholder="მაგალითად: DJI Mavic 3, Matrice 300 RTK">
+      </label>
       <label id="registrationCraneControlField" class="registration-field hidden">როგორ მართავ კოშკურა ამწეს?
         <select id="registrationCraneControlType">
           <option value="">აირჩიე მართვის ტიპი</option>
@@ -989,7 +1005,11 @@
         </select>
       </label>
       <label class="registration-field">გამოცდილება (წლები)
-        <input id="experience" type="number" min="0" step="1" placeholder="გამოცდილება (წლები)" required>
+        <select id="experience" required>
+          <option value="">აირჩიე გამოცდილება</option>
+          <option value="1">1 წელი</option><option value="2">2 წელი</option><option value="3">3 წელი</option><option value="4">4 წელი</option><option value="5">5 წელი</option>
+          <option value="6">6 წელი</option><option value="7">7 წელი</option><option value="8">8 წელი</option><option value="9">9 წელი</option><option value="10">10 წელი</option><option value="11">10+</option>
+        </select>
       </label>
       <div class="registration-field">
         <span id="registrationCertificatePhotoQuestion" class="registration-question">სერტიფიკატის ფოტო (სავალდებულო)</span>
@@ -1220,6 +1240,14 @@ function toggleRegistrationCraneControls(operatorType = document.getElementById(
   const select = document.getElementById("registrationCraneControlType");
   if (!field || !select) return;
   const show = registrationAccountType === "operator" && operatorType === "Tower Crane Operator";
+  const droneField = document.getElementById("registrationDroneEquipmentField");
+  const droneInput = document.getElementById("registrationDroneEquipment");
+  const showDrone = registrationAccountType === "operator" && operatorType === "Drone Operator";
+  droneField?.classList.toggle("hidden", !showDrone);
+  if (droneInput) {
+    droneInput.required = showDrone;
+    if (!showDrone) droneInput.value = "";
+  }
   const certificateQuestion = document.getElementById("registrationCertificatePhotoQuestion");
   if (certificateQuestion) {
     certificateQuestion.textContent = operatorType === "Drone Operator"
@@ -1276,6 +1304,7 @@ async function register() {
   const operatorType = document.getElementById("operatorType").value;
   const ageValue = document.getElementById("age").value.trim();
   const age = ageValue === "" ? null : Number(ageValue);
+  const droneEquipment = document.getElementById("registrationDroneEquipment").value.trim();
 
   const experience =
     document.getElementById("experience").value;
@@ -1324,6 +1353,10 @@ async function register() {
       status.textContent = "Please select the equipment type you operate.";
       return;
     }
+    if (operatorType === "Drone Operator" && !droneEquipment) {
+      status.textContent = "მიუთითეთ, რა დრონით მუშაობთ.";
+      return;
+    }
     if (!Number.isInteger(age) || age < 16 || age > 100) {
       status.textContent = "Please enter an age from 16 to 100.";
       return;
@@ -1349,6 +1382,7 @@ async function register() {
     }
     Object.assign(signupMetadata, {
       operator_type: operatorType,
+      drone_equipment: operatorType === "Drone Operator" ? droneEquipment : null,
       crane_control_type: craneControlType || null,
       age,
       experience_years: parsedExperience,
@@ -1628,7 +1662,7 @@ function filterAdminAccounts() {
       ${account.phone ? `<p>ტელეფონი: ${escapeHtml(account.phone)}</p>` : ""}
       ${account.city ? `<p>ქალაქი: ${escapeHtml(account.city)}</p>` : ""}
       ${account.operator_type ? `<p>კატეგორია: ${escapeHtml(translateOperoText(account.operator_type))}</p>` : ""}
-      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p><p>სერტიფიკატი: ${account.certificate_verified ? "დადასტურებულია" : account.certificate_url ? "მოლოდინში" : "არ არის ატვირთული"}</p>${account.certificate_url ? `<figure class="operator-certificate"><figcaption>სერტიფიკატი · გასადიდებლად დააჭირე</figcaption><img src="${escapeHtml(account.certificate_url)}" alt="სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}"></figure>` : `<p class="muted">სერტიფიკატი ატვირთული არ არის</p>`}${account.certificate_verified ? `<button type="button" class="secondary" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', false)">დადასტურების გაუქმება</button>` : `<button type="button" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', true)" ${account.certificate_url ? "" : "disabled"}>სერტიფიკატის დადასტურება</button>`}` : ""}
+      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(formatExperienceYears(account.experience_years)) + (account.experience_years ? " წელი" : "")}</p><p>სერტიფიკატი: ${account.certificate_verified ? "დადასტურებულია" : account.certificate_url ? "მოლოდინში" : "არ არის ატვირთული"}</p>${account.certificate_url ? `<figure class="operator-certificate"><figcaption>სერტიფიკატი · გასადიდებლად დააჭირე</figcaption><img src="${escapeHtml(account.certificate_url)}" alt="სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}"></figure>` : `<p class="muted">სერტიფიკატი ატვირთული არ არის</p>`}${account.certificate_verified ? `<button type="button" class="secondary" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', false)">დადასტურების გაუქმება</button>` : `<button type="button" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', true)" ${account.certificate_url ? "" : "disabled"}>სერტიფიკატის დადასტურება</button>`}` : ""}
       ${account.account_type === "operator" ? `<button type="button" class="secondary" onclick="setAdminOperatorDeleted('${escapeHtml(account.id)}', ${!account.admin_deleted_at})">${account.admin_deleted_at ? "აღდგენა" : "ოპერატორის წაშლა"}</button>` : ""}
     </article>
   `).join("") : `<p class="muted">ანგარიშები ვერ მოიძებნა.</p>`;
@@ -1771,14 +1805,16 @@ async function showProfile() {
 
   document.getElementById("profileOperatorType").value =
     data.account_type === "operator" ? data.operator_type || "" : "";
+  updateProfileAboutPrompt(data.operator_type);
+  document.getElementById("profileDroneEquipment").value = data.drone_equipment || "";
   document.getElementById("profileIsEmployed").value = booleanToChoice(data.is_employed);
   savedProfileEmploymentStatus = data.is_employed;
   toggleReplacementProfileFields();
   const calendar = document.getElementById("operatorAvailabilityCalendar");
   calendar.classList.toggle("hidden", data.account_type !== "operator" || data.is_employed !== false);
 
-  document.getElementById("profileExperience").value =
-    data.experience_years || "";
+  document.getElementById("profileExperience").value = data.experience_years
+    ? String(Math.min(Number(data.experience_years), 11)) : "";
 
   document.getElementById("profileAbout").value =
     data.about || "";
@@ -1831,6 +1867,20 @@ function setOperatorPhotoPreview(url) {
 
 function togglePersonalProfileEditor() {
   document.getElementById("profilePersonalEditor")?.classList.toggle("hidden");
+}
+
+function updateProfileAboutPrompt(operatorType) {
+  const isDroneOperator = operatorType === "Drone Operator";
+  const label = document.getElementById("profileAboutLabel");
+  const about = document.getElementById("profileAbout");
+  if (label) label.textContent = isDroneOperator ? "რა პროექტებზე მუშაობ?" : "About you";
+  if (about) {
+    about.placeholder = isDroneOperator ? "მოკლედ აღწერე, რა ტიპის პროექტებზე მუშაობდი" : "About you";
+    about.maxLength = isDroneOperator ? 240 : 2000;
+  }
+  document.getElementById("profileDroneEquipmentField")?.classList.toggle("hidden", !isDroneOperator);
+  const droneEquipment = document.getElementById("profileDroneEquipment");
+  if (droneEquipment) droneEquipment.required = isDroneOperator;
 }
 
 function previewOperatorPhoto(file) {
@@ -2073,6 +2123,11 @@ async function saveProfile() {
   if (profile.account_type === "operator") {
     const employed = choiceToBoolean(document.getElementById("profileIsEmployed").value);
     if (employed === null) { alert("Please select whether you are currently employed."); return; }
+    const experienceValue = document.getElementById("profileExperience").value;
+    if (!experienceValue || !Number.isInteger(Number(experienceValue)) || Number(experienceValue) < 1 || Number(experienceValue) > 11) {
+      alert("აირჩიეთ გამოცდილება 1-დან 10 წლამდე ან 10+.");
+      return;
+    }
     const ageValue = document.getElementById("profileAge").value.trim();
     const age = ageValue === "" ? null : Number(ageValue);
     if (age !== null && (!Number.isInteger(age) || age < 16 || age > 100)) {
@@ -2080,6 +2135,13 @@ async function saveProfile() {
       return;
     }
     updates.operator_type = document.getElementById("profileOperatorType").value;
+    if (updates.operator_type === "Drone Operator" && !document.getElementById("profileDroneEquipment").value.trim()) {
+      alert("მიუთითეთ, რა დრონით მუშაობთ.");
+      return;
+    }
+    updates.drone_equipment = updates.operator_type === "Drone Operator"
+      ? document.getElementById("profileDroneEquipment").value.trim() || null
+      : null;
     updates.is_employed = employed;
     updates.age = age;
     updates.crane_control_type = document.getElementById("profileCraneControlType").value || null;
@@ -2468,7 +2530,7 @@ async function showOperators() {
 
   const { data: { user } } = await supabaseClient.auth.getUser();
   let operatorsQuery = supabaseClient.from("profiles")
-    .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
+    .select("id, full_name, operator_type, drone_equipment, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
     .is("admin_deleted_at", null);
   operatorsQuery = user
@@ -2539,8 +2601,11 @@ function renderOperators(operators, searched = false) {
   const ownProfiles = operators.filter(operator => operator.is_own_profile);
   const directoryOperators = operators.filter(operator => !operator.is_own_profile);
   const cardMarkup = operator => {
-    const compactOwnCard = operator.is_own_profile && operator.is_employed !== true;
+    const isDroneOperator = operator.operator_type === "Drone Operator";
+    const compactOwnCard = !isDroneOperator && operator.is_own_profile && operator.is_employed !== true;
     const employedOwnCard = operator.is_own_profile && operator.is_employed === true;
+    const droneDetails = `<div class="operator-drone-facts"><p>ასაკი: ${operator.age ? escapeHtml(operator.age) : "—"}</p><p>გამოცდილება: ${escapeHtml(formatExperienceYears(operator.experience_years))}${operator.experience_years ? " წელი" : ""}</p><p>სამუშაო ტექნიკა: ${escapeHtml(operator.drone_equipment || "დრონი")}</p></div>`;
+    const droneActive = '<span class="operator-drone-active"><i class="operator-drone-active-dot" aria-hidden="true"></i>პროფილი აქტიურია</span>';
     return `
     <article class="card operator-card ${operator.is_own_profile ? "operator-card-own" : ""} ${employedOwnCard ? "operator-card-employed" : ""}" role="button" tabindex="0"
       aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
@@ -2549,13 +2614,14 @@ function renderOperators(operators, searched = false) {
       <div class="operator-card-main">
         ${operatorPhotoMarkup(operator)}
         <div class="operator-card-copy">
-          ${operator.is_own_profile ? `<span class="operator-card-own-label">${employedOwnCard ? "დასაქმებული · ჩემი პროფილი" : "ჩემი პროფილი"}</span>` : ""}
+          ${operator.is_own_profile && !isDroneOperator ? `<span class="operator-card-own-label">${employedOwnCard ? "დასაქმებული · ჩემი პროფილი" : "ჩემი პროფილი"}</span>` : ""}
           <h3 data-user-content>${escapeHtml(operator.full_name || "ოპერატორი")}</h3>
-          ${compactOwnCard ? "" : `<p class="operator-card-type">${escapeHtml(translateOperoText(operator.operator_type || "ოპერატორი"))}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
-          <p class="operator-card-experience">გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>`}
+          ${compactOwnCard ? "" : isDroneOperator ? droneDetails : `<p class="operator-card-type">${escapeHtml(translateOperoText(operator.operator_type || "ოპერატორი"))}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
+          <p class="operator-card-experience">გამოცდილება: ${escapeHtml(formatExperienceYears(operator.experience_years))}${operator.experience_years ? " წელი" : ""}${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>`}
         </div>
       </div>
-      ${compactOwnCard ? "" : `<p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
+      ${!compactOwnCard && isDroneOperator ? droneActive : ""}
+      ${compactOwnCard || isDroneOperator ? "" : `<p class="operator-card-location" data-user-content>${escapeHtml(operator.city || "")}${operator.country ? ", " + escapeHtml(operator.country) : ""}</p>
       ${employedOwnCard ? '<span class="status-badge">დასაქმებულია</span>' : renderOperatorStatuses(operator)}
       ${operator.contact_anytime ? `<span class="status-badge">დარეკვა ნებისმიერ დროს</span>` : ""}`}
     </article>
@@ -2591,6 +2657,12 @@ function craneControlTypeLabel(value) {
   return value || "";
 }
 
+function formatExperienceYears(value) {
+  const years = Number(value);
+  if (!Number.isFinite(years) || years < 1) return "—";
+  return years >= 11 ? "10+" : String(years);
+}
+
 function renderOperatorStatuses(operator) {
   const badges = [];
   if (operator.is_employed === false) badges.push({ label: "⚪ ამჟამად არ არის დასაქმებული", looking: false });
@@ -2619,7 +2691,7 @@ async function showOperatorProfile(operatorId) {
 
   const { data: { user: viewingUser } } = await supabaseClient.auth.getUser();
   let operatorProfileQuery = supabaseClient.from("profiles")
-    .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone, is_employed")
+    .select("full_name, operator_type, drone_equipment, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone, is_employed")
     .eq("id", operatorId)
     .eq("account_type", "operator")
     .is("admin_deleted_at", null);
@@ -2643,7 +2715,8 @@ async function showOperatorProfile(operatorId) {
   const city = escapeHtml(data.city || "");
   const country = escapeHtml(data.country || "");
   const location = [city, country].filter(Boolean).join(", ");
-  const experience = escapeHtml(data.experience_years ?? 0);
+  const experienceDisplay = escapeHtml(formatExperienceYears(data.experience_years));
+  const isDroneOperator = data.operator_type === "Drone Operator";
   const about = data.about ? `<span data-user-content>${escapeHtml(data.about)}</span>` : "აღწერა მითითებული არ არის.";
   const phone = String(data.phone || "").trim();
   const phoneLink = phone.replace(/[^+\d]/g, "");
@@ -2652,14 +2725,14 @@ async function showOperatorProfile(operatorId) {
     ? `<div class="operator-profile-contact"><button type="button" onclick="document.getElementById('operatorPhoneValue').classList.remove('hidden');this.classList.add('hidden')">ნომრის ჩვენება</button><p id="operatorPhoneValue" class="operator-profile-contact-value hidden" data-user-content><a href="tel:${escapeHtml(phoneLink)}">${escapeHtml(phone)}</a></p></div>`
     : "<p class=\"muted\">ტელეფონის ნომერი მითითებული არ არის.</p>";
   const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
-  const aboutMarkup = data.about ? `<section class="operator-profile-about"><h3>ჩემ შესახებ</h3><p>${about}</p></section>` : "";
+  const aboutMarkup = data.about ? `<section class="operator-profile-about"><h3>${isDroneOperator ? "რა პროექტებზე მუშაობ?" : "ჩემ შესახებ"}</h3><p>${about}</p></section>` : isDroneOperator ? `<section class="operator-profile-about"><h3>რა პროექტებზე მუშაობ?</h3><p>მოკლე აღწერა ჯერ არ არის დამატებული.</p></section>` : "";
   const certificateLabel = data.operator_type === "Drone Operator" ? "ნამუშევარი" : "კოშკურა ამწის სერტიფიკატი";
   const certificateMarkup = data.certificate_url ? `
     <figure class="operator-certificate">
       <figcaption>${certificateLabel} · გასადიდებლად დააჭირე</figcaption>
       <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="${certificateLabel}" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
     </figure>` : "";
-  const calendarMarkup = data.is_employed === true ? "" : `
+  const calendarMarkup = data.is_employed === true || isDroneOperator ? "" : `
         <aside class="operator-profile-calendar" aria-label="ოპერატორის თავისუფალი და დაკავებული დღეების კალენდარი">
           <div class="operator-profile-calendar-head">
             <h3>კალენდარი</h3>
@@ -2683,14 +2756,13 @@ async function showOperatorProfile(operatorId) {
             ${operatorPhotoMarkup(cardProfile, true)}
             <div class="operator-profile-identity">
               <h2 data-user-content>${name}</h2>
-              <p class="operator-profile-type">${operatorType}${data.crane_control_type ? ` · ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}` : ""}</p>
+              <p class="operator-profile-type">${isDroneOperator ? "დრონის ოპერატორი" : `${operatorType}${data.crane_control_type ? ` · ${escapeHtml(craneControlTypeLabel(data.crane_control_type))}` : ""}`}</p>
               <dl class="operator-profile-facts">
-                <div class="operator-profile-fact"><dt>გამოცდილება</dt><dd>${experience} წელი</dd></div>
-                ${age ? `<div class="operator-profile-fact"><dt>ასაკი</dt><dd>${age}</dd></div>` : ""}
-                <div class="operator-profile-fact"><dt>ქალაქი</dt><dd data-user-content>${location || "—"}</dd></div>
+                ${isDroneOperator ? `<div class="operator-profile-fact"><dt>ასაკი</dt><dd>${age || "—"}</dd></div><div class="operator-profile-fact"><dt>გამოცდილება</dt><dd>${experienceDisplay}${data.experience_years ? " წელი" : ""}</dd></div><div class="operator-profile-fact"><dt>სამუშაო ტექნიკა</dt><dd>${escapeHtml(data.drone_equipment || "დრონი")}</dd></div>` : `<div class="operator-profile-fact"><dt>გამოცდილება</dt><dd>${experienceDisplay}${data.experience_years ? " წელი" : ""}</dd></div>${age ? `<div class="operator-profile-fact"><dt>ასაკი</dt><dd>${age}</dd></div>` : ""}<div class="operator-profile-fact"><dt>ქალაქი</dt><dd data-user-content>${location || "—"}</dd></div>`}
               </dl>
             </div>
           </div>
+          ${isDroneOperator ? '<span class="operator-drone-active"><i class="operator-drone-active-dot" aria-hidden="true"></i>პროფილი აქტიურია</span>' : ""}
           ${data.contact_anytime ? "<span class=\"status-badge\">დარეკვა ნებისმიერ დროს</span>" : ""}
           ${contactMarkup}
           ${aboutMarkup}
@@ -2701,7 +2773,7 @@ async function showOperatorProfile(operatorId) {
       ${certificateMarkup}
     </div>
   `;
-  if (data.is_employed !== true) await loadOperatorProfileCalendar(operatorId);
+  if (!isDroneOperator && data.is_employed !== true) await loadOperatorProfileCalendar(operatorId);
 }
 
 function toggleCertificatePhoto(image) {
