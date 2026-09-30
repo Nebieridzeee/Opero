@@ -1144,8 +1144,8 @@ function restoreAppView(state) {
     admin: () => showAdminDashboard(),
     dashboard: () => showAccountHome(),
     myJobs: () => showMyJobs(),
-    operators: () => showOperators(),
-    operatorProfile: () => showOperatorProfile(args[0]),
+    operators: () => showOperators(args[0]),
+    operatorProfile: () => showOperatorProfile(args[0], args[1]),
     companyProfile: () => showCompanyProfile(args[0]),
     replacementForm: () => showOperatorReplacementForm(),
     jobs: () => showOperators(),
@@ -2519,10 +2519,10 @@ const JOBS_TEMPORARILY_HIDDEN = true;
 let operatorDirectory = [];
 let currentOperatorCategory = "Tower Crane Operator";
 
-async function showOperators() {
+async function showOperators(category = "Tower Crane Operator") {
 
-  saveAppView("operators");
-  currentOperatorCategory = "Tower Crane Operator";
+  currentOperatorCategory = category || "Tower Crane Operator";
+  saveAppView("operators", [currentOperatorCategory]);
   hideAll();
   document.getElementById("mainContent").classList.remove("hidden");
   const content = document.getElementById("content");
@@ -2578,6 +2578,11 @@ async function showOperators() {
 
 function filterOperatorCategory(category) {
   currentOperatorCategory = category || "Tower Crane Operator";
+  if (window.history.state?.[OPERO_HISTORY_KEY] && window.history.state.view === "operators") {
+    const state = { ...window.history.state, args: [currentOperatorCategory] };
+    window.history.replaceState(state, "", window.location.href);
+    persistAppView(state);
+  }
   filterOperators(document.getElementById("operatorSearch")?.value || "");
 }
 
@@ -2609,7 +2614,7 @@ function renderOperators(operators, searched = false) {
     return `
     <article class="card operator-card ${operator.is_own_profile ? "operator-card-own" : ""} ${employedOwnCard ? "operator-card-employed" : ""}" role="button" tabindex="0"
       aria-label="ოპერატორის პროფილის ნახვა: ${escapeHtml(operator.full_name || "ოპერატორი")}"
-      onclick="showOperatorProfile('${escapeHtml(operator.id)}')"
+      onclick="showOperatorProfile('${escapeHtml(operator.id)}', '${escapeHtml(currentOperatorCategory)}')"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showOperatorProfile('${escapeHtml(operator.id)}')}">
       <div class="operator-card-main">
         ${operatorPhotoMarkup(operator)}
@@ -2671,9 +2676,11 @@ function renderOperatorStatuses(operator) {
   return `<div class="status-badges">${badges.map(({ label, looking }) => `<span class="status-badge ${looking ? "status-badge-looking" : ""}">${label}</span>`).join("")}</div>`;
 }
 
-async function showOperatorProfile(operatorId) {
+async function showOperatorProfile(operatorId, category = currentOperatorCategory) {
 
-  saveAppView("operatorProfile", [operatorId]);
+  const returnCategory = category || "Tower Crane Operator";
+  currentOperatorCategory = returnCategory;
+  saveAppView("operatorProfile", [operatorId, returnCategory]);
   hideAll();
 
   const mainContent = document.getElementById("mainContent");
@@ -2685,7 +2692,7 @@ async function showOperatorProfile(operatorId) {
   if (!operatorId) {
     content.innerHTML =
       "<p class=\"muted\">Operator profile not found.</p>" +
-      "<button onclick=\"showOperators()\">Back to Operators</button>";
+      `<button onclick="showOperators('${escapeHtml(returnCategory)}')">Back to Operators</button>`;
     return;
   }
 
@@ -2704,7 +2711,7 @@ async function showOperatorProfile(operatorId) {
     console.error("Could not load operator profile:", error);
     content.innerHTML =
       "<p class=\"muted\">Could not load this operator profile.</p>" +
-      "<button onclick=\"showOperators()\">Back to Operators</button>";
+      `<button onclick="showOperators('${escapeHtml(returnCategory)}')">Back to Operators</button>`;
     return;
   }
 
@@ -2748,7 +2755,7 @@ async function showOperatorProfile(operatorId) {
         </aside>`;
 
   content.innerHTML = `
-    <button class="secondary" onclick="showOperators()">ოპერატორებზე დაბრუნება</button>
+    <button class="secondary" onclick="showOperators('${escapeHtml(returnCategory)}')">ოპერატორებზე დაბრუნება</button>
     <div class="card operator-profile-card">
       <div class="operator-profile-layout">
         <section class="operator-profile-main">
