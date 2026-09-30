@@ -1575,7 +1575,7 @@ async function showAdminDashboard() {
   const [profilesCount, operatorsCount, pendingOperatorsCount, jobsCount, applicationsCount, accountsResult, jobsResult] = await Promise.all([
     countQuery("profiles"),
     supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").eq("certificate_verified", true).is("admin_deleted_at", null),
-    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").eq("certificate_verified", false).is("admin_deleted_at", null),
+    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").eq("certificate_verified", false).not("certificate_url", "is", null).is("admin_deleted_at", null),
     countQuery("jobs", true),
     countQuery("applications"),
     supabaseClient.from("profiles")
@@ -1613,7 +1613,7 @@ function filterAdminAccounts() {
   const term = String(document.getElementById("adminAccountSearch")?.value || "").trim().toLocaleLowerCase();
   const role = document.getElementById("adminAccountRole")?.value || "";
   const rows = adminAccountsCache.filter(account => {
-    if (role === "operator_pending" && (account.account_type !== "operator" || account.certificate_verified === true)) return false;
+    if (role === "operator_pending" && (account.account_type !== "operator" || account.certificate_verified === true || !account.certificate_url)) return false;
     if (role && role !== "operator_pending" && account.account_type !== role) return false;
     return [account.full_name, account.phone, account.city, account.operator_type]
       .some(value => String(value || "").toLocaleLowerCase().includes(term));
@@ -1628,7 +1628,7 @@ function filterAdminAccounts() {
       ${account.phone ? `<p>ტელეფონი: ${escapeHtml(account.phone)}</p>` : ""}
       ${account.city ? `<p>ქალაქი: ${escapeHtml(account.city)}</p>` : ""}
       ${account.operator_type ? `<p>კატეგორია: ${escapeHtml(translateOperoText(account.operator_type))}</p>` : ""}
-      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p><p>სერტიფიკატი: ${account.certificate_verified ? "დადასტურებულია" : "მოლოდინში"}</p>${account.certificate_url ? `<figure class="operator-certificate"><figcaption>სერტიფიკატი · გასადიდებლად დააჭირე</figcaption><img src="${escapeHtml(account.certificate_url)}" alt="სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}"></figure>` : `<p class="muted">სერტიფიკატი ატვირთული არ არის</p>`}${account.certificate_verified ? `<button type="button" class="secondary" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', false)">დადასტურების გაუქმება</button>` : `<button type="button" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', true)" ${account.certificate_url ? "" : "disabled"}>სერტიფიკატის დადასტურება</button>`}` : ""}
+      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p><p>სერტიფიკატი: ${account.certificate_verified ? "დადასტურებულია" : account.certificate_url ? "მოლოდინში" : "არ არის ატვირთული"}</p>${account.certificate_url ? `<figure class="operator-certificate"><figcaption>სერტიფიკატი · გასადიდებლად დააჭირე</figcaption><img src="${escapeHtml(account.certificate_url)}" alt="სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}"></figure>` : `<p class="muted">სერტიფიკატი ატვირთული არ არის</p>`}${account.certificate_verified ? `<button type="button" class="secondary" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', false)">დადასტურების გაუქმება</button>` : `<button type="button" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', true)" ${account.certificate_url ? "" : "disabled"}>სერტიფიკატის დადასტურება</button>`}` : ""}
       ${account.account_type === "operator" ? `<button type="button" class="secondary" onclick="setAdminOperatorDeleted('${escapeHtml(account.id)}', ${!account.admin_deleted_at})">${account.admin_deleted_at ? "აღდგენა" : "ოპერატორის წაშლა"}</button>` : ""}
     </article>
   `).join("") : `<p class="muted">ანგარიშები ვერ მოიძებნა.</p>`;
@@ -2470,11 +2470,10 @@ async function showOperators() {
   let operatorsQuery = supabaseClient.from("profiles")
     .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
-    .is("admin_deleted_at", null)
-    .eq("certificate_verified", true);
+    .is("admin_deleted_at", null);
   operatorsQuery = user
-    ? operatorsQuery.or(`is_employed.eq.false,id.eq.${user.id}`)
-    : operatorsQuery.eq("is_employed", false);
+    ? operatorsQuery.or(`and(or(certificate_verified.eq.true,certificate_url.is.null),or(is_employed.eq.false,id.eq.${user.id}))`)
+    : operatorsQuery.eq("is_employed", false).or("certificate_verified.eq.true,certificate_url.is.null");
   const { data, error } = await operatorsQuery.order("created_at", { ascending: false });
 
   if (error) {
@@ -2490,7 +2489,7 @@ async function showOperators() {
     .from("profiles")
     .select("operator_type")
     .eq("account_type", "operator")
-    .eq("certificate_verified", true)
+    .or("certificate_verified.eq.true,certificate_url.is.null")
     .is("admin_deleted_at", null);
   const categorySource = categoryError ? operatorDirectory : (registeredOperatorTypes || []);
   const operatorCategories = new Set(["Tower Crane Operator", "Mobile Crane Operator"]);
@@ -2623,11 +2622,10 @@ async function showOperatorProfile(operatorId) {
     .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone, is_employed")
     .eq("id", operatorId)
     .eq("account_type", "operator")
-    .is("admin_deleted_at", null)
-    .eq("certificate_verified", true);
+    .is("admin_deleted_at", null);
   operatorProfileQuery = viewingUser
-    ? operatorProfileQuery.or(`is_employed.eq.false,id.eq.${viewingUser.id}`)
-    : operatorProfileQuery.eq("is_employed", false);
+    ? operatorProfileQuery.or(`and(or(certificate_verified.eq.true,certificate_url.is.null),or(is_employed.eq.false,id.eq.${viewingUser.id}))`)
+    : operatorProfileQuery.eq("is_employed", false).or("certificate_verified.eq.true,certificate_url.is.null");
   const { data, error } = await operatorProfileQuery.single();
 
   if (error || !data) {
