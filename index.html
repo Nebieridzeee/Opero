@@ -187,17 +187,21 @@
     .operator-card .status-badge-looking { border-color:#26784e; background:#123526; color:#8ef0b4; animation:operator-looking-pulse 1.8s ease-in-out infinite; }
     @keyframes operator-looking-pulse { 0%,100% { border-color:#26784e; box-shadow:0 0 0 0 rgb(66 216 135 / 0%); } 50% { border-color:#42d887; box-shadow:0 0 10px rgb(66 216 135 / 22%); } }
     @media (prefers-reduced-motion: reduce) { .operator-card .status-badge-looking { animation:none; } }
-    .operator-card-own { width:auto; padding:11px 13px; border-color:#34463d; }
+    .operator-card-own { width:min(100%,520px); padding:11px 13px; border-color:#34463d; }
     .operator-card-own:not(.operator-card-employed) .operator-card-main { gap:10px; }
     .operator-card-own:not(.operator-card-employed) .operator-avatar { flex-basis:52px; width:52px; height:52px; border-radius:10px; }
     .operator-card-own:not(.operator-card-employed) .operator-card-copy h3 { margin:0; font-size:15px; }
-    .operator-card-employed { width:auto; }
+    .operator-card-employed { width:min(100%,520px); }
     .operator-card-own-label { display:inline-block; margin-bottom:3px; color:#8ef0b4; font-size:11px; font-weight:600; }
     .operator-profile-edit-action { justify-self:start; }
-    #operatorResults { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    #operatorResults { display:block; }
+    .operator-own-profile { margin-bottom:22px; padding-bottom:18px; border-bottom:1px solid #28313b; }
+    .operator-own-profile h3, .operator-directory-heading { margin:0 0 11px; color:#dbe1e7; font-size:15px; font-weight:650; }
+    .operator-own-card-slot { display:flex; justify-content:flex-start; }
+    .operator-directory-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
     #operatorResults > .card, #jobResults > .card { margin:0; }
-    @media (max-width:900px) { #operatorResults { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width:640px) { #operatorResults { grid-template-columns:minmax(0,1fr); } }
+    @media (max-width:900px) { .operator-directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px) { .operator-directory-grid { grid-template-columns:minmax(0,1fr); } }
     .job-card { display:grid; gap:12px; padding:16px; border-radius:14px; }
     .job-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; min-width:0; padding:0; border:0; background:transparent; }
     .job-card-title-wrap { min-width:0; }
@@ -2201,7 +2205,9 @@ function renderOperators(operators, searched = false) {
     results.innerHTML = `<p class="muted">${searched ? "No operators match your search." : "No operators are currently available."}</p>`;
     return;
   }
-  results.innerHTML = operators.map(operator => {
+  const ownProfiles = operators.filter(operator => operator.is_own_profile);
+  const directoryOperators = operators.filter(operator => !operator.is_own_profile);
+  const cardMarkup = operator => {
     const compactOwnCard = operator.is_own_profile && operator.is_employed !== true;
     const employedOwnCard = operator.is_own_profile && operator.is_employed === true;
     return `
@@ -2223,7 +2229,19 @@ function renderOperators(operators, searched = false) {
       ${operator.contact_anytime ? `<span class="status-badge">დარეკვა ნებისმიერ დროს</span>` : ""}`}
     </article>
   `;
-  }).join("");
+  };
+  results.innerHTML = `
+    ${ownProfiles.length ? `<section class="operator-own-profile" aria-labelledby="operatorOwnProfileHeading">
+      <h3 id="operatorOwnProfileHeading">ჩემი პროფილი</h3>
+      <div class="operator-own-card-slot">${ownProfiles.map(cardMarkup).join("")}</div>
+    </section>` : ""}
+    <section class="operator-directory" aria-labelledby="operatorDirectoryHeading">
+      <h3 id="operatorDirectoryHeading" class="operator-directory-heading">ოპერატორები</h3>
+      ${directoryOperators.length
+        ? `<div class="operator-directory-grid">${directoryOperators.map(cardMarkup).join("")}</div>`
+        : `<p class="muted">${searched ? "No operators match your search." : "No operators are currently available."}</p>`}
+    </section>
+  `;
 }
 
 function operatorPhotoMarkup(operator, large = false) {
