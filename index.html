@@ -867,10 +867,26 @@
           <label class="profile-field wide">About you
             <textarea id="profileAbout" placeholder="About you"></textarea>
           </label>
-          <label class="profile-checkbox wide">
-            <input id="profileContactAnytime" type="checkbox">
-            Call me anytime
-          </label>
+        <label class="profile-checkbox wide">
+          <input id="profileContactAnytime" type="checkbox">
+          Call me anytime
+        </label>
+        <div class="profile-field wide">
+          <strong>სერტიფიკატი / ნამუშევარი</strong>
+          <p id="profileCertificateStatus" class="muted">იტვირთება…</p>
+          <img id="profileCertificatePreview" class="hidden" alt="სერტიფიკატის გადახედვა" style="display:block;max-width:min(100%,320px);max-height:210px;object-fit:contain;border-radius:10px;margin:8px 0;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label class="secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:9px 12px;">
+              <span aria-hidden="true">▣</span> გადაღება
+              <input type="file" accept="image/*" capture="environment" onchange="setProfileCertificatePhoto(this.files?.[0])" style="display:none">
+            </label>
+            <label class="secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:9px 12px;">
+              <span aria-hidden="true">▤</span> ატვირთვა
+              <input id="profileCertificateFile" type="file" accept="image/jpeg,image/png,image/webp" onchange="setProfileCertificatePhoto(this.files?.[0])" style="display:none">
+            </label>
+          </div>
+          <span id="profileCertificateSelection" class="muted"></span>
+        </div>
         </div>
         <button type="button" style="margin-top:16px;" onclick="saveProfile()">Save operator card</button>
       </div>
@@ -1488,6 +1504,7 @@ async function login(event) {
 
 }
 
+let selectedProfileCertificatePhoto = null;
 let adminAccountsCache = [];
 let adminJobsCache = [];
 
@@ -1515,6 +1532,7 @@ async function showAdminDashboard() {
     <div class="admin-stat-grid" aria-live="polite">
       <div class="admin-stat-card"><span>ყველა ანგარიში</span><strong id="adminTotalAccounts">…</strong></div>
       <div class="admin-stat-card"><span>ოპერატორები</span><strong id="adminOperatorCount">…</strong></div>
+      <div class="admin-stat-card"><span>დადასტურებას ელოდება</span><strong id="adminPendingOperatorCount">…</strong></div>
       <div class="admin-stat-card"><span>ვაკანსიები</span><strong id="adminJobCount">…</strong></div>
       <div class="admin-stat-card"><span>განაცხადები</span><strong id="adminApplicationCount">…</strong></div>
     </div>
@@ -1525,6 +1543,7 @@ async function showAdminDashboard() {
         <select id="adminAccountRole" onchange="filterAdminAccounts()" aria-label="ანგარიშის ტიპის ფილტრი">
           <option value="">ყველა ტიპი</option>
           <option value="operator">ოპერატორი</option>
+          <option value="operator_pending">დასადასტურებელი ოპერატორები</option>
           <option value="user">მომხმარებელი</option>
           <option value="company">კომპანია</option>
           <option value="admin">ადმინისტრატორი</option>
@@ -1553,13 +1572,14 @@ async function showAdminDashboard() {
     if (activeOnly) query = query.is("admin_deleted_at", null);
     return query;
   };
-  const [profilesCount, operatorsCount, jobsCount, applicationsCount, accountsResult, jobsResult] = await Promise.all([
+  const [profilesCount, operatorsCount, pendingOperatorsCount, jobsCount, applicationsCount, accountsResult, jobsResult] = await Promise.all([
     countQuery("profiles"),
-    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").is("admin_deleted_at", null),
+    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").eq("certificate_verified", true).is("admin_deleted_at", null),
+    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").eq("certificate_verified", false).is("admin_deleted_at", null),
     countQuery("jobs", true),
     countQuery("applications"),
     supabaseClient.from("profiles")
-      .select("id, full_name, phone, account_type, city, operator_type, is_employed, experience_years, created_at, admin_deleted_at")
+      .select("id, full_name, phone, account_type, city, operator_type, is_employed, experience_years, created_at, admin_deleted_at, certificate_url, certificate_verified")
       .order("created_at", { ascending: false }).limit(500),
     supabaseClient.from("jobs")
       .select("id, title, job_type, operator_type, company, city, country, created_at, admin_deleted_at")
@@ -1568,6 +1588,7 @@ async function showAdminDashboard() {
 
   document.getElementById("adminTotalAccounts").textContent = profilesCount.error ? "—" : String(profilesCount.count ?? 0);
   document.getElementById("adminOperatorCount").textContent = operatorsCount.error ? "—" : String(operatorsCount.count ?? 0);
+  document.getElementById("adminPendingOperatorCount").textContent = pendingOperatorsCount.error ? "—" : String(pendingOperatorsCount.count ?? 0);
   document.getElementById("adminJobCount").textContent = jobsCount.error ? "—" : String(jobsCount.count ?? 0);
   document.getElementById("adminApplicationCount").textContent = applicationsCount.error ? "—" : String(applicationsCount.count ?? 0);
 
@@ -1592,7 +1613,8 @@ function filterAdminAccounts() {
   const term = String(document.getElementById("adminAccountSearch")?.value || "").trim().toLocaleLowerCase();
   const role = document.getElementById("adminAccountRole")?.value || "";
   const rows = adminAccountsCache.filter(account => {
-    if (role && account.account_type !== role) return false;
+    if (role === "operator_pending" && (account.account_type !== "operator" || account.certificate_verified === true)) return false;
+    if (role && role !== "operator_pending" && account.account_type !== role) return false;
     return [account.full_name, account.phone, account.city, account.operator_type]
       .some(value => String(value || "").toLocaleLowerCase().includes(term));
   });
@@ -1606,7 +1628,7 @@ function filterAdminAccounts() {
       ${account.phone ? `<p>ტელეფონი: ${escapeHtml(account.phone)}</p>` : ""}
       ${account.city ? `<p>ქალაქი: ${escapeHtml(account.city)}</p>` : ""}
       ${account.operator_type ? `<p>კატეგორია: ${escapeHtml(translateOperoText(account.operator_type))}</p>` : ""}
-      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p>` : ""}
+      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p><p>სერტიფიკატი: ${account.certificate_verified ? "დადასტურებულია" : "მოლოდინში"}</p>${account.certificate_url ? `<figure class="operator-certificate"><figcaption>სერტიფიკატი · გასადიდებლად დააჭირე</figcaption><img src="${escapeHtml(account.certificate_url)}" alt="სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}"></figure>` : `<p class="muted">სერტიფიკატი ატვირთული არ არის</p>`}${account.certificate_verified ? `<button type="button" class="secondary" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', false)">დადასტურების გაუქმება</button>` : `<button type="button" onclick="setAdminOperatorVerified('${escapeHtml(account.id)}', true)" ${account.certificate_url ? "" : "disabled"}>სერტიფიკატის დადასტურება</button>`}` : ""}
       ${account.account_type === "operator" ? `<button type="button" class="secondary" onclick="setAdminOperatorDeleted('${escapeHtml(account.id)}', ${!account.admin_deleted_at})">${account.admin_deleted_at ? "აღდგენა" : "ოპერატორის წაშლა"}</button>` : ""}
     </article>
   `).join("") : `<p class="muted">ანგარიშები ვერ მოიძებნა.</p>`;
@@ -1656,6 +1678,19 @@ async function setAdminOperatorDeleted(operatorId, deleted) {
     p_operator_id: operatorId, p_deleted: deleted
   });
   if (error || data !== true) { alert("ოპერატორის შეცვლა ვერ მოხერხდა: " + (error?.message || "ოპერატორი ვერ მოიძებნა.")); return; }
+  await showAdminDashboard();
+}
+
+async function setAdminOperatorVerified(operatorId, verified) {
+  const action = verified ? "დაადასტუროთ ამ ოპერატორის სერტიფიკატი?" : "გაუქმდეს სერტიფიკატის დადასტურება?";
+  if (!confirm(action)) return;
+  const { data, error } = await supabaseClient.rpc("opero_admin_set_operator_verified", {
+    p_operator_id: operatorId, p_verified: verified
+  });
+  if (error || data !== true) {
+    alert("სტატუსის შეცვლა ვერ მოხერხდა: " + (error?.message || "ოპერატორი ვერ მოიძებნა."));
+    return;
+  }
   await showAdminDashboard();
 }
 
@@ -1747,6 +1782,36 @@ async function showProfile() {
 
   document.getElementById("profileAbout").value =
     data.about || "";
+  selectedProfileCertificatePhoto = null;
+  const certificatePreview = document.getElementById("profileCertificatePreview");
+  const certificateStatus = document.getElementById("profileCertificateStatus");
+  const certificateSelection = document.getElementById("profileCertificateSelection");
+  if (certificatePreview) {
+    certificatePreview.src = data.certificate_url || "";
+    certificatePreview.classList.toggle("hidden", !data.certificate_url);
+  }
+  if (certificateStatus) certificateStatus.textContent = data.certificate_verified ? "სერტიფიკატი დადასტურებულია" : data.certificate_url ? "სერტიფიკატი შემოწმების მოლოდინშია. შეცვლის შემდეგ ხელახლა დადასტურება იქნება საჭირო." : "სერტიფიკატი ატვირთული არ არის";
+  if (certificateSelection) certificateSelection.textContent = "";
+  const certificateFile = document.getElementById("profileCertificateFile");
+  if (certificateFile) certificateFile.value = "";
+}
+
+function setProfileCertificatePhoto(file) {
+  if (!file) return;
+  const status = document.getElementById("profileCertificateStatus");
+  if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size > 5 * 1024 * 1024) {
+    alert("აირჩიეთ JPG, PNG ან WebP ფოტო მაქსიმუმ 5 MB ზომით.");
+    return;
+  }
+  selectedProfileCertificatePhoto = file;
+  const preview = document.getElementById("profileCertificatePreview");
+  if (preview) {
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove("hidden");
+  }
+  if (status) status.textContent = "ახალი ფაილი ატვირთვის შემდეგ ადმინის დადასტურებას დაელოდება.";
+  const selection = document.getElementById("profileCertificateSelection");
+  if (selection) selection.textContent = file.name;
 }
 
 function setOperatorPhotoPreview(url) {
@@ -2020,6 +2085,24 @@ async function saveProfile() {
     updates.crane_control_type = document.getElementById("profileCraneControlType").value || null;
     updates.contact_anytime = document.getElementById("profileContactAnytime").checked;
 
+    if (selectedProfileCertificatePhoto) {
+      const file = selectedProfileCertificatePhoto;
+      const { data: upload, error: uploadError } = await supabaseClient.storage
+        .from("operator-photos")
+        .upload(user.id + "/certificate", file, {
+          upsert: true,
+          contentType: file.type,
+          cacheControl: "3600"
+        });
+      if (uploadError) {
+        alert("სერტიფიკატის ატვირთვა ვერ მოხერხდა: " + uploadError.message);
+        return;
+      }
+      const { data: publicUrl } = supabaseClient.storage.from("operator-photos").getPublicUrl(upload.path);
+      updates.certificate_url = publicUrl.publicUrl + "?v=" + Date.now();
+      updates.certificate_verified = false;
+    }
+
     const photoFile = document.getElementById("profilePhoto").files?.[0];
     if (photoFile) {
       const { data: upload, error: uploadError } = await supabaseClient.storage
@@ -2064,6 +2147,12 @@ async function saveProfile() {
     if (updates.photo_url) {
       setOperatorPhotoPreview(updates.photo_url);
       document.getElementById("profilePhoto").value = "";
+    }
+    if (updates.certificate_url) {
+      selectedProfileCertificatePhoto = null;
+      document.getElementById("profileCertificateFile").value = "";
+      document.getElementById("profileCertificateSelection").textContent = "";
+      document.getElementById("profileCertificateStatus").textContent = "სერტიფიკატი შემოწმების მოლოდინშია.";
     }
     savedProfileEmploymentStatus = updates.is_employed;
     await toggleReplacementProfileFields();
@@ -2381,7 +2470,8 @@ async function showOperators() {
   let operatorsQuery = supabaseClient.from("profiles")
     .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
     .eq("account_type", "operator")
-    .is("admin_deleted_at", null);
+    .is("admin_deleted_at", null)
+    .eq("certificate_verified", true);
   operatorsQuery = user
     ? operatorsQuery.or(`is_employed.eq.false,id.eq.${user.id}`)
     : operatorsQuery.eq("is_employed", false);
@@ -2400,6 +2490,7 @@ async function showOperators() {
     .from("profiles")
     .select("operator_type")
     .eq("account_type", "operator")
+    .eq("certificate_verified", true)
     .is("admin_deleted_at", null);
   const categorySource = categoryError ? operatorDirectory : (registeredOperatorTypes || []);
   const operatorCategories = new Set(["Tower Crane Operator", "Mobile Crane Operator"]);
@@ -2532,7 +2623,8 @@ async function showOperatorProfile(operatorId) {
     .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone, is_employed")
     .eq("id", operatorId)
     .eq("account_type", "operator")
-    .is("admin_deleted_at", null);
+    .is("admin_deleted_at", null)
+    .eq("certificate_verified", true);
   operatorProfileQuery = viewingUser
     ? operatorProfileQuery.or(`is_employed.eq.false,id.eq.${viewingUser.id}`)
     : operatorProfileQuery.eq("is_employed", false);
