@@ -753,6 +753,10 @@
   <div class="profile-shell">
     <h2>My Profile</h2>
     <p class="muted profile-account-type">Account type: <strong id="profileAccountTypeLabel"></strong></p>
+    <section id="adminProfilePanel" class="profile-panel full hidden" aria-label="ადმინისტრატორის პროფილი">
+      <h3>ადმინისტრატორის პროფილი</h3>
+      <p class="muted">ადმინისტრატორის სტატუსი ამ ანგარიშზე აქტიურია.</p>
+    </section>
     <div class="profile-grid">
       <div id="operatorProfileOverview" class="profile-panel profile-overview full hidden">
         <div class="profile-overview-photo">
@@ -1504,9 +1508,11 @@ async function showProfile() {
   }
 
   document.getElementById("profileAccountTypeLabel").textContent =
-    data.account_type === "operator" ? "Operator" : data.account_type === "company" ? "Company" : "User";
+    data.account_type === "admin" ? "ადმინისტრატორი" : data.account_type === "operator" ? "Operator" : data.account_type === "company" ? "Company" : "User";
 
   const isOperator = data.account_type === "operator";
+  const isAdmin = data.account_type === "admin";
+  document.getElementById("adminProfilePanel").classList.toggle("hidden", !isAdmin);
   document.getElementById("operatorProfileOverview").classList.toggle("hidden", !isOperator);
   document.getElementById("operatorCardDetails").classList.toggle("hidden", !isOperator);
   document.getElementById("profilePersonalEditor").classList.toggle("hidden", isOperator);
@@ -1969,7 +1975,7 @@ async function updateHomeCTAs(user) {
     .select("account_type").eq("id", user.id).maybeSingle();
   if (requestId !== homeCtaRequest) return;
 
-  if (error || !profile || !["operator", "company", "user"].includes(profile.account_type)) {
+  if (error || !profile || !["operator", "company", "user", "admin"].includes(profile.account_type)) {
     ctas.innerHTML = "<span class=\"muted\">Your account profile is not available yet.</span>";
     return;
   }
