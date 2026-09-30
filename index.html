@@ -199,9 +199,20 @@
     .operator-own-profile h3, .operator-directory-heading { margin:0 0 11px; color:#dbe1e7; font-size:15px; font-weight:650; }
     .operator-own-card-slot { display:flex; justify-content:flex-start; }
     .operator-directory-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .admin-stat-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:16px 0 22px; }
+    .admin-stat-card { min-width:0; padding:16px; border:1px solid #303945; border-radius:12px; background:#121820; }
+    .admin-stat-card span { display:block; margin-bottom:7px; color:#aeb7c1; font-size:12px; }
+    .admin-stat-card strong { color:#fff; font-size:25px; line-height:1.1; }
+    .admin-directory-controls { display:grid; grid-template-columns:minmax(0,1fr) 190px; gap:10px; margin:14px 0; }
+    .admin-directory-controls input, .admin-directory-controls select { width:100%; min-width:0; min-height:42px; margin:0; padding:10px 12px; border:1px solid #303945; border-radius:8px; background:#0b0f14; color:#fff; }
+    .admin-account-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .admin-account-card { min-width:0; padding:15px; border:1px solid #303945; border-radius:12px; background:#121820; }
+    .admin-account-card h3 { margin:0 0 7px; color:#fff; font-size:16px; overflow-wrap:anywhere; }
+    .admin-account-card p { margin:4px 0 0; color:#aeb7c1; font-size:13px; line-height:1.45; overflow-wrap:anywhere; }
+    .admin-account-role { display:inline-flex; margin-bottom:6px; padding:3px 8px; border:1px solid #394653; border-radius:999px; color:#d7dde5; font-size:11px; }
     #operatorResults > .card, #jobResults > .card { margin:0; }
-    @media (max-width:900px) { .operator-directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width:640px) { .operator-directory-grid { grid-template-columns:minmax(0,1fr); } }
+    @media (max-width:900px) { .operator-directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .admin-stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px) { .operator-directory-grid, .admin-account-list { grid-template-columns:minmax(0,1fr); } .admin-directory-controls { grid-template-columns:minmax(0,1fr); } }
     .job-card { display:grid; gap:12px; padding:16px; border-radius:14px; }
     .job-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; min-width:0; padding:0; border:0; background:transparent; }
     .job-card-title-wrap { min-width:0; }
@@ -714,6 +725,7 @@
 
   <nav class="hidden">
     <button id="operatorsNav" class="hidden" onclick="showOperators()">Operators</button>
+    <button id="adminNav" class="hidden" onclick="showAdminDashboard()">ადმინი</button>
     <button id="applicationsNav" class="hidden" onclick="showApplications()">Applications <span id="applicationsUnreadBadge" class="unread-badge hidden">0</span></button>
     <button id="dashboardNav" class="hidden" onclick="showDashboard()">Dashboard</button>
     <button id="loginNav" class="hidden" onclick="showLogin()">Login</button>
@@ -756,6 +768,7 @@
     <section id="adminProfilePanel" class="profile-panel full hidden" aria-label="ადმინისტრატორის პროფილი">
       <h3>ადმინისტრატორის პროფილი</h3>
       <p class="muted">ადმინისტრატორის სტატუსი ამ ანგარიშზე აქტიურია.</p>
+      <button type="button" onclick="showAdminDashboard()">ადმინისტრაციულ პანელზე გადასვლა</button>
     </section>
     <div class="profile-grid">
       <div id="operatorProfileOverview" class="profile-panel profile-overview full hidden">
@@ -1059,9 +1072,10 @@ function persistAppView(state) {
 
 function setActiveNavigation(view) {
   const activeId = view === "profile" ? "profileNav"
+    : view === "admin" ? "adminNav"
     : ["operators", "operatorProfile", "companyProfile"].includes(view) ? "operatorsNav"
     : null;
-  ["operatorsNav", "profileNav"].forEach(id => {
+  ["operatorsNav", "adminNav", "profileNav"].forEach(id => {
     document.getElementById(id)?.classList.toggle("active", id === activeId);
   });
 }
@@ -1091,6 +1105,7 @@ function restoreAppView(state) {
     login: () => showLogin(),
     register: () => showRegister(),
     profile: () => showProfile(),
+    admin: () => showAdminDashboard(),
     dashboard: () => showAccountHome(),
     myJobs: () => showMyJobs(),
     operators: () => showOperators(),
@@ -1471,6 +1486,101 @@ async function login(event) {
   await updateHomeCTAs(data.user);
   showHome();
 
+}
+
+let adminAccountsCache = [];
+
+async function showAdminDashboard() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) { showLogin(); return; }
+
+  const { data: ownProfile, error: accessError } = await supabaseClient
+    .from("profiles").select("account_type").eq("id", user.id).maybeSingle();
+  if (accessError || ownProfile?.account_type !== "admin") {
+    alert("ამ გვერდზე შესვლის უფლება არ გაქვთ.");
+    showHome();
+    return;
+  }
+
+  saveAppView("admin");
+  hideAll();
+  document.getElementById("mainContent").classList.remove("hidden");
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="profile-panel-heading">
+      <div><h2>ადმინისტრაციული პანელი</h2><p class="muted">Opero პლატფორმის ანგარიშების მიმოხილვა</p></div>
+      <button type="button" class="secondary" onclick="showProfile()">ჩემი პროფილი</button>
+    </div>
+    <div class="admin-stat-grid" aria-live="polite">
+      <div class="admin-stat-card"><span>ყველა ანგარიში</span><strong id="adminTotalAccounts">…</strong></div>
+      <div class="admin-stat-card"><span>ოპერატორები</span><strong id="adminOperatorCount">…</strong></div>
+      <div class="admin-stat-card"><span>ვაკანსიები</span><strong id="adminJobCount">…</strong></div>
+      <div class="admin-stat-card"><span>განაცხადები</span><strong id="adminApplicationCount">…</strong></div>
+    </div>
+    <section aria-labelledby="adminAccountsHeading">
+      <h3 id="adminAccountsHeading">ანგარიშები</h3>
+      <div class="admin-directory-controls">
+        <input id="adminAccountSearch" type="search" placeholder="ძებნა სახელით, ნომრით ან ქალაქით" oninput="filterAdminAccounts()" aria-label="ანგარიშების ძიება">
+        <select id="adminAccountRole" onchange="filterAdminAccounts()" aria-label="ანგარიშის ტიპის ფილტრი">
+          <option value="">ყველა ტიპი</option>
+          <option value="operator">ოპერატორი</option>
+          <option value="user">მომხმარებელი</option>
+          <option value="company">კომპანია</option>
+          <option value="admin">ადმინისტრატორი</option>
+        </select>
+      </div>
+      <p id="adminDirectoryStatus" class="muted" aria-live="polite">ანგარიშები იტვირთება…</p>
+      <div id="adminAccountList" class="admin-account-list"></div>
+    </section>
+  `;
+
+  const countQuery = table => supabaseClient.from(table).select("id", { count: "exact", head: true });
+  const [profilesCount, operatorsCount, jobsCount, applicationsCount, accountsResult] = await Promise.all([
+    countQuery("profiles"),
+    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator"),
+    countQuery("jobs"),
+    countQuery("applications"),
+    supabaseClient.from("profiles")
+      .select("id, full_name, phone, account_type, city, operator_type, is_employed, experience_years, created_at")
+      .order("created_at", { ascending: false }).limit(500)
+  ]);
+
+  document.getElementById("adminTotalAccounts").textContent = profilesCount.error ? "—" : String(profilesCount.count ?? 0);
+  document.getElementById("adminOperatorCount").textContent = operatorsCount.error ? "—" : String(operatorsCount.count ?? 0);
+  document.getElementById("adminJobCount").textContent = jobsCount.error ? "—" : String(jobsCount.count ?? 0);
+  document.getElementById("adminApplicationCount").textContent = applicationsCount.error ? "—" : String(applicationsCount.count ?? 0);
+
+  if (accountsResult.error) {
+    document.getElementById("adminDirectoryStatus").textContent = "ანგარიშების სია ვერ ჩაიტვირთა. შეამოწმეთ Supabase-ის admin მიგრაცია.";
+    return;
+  }
+  adminAccountsCache = accountsResult.data || [];
+  filterAdminAccounts();
+}
+
+function filterAdminAccounts() {
+  const target = document.getElementById("adminAccountList");
+  const status = document.getElementById("adminDirectoryStatus");
+  if (!target || !status) return;
+  const term = String(document.getElementById("adminAccountSearch")?.value || "").trim().toLocaleLowerCase();
+  const role = document.getElementById("adminAccountRole")?.value || "";
+  const rows = adminAccountsCache.filter(account => {
+    if (role && account.account_type !== role) return false;
+    return [account.full_name, account.phone, account.city, account.operator_type]
+      .some(value => String(value || "").toLocaleLowerCase().includes(term));
+  });
+  const labels = { admin: "ადმინისტრატორი", operator: "ოპერატორი", user: "მომხმარებელი", company: "კომპანია" };
+  status.textContent = `ნაჩვენებია ${rows.length} ანგარიში${adminAccountsCache.length === 500 ? " · ჩამოტვირთულია ბოლო 500" : ""}`;
+  target.innerHTML = rows.length ? rows.map(account => `
+    <article class="admin-account-card">
+      <span class="admin-account-role">${escapeHtml(labels[account.account_type] || account.account_type || "უცნობი")}</span>
+      <h3>${escapeHtml(account.full_name || "სახელი მითითებული არ არის")}</h3>
+      ${account.phone ? `<p>ტელეფონი: ${escapeHtml(account.phone)}</p>` : ""}
+      ${account.city ? `<p>ქალაქი: ${escapeHtml(account.city)}</p>` : ""}
+      ${account.operator_type ? `<p>კატეგორია: ${escapeHtml(translateOperoText(account.operator_type))}</p>` : ""}
+      ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p>` : ""}
+    </article>
+  `).join("") : `<p class="muted">ანგარიშები ვერ მოიძებნა.</p>`;
 }
 
 async function showProfile() {
@@ -1900,6 +2010,7 @@ function updateAuthUI(loggedIn) {
   document.getElementById("loginNav").classList.add("hidden");
   document.querySelector("header nav")?.classList.toggle("hidden", !loggedIn);
   document.getElementById("operatorsNav").classList.toggle("hidden", !loggedIn);
+  document.getElementById("adminNav").classList.add("hidden");
   document.getElementById("logoutNav").classList.toggle("hidden", !loggedIn);
   document.getElementById("applicationsNav").classList.add("hidden");
   document.getElementById("dashboardNav").classList.add("hidden");
@@ -1975,6 +2086,7 @@ async function updateHomeCTAs(user) {
     .select("account_type").eq("id", user.id).maybeSingle();
   if (requestId !== homeCtaRequest) return;
 
+  document.getElementById("adminNav").classList.toggle("hidden", profile?.account_type !== "admin");
   if (error || !profile || !["operator", "company", "user", "admin"].includes(profile.account_type)) {
     ctas.innerHTML = "<span class=\"muted\">Your account profile is not available yet.</span>";
     return;
