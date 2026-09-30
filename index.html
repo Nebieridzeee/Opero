@@ -792,7 +792,9 @@
             <input id="profilePhone" type="text" placeholder="Phone">
           </label>
           <label class="profile-field">City
-            <input id="profileCity" type="text" placeholder="City">
+            <select id="profileCity" autocomplete="address-level2">
+              <option value="">აირჩიეთ ქალაქი</option>
+            </select>
           </label>
           <label class="profile-field">Country
             <input id="profileCountry" type="text" placeholder="Country">
@@ -910,7 +912,9 @@
       <input id="fullName" placeholder="სახელი გვარი" autocomplete="name" required>
     </label>
     <label class="registration-field">ქალაქი
-      <input id="city" placeholder="ქალაქი" autocomplete="address-level2" required>
+      <select id="city" autocomplete="address-level2" required>
+        <option value="">აირჩიეთ ქალაქი</option>
+      </select>
     </label>
     <input id="operatorCountry" type="hidden" value="Georgia">
 
@@ -1020,6 +1024,26 @@ const supabaseClient =
 
 const OPERO_HISTORY_KEY = "operoHistory";
 let restoringAppHistory = false;
+const GEORGIAN_CITIES = [
+  "თბილისი", "ბათუმი", "ქუთაისი", "რუსთავი", "ზუგდიდი", "გორი", "ფოთი", "ხაშური", "სამტრედია", "სენაკი",
+  "ზესტაფონი", "მარნეული", "თელავი", "ახალციხე", "ქობულეთი", "ოზურგეთი", "კასპი", "ჭიათურა", "წყალტუბო", "საგარეჯო",
+  "გარდაბანი", "ბოლნისი", "ბორჯომი", "ტყიბული", "ხონი", "ახალქალაქი", "გურჯაანი", "მცხეთა", "ყვარელი", "ლანჩხუთი",
+  "დუშეთი", "საჩხერე", "დედოფლისწყარო", "ლაგოდეხი", "ნინოწმინდა", "წნორი", "წალკა", "ამბროლაური", "ონი", "მესტია",
+  "აბაშა", "ასპინძა", "ბაღდათი", "ვანი", "ჯვარი", "თერჯოლა", "ლენტეხი", "მარტვილი", "ჩოხატაური", "ხობი",
+  "წალენჯიხა", "სტეფანწმინდა", "ქედა", "შუახევი", "ხულო", "ახმეტა", "თეთრიწყარო", "ვალე", "სურამი"
+];
+
+function populateGeorgianCitySelect(select, currentValue = "") {
+  if (!select) return;
+  const placeholder = select.options[0];
+  select.replaceChildren(placeholder);
+  GEORGIAN_CITIES.forEach(city => select.add(new Option(city, city)));
+  const current = String(currentValue || "").trim();
+  if (current && !GEORGIAN_CITIES.includes(current)) select.add(new Option(current, current));
+  select.value = current;
+}
+
+populateGeorgianCitySelect(document.getElementById("city"));
 
 if (!window.history.state?.[OPERO_HISTORY_KEY]) {
   window.history.replaceState({ [OPERO_HISTORY_KEY]: true, view: "home", args: [] }, "", window.location.href);
@@ -1513,8 +1537,7 @@ async function showProfile() {
   document.getElementById("profilePhone").value =
     data.phone || "";
 
-  document.getElementById("profileCity").value =
-    data.city || "";
+  populateGeorgianCitySelect(document.getElementById("profileCity"), data.city || "");
 
   document.getElementById("profileCountry").value =
     data.country || "Georgia";
