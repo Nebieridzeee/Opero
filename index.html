@@ -187,15 +187,17 @@
     .operator-card .status-badge-looking { border-color:#26784e; background:#123526; color:#8ef0b4; animation:operator-looking-pulse 1.8s ease-in-out infinite; }
     @keyframes operator-looking-pulse { 0%,100% { border-color:#26784e; box-shadow:0 0 0 0 rgb(66 216 135 / 0%); } 50% { border-color:#42d887; box-shadow:0 0 10px rgb(66 216 135 / 22%); } }
     @media (prefers-reduced-motion: reduce) { .operator-card .status-badge-looking { animation:none; } }
-    .operator-card-own { width:min(100%,560px); padding:11px 13px; border-color:#34463d; }
+    .operator-card-own { width:auto; padding:11px 13px; border-color:#34463d; }
     .operator-card-own:not(.operator-card-employed) .operator-card-main { gap:10px; }
     .operator-card-own:not(.operator-card-employed) .operator-avatar { flex-basis:52px; width:52px; height:52px; border-radius:10px; }
     .operator-card-own:not(.operator-card-employed) .operator-card-copy h3 { margin:0; font-size:15px; }
-    .operator-card-employed { width:100%; }
+    .operator-card-employed { width:auto; }
     .operator-card-own-label { display:inline-block; margin-bottom:3px; color:#8ef0b4; font-size:11px; font-weight:600; }
     .operator-profile-edit-action { justify-self:start; }
-    #operatorResults, #jobResults { display:grid; gap:12px; }
+    #operatorResults { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
     #operatorResults > .card, #jobResults > .card { margin:0; }
+    @media (max-width:900px) { #operatorResults { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px) { #operatorResults { grid-template-columns:minmax(0,1fr); } }
     .job-card { display:grid; gap:12px; padding:16px; border-radius:14px; }
     .job-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; min-width:0; padding:0; border:0; background:transparent; }
     .job-card-title-wrap { min-width:0; }
@@ -2168,6 +2170,7 @@ async function showOperators() {
       <label for="operatorCategoryFilter">სასურველი ოპერატორი</label>
       <select id="operatorCategoryFilter" onchange="filterOperatorCategory(this.value)" aria-label="სასურველი ოპერატორის კატეგორია">
         <option value="Tower Crane Operator" selected>კოშკურა ამწის ოპერატორი</option>
+        <option value="Mobile Crane Operator">მობილური ამწის ოპერატორი</option>
       </select>
     </div>
     <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
@@ -2187,7 +2190,7 @@ function filterOperators(query) {
     (operator.is_own_profile || operator.operator_type === currentOperatorCategory) &&
     [operator.full_name, operator.operator_type, operator.city, operator.country, operator.about]
       .some(value => String(value || "").toLocaleLowerCase().includes(term))
-  );
+  ).sort((a, b) => (Number(b.experience_years) || 0) - (Number(a.experience_years) || 0));
   renderOperators(matches, Boolean(term));
 }
 
@@ -2211,7 +2214,7 @@ function renderOperators(operators, searched = false) {
         <div class="operator-card-copy">
           ${operator.is_own_profile ? `<span class="operator-card-own-label">${employedOwnCard ? "დასაქმებული · ჩემი პროფილი" : "ჩემი პროფილი"}</span>` : ""}
           <h3 data-user-content>${escapeHtml(operator.full_name || "ოპერატორი")}</h3>
-          ${compactOwnCard ? "" : `<p class="operator-card-type">${escapeHtml(operator.operator_type || "ოპერატორი")}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
+          ${compactOwnCard ? "" : `<p class="operator-card-type">${escapeHtml(translateOperoText(operator.operator_type || "ოპერატორი"))}${operator.crane_control_type ? " · " + escapeHtml(craneControlTypeLabel(operator.crane_control_type)) : ""}</p>
           <p class="operator-card-experience">გამოცდილება: ${escapeHtml(operator.experience_years ?? 0)} წელი${operator.age ? " · ასაკი " + escapeHtml(operator.age) : ""}</p>`}
         </div>
       </div>
