@@ -1489,6 +1489,7 @@ async function login(event) {
 }
 
 let adminAccountsCache = [];
+let adminJobsCache = [];
 
 async function showAdminDashboard() {
   const { data: { user } } = await supabaseClient.auth.getUser();
@@ -1532,16 +1533,36 @@ async function showAdminDashboard() {
       <p id="adminDirectoryStatus" class="muted" aria-live="polite">ანგარიშები იტვირთება…</p>
       <div id="adminAccountList" class="admin-account-list"></div>
     </section>
+    <section aria-labelledby="adminJobsHeading" style="margin-top:28px;">
+      <h3 id="adminJobsHeading">ვაკანსიები</h3>
+      <div class="admin-directory-controls">
+        <input id="adminJobSearch" type="search" placeholder="ვაკანსიის ძიება" oninput="filterAdminJobs()" aria-label="ვაკანსიების ძიება">
+        <select id="adminJobState" onchange="filterAdminJobs()" aria-label="ვაკანსიის სტატუსის ფილტრი">
+          <option value="active">აქტიური</option>
+          <option value="deleted">წაშლილი</option>
+          <option value="all">ყველა</option>
+        </select>
+      </div>
+      <p id="adminJobDirectoryStatus" class="muted" aria-live="polite">ვაკანსიები იტვირთება…</p>
+      <div id="adminJobList" class="admin-account-list"></div>
+    </section>
   `;
 
-  const countQuery = table => supabaseClient.from(table).select("id", { count: "exact", head: true });
-  const [profilesCount, operatorsCount, jobsCount, applicationsCount, accountsResult] = await Promise.all([
+  const countQuery = (table, activeOnly = false) => {
+    let query = supabaseClient.from(table).select("id", { count: "exact", head: true });
+    if (activeOnly) query = query.is("admin_deleted_at", null);
+    return query;
+  };
+  const [profilesCount, operatorsCount, jobsCount, applicationsCount, accountsResult, jobsResult] = await Promise.all([
     countQuery("profiles"),
-    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator"),
-    countQuery("jobs"),
+    supabaseClient.from("profiles").select("id", { count: "exact", head: true }).eq("account_type", "operator").is("admin_deleted_at", null),
+    countQuery("jobs", true),
     countQuery("applications"),
     supabaseClient.from("profiles")
-      .select("id, full_name, phone, account_type, city, operator_type, is_employed, experience_years, created_at")
+      .select("id, full_name, phone, account_type, city, operator_type, is_employed, experience_years, created_at, admin_deleted_at")
+      .order("created_at", { ascending: false }).limit(500),
+    supabaseClient.from("jobs")
+      .select("id, title, job_type, operator_type, company, city, country, created_at, admin_deleted_at")
       .order("created_at", { ascending: false }).limit(500)
   ]);
 
@@ -1556,6 +1577,12 @@ async function showAdminDashboard() {
   }
   adminAccountsCache = accountsResult.data || [];
   filterAdminAccounts();
+  if (jobsResult.error) {
+    document.getElementById("adminJobDirectoryStatus").textContent = "ვაკანსიების სია ვერ ჩაიტვირთა. შეამოწმეთ admin მიგრაცია.";
+  } else {
+    adminJobsCache = jobsResult.data || [];
+    filterAdminJobs();
+  }
 }
 
 function filterAdminAccounts() {
@@ -1574,13 +1601,62 @@ function filterAdminAccounts() {
   target.innerHTML = rows.length ? rows.map(account => `
     <article class="admin-account-card">
       <span class="admin-account-role">${escapeHtml(labels[account.account_type] || account.account_type || "უცნობი")}</span>
+      ${account.admin_deleted_at ? '<span class="admin-account-role">სიიდან წაშლილია</span>' : ""}
       <h3>${escapeHtml(account.full_name || "სახელი მითითებული არ არის")}</h3>
       ${account.phone ? `<p>ტელეფონი: ${escapeHtml(account.phone)}</p>` : ""}
       ${account.city ? `<p>ქალაქი: ${escapeHtml(account.city)}</p>` : ""}
       ${account.operator_type ? `<p>კატეგორია: ${escapeHtml(translateOperoText(account.operator_type))}</p>` : ""}
       ${account.account_type === "operator" ? `<p>${account.is_employed === true ? "დასაქმებულია" : "გამოცდილება: " + escapeHtml(account.experience_years ?? 0) + " წელი"}</p>` : ""}
+      ${account.account_type === "operator" ? `<button type="button" class="secondary" onclick="setAdminOperatorDeleted('${escapeHtml(account.id)}', ${!account.admin_deleted_at})">${account.admin_deleted_at ? "აღდგენა" : "ოპერატორის წაშლა"}</button>` : ""}
     </article>
   `).join("") : `<p class="muted">ანგარიშები ვერ მოიძებნა.</p>`;
+}
+
+function filterAdminJobs() {
+  const target = document.getElementById("adminJobList");
+  const status = document.getElementById("adminJobDirectoryStatus");
+  if (!target || !status) return;
+  const term = String(document.getElementById("adminJobSearch")?.value || "").trim().toLocaleLowerCase();
+  const state = document.getElementById("adminJobState")?.value || "active";
+  const rows = adminJobsCache.filter(job => {
+    const deleted = Boolean(job.admin_deleted_at);
+    if (state === "active" && deleted || state === "deleted" && !deleted) return false;
+    return [job.title, job.operator_type, job.company, job.city, job.country]
+      .some(value => String(value || "").toLocaleLowerCase().includes(term));
+  });
+  status.textContent = `ნაჩვენებია ${rows.length} ვაკანსია${adminJobsCache.length === 500 ? " · ჩამოტვირთულია ბოლო 500" : ""}`;
+  target.innerHTML = rows.length ? rows.map(job => `
+    <article class="admin-account-card">
+      <span class="admin-account-role">${job.admin_deleted_at ? "სიიდან წაშლილია" : job.job_type === "replacement" ? "შემცვლელის მოთხოვნა" : "ვაკანსია"}</span>
+      <h3>${escapeHtml(job.title || "უსათაურო განცხადება")}</h3>
+      ${job.company ? `<p>კომპანია: ${escapeHtml(job.company)}</p>` : ""}
+      ${job.operator_type ? `<p>ოპერატორი: ${escapeHtml(translateOperoText(job.operator_type))}</p>` : ""}
+      <p>ადგილმდებარეობა: ${escapeHtml([job.city, job.country].filter(Boolean).join(", ") || "მითითებული არ არის")}</p>
+      <button type="button" class="secondary" onclick="setAdminJobDeleted(${Number(job.id)}, ${!job.admin_deleted_at})">${job.admin_deleted_at ? "აღდგენა" : "ვაკანსიის წაშლა"}</button>
+    </article>
+  `).join("") : `<p class="muted">ამ ფილტრით ვაკანსია ვერ მოიძებნა.</p>`;
+}
+
+async function setAdminJobDeleted(jobId, deleted) {
+  const action = deleted ? "წაიშალოს" : "აღდგეს";
+  const detail = deleted ? "ვაკანსია საიტიდან დაიმალება და შეტყობინებების ისტორია შენარჩუნდება." : "ვაკანსია ისევ გამოჩნდება საიტზე.";
+  if (!confirm(`ვაკანსია ${action}? ${detail}`)) return;
+  const { data, error } = await supabaseClient.rpc("opero_admin_set_job_deleted", {
+    p_job_id: Number(jobId), p_deleted: deleted
+  });
+  if (error || data !== true) { alert("ვაკანსიის შეცვლა ვერ მოხერხდა: " + (error?.message || "ვაკანსია ვერ მოიძებნა.")); return; }
+  await showAdminDashboard();
+}
+
+async function setAdminOperatorDeleted(operatorId, deleted) {
+  const action = deleted ? "წაიშალოს" : "აღდგეს";
+  const detail = deleted ? "ოპერატორის პროფილი ოპერატორების სიიდან დაიმალება. ანგარიშის ისტორია შენარჩუნდება." : "ოპერატორის პროფილი ისევ გამოჩნდება სიაში.";
+  if (!confirm(`ოპერატორი ${action}? ${detail}`)) return;
+  const { data, error } = await supabaseClient.rpc("opero_admin_set_operator_deleted", {
+    p_operator_id: operatorId, p_deleted: deleted
+  });
+  if (error || data !== true) { alert("ოპერატორის შეცვლა ვერ მოხერხდა: " + (error?.message || "ოპერატორი ვერ მოიძებნა.")); return; }
+  await showAdminDashboard();
 }
 
 async function showProfile() {
@@ -2166,7 +2242,7 @@ async function showMyJobs() {
 
   let jobsQuery = supabaseClient.from("jobs")
     .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date")
-    .eq("created_by", user.id).order("created_at", { ascending: false });
+    .eq("created_by", user.id).is("admin_deleted_at", null).order("created_at", { ascending: false });
   if (profile.account_type === "operator") jobsQuery = jobsQuery.eq("job_type", "replacement");
   const { data: jobs, error } = await jobsQuery;
   if (error) {
@@ -2304,7 +2380,8 @@ async function showOperators() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   let operatorsQuery = supabaseClient.from("profiles")
     .select("id, full_name, operator_type, crane_control_type, age, photo_url, contact_anytime, city, country, experience_years, about, is_employed, looking_for_permanent_job, needs_replacement, available_for_replacement, created_at")
-    .eq("account_type", "operator");
+    .eq("account_type", "operator")
+    .is("admin_deleted_at", null);
   operatorsQuery = user
     ? operatorsQuery.or(`is_employed.eq.false,id.eq.${user.id}`)
     : operatorsQuery.eq("is_employed", false);
@@ -2322,7 +2399,8 @@ async function showOperators() {
   const { data: registeredOperatorTypes, error: categoryError } = await supabaseClient
     .from("profiles")
     .select("operator_type")
-    .eq("account_type", "operator");
+    .eq("account_type", "operator")
+    .is("admin_deleted_at", null);
   const categorySource = categoryError ? operatorDirectory : (registeredOperatorTypes || []);
   const operatorCategories = new Set(["Tower Crane Operator", "Mobile Crane Operator"]);
   categorySource.forEach(operator => {
@@ -2453,7 +2531,8 @@ async function showOperatorProfile(operatorId) {
   let operatorProfileQuery = supabaseClient.from("profiles")
     .select("full_name, operator_type, crane_control_type, age, photo_url, certificate_url, contact_anytime, city, country, experience_years, about, phone, is_employed")
     .eq("id", operatorId)
-    .eq("account_type", "operator");
+    .eq("account_type", "operator")
+    .is("admin_deleted_at", null);
   operatorProfileQuery = viewingUser
     ? operatorProfileQuery.or(`is_employed.eq.false,id.eq.${viewingUser.id}`)
     : operatorProfileQuery.eq("is_employed", false);
@@ -2765,6 +2844,7 @@ async function showJobs(category = "all", focusJobId = null) {
   const { data, error } = await supabaseClient
     .from("jobs")
     .select("id, job_type, title, operator_type, company, city, country, description, salary, replacement_date, replacement_end_date, created_by, created_at")
+    .is("admin_deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
