@@ -2168,13 +2168,25 @@ async function showOperators() {
   operatorDirectory = data || [];
   operatorDirectory = operatorDirectory.map(operator => ({ ...operator, is_own_profile: operator.id === user?.id }));
   operatorDirectory.sort((a, b) => Number(b.is_own_profile) - Number(a.is_own_profile));
+  const { data: registeredOperatorTypes, error: categoryError } = await supabaseClient
+    .from("profiles")
+    .select("operator_type")
+    .eq("account_type", "operator");
+  const categorySource = categoryError ? operatorDirectory : (registeredOperatorTypes || []);
+  const operatorCategories = new Set(["Tower Crane Operator", "Mobile Crane Operator"]);
+  categorySource.forEach(operator => {
+    const category = String(operator.operator_type || "").trim();
+    if (category) operatorCategories.add(category);
+  });
+  const categoryOptions = [...operatorCategories].map(category =>
+    `<option value="${escapeHtml(category)}" ${category === currentOperatorCategory ? "selected" : ""}>${escapeHtml(translateOperoText(category))}</option>`
+  ).join("");
   content.innerHTML = `
     <h2>Operators</h2>
     <div class="operator-category-filter">
       <label for="operatorCategoryFilter">სასურველი ოპერატორი</label>
       <select id="operatorCategoryFilter" onchange="filterOperatorCategory(this.value)" aria-label="სასურველი ოპერატორის კატეგორია">
-        <option value="Tower Crane Operator" selected>კოშკურა ამწის ოპერატორი</option>
-        <option value="Mobile Crane Operator">მობილური ამწის ოპერატორი</option>
+        ${categoryOptions}
       </select>
     </div>
     <input type="search" id="operatorSearch" placeholder="Search by name, profession or location" oninput="filterOperators(this.value)" aria-label="Search operators" style="width:100%; padding:12px; margin:16px 0; border-radius:8px; border:1px solid #303945; background:#121820; color:white;">
