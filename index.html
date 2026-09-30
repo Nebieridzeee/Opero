@@ -955,7 +955,7 @@
         <input id="experience" type="number" min="0" step="1" placeholder="გამოცდილება (წლები)" required>
       </label>
       <div class="registration-field">
-        <span class="registration-question">სერტიფიკატის ფოტო (სავალდებულო)</span>
+        <span id="registrationCertificatePhotoQuestion" class="registration-question">სერტიფიკატის ფოტო (სავალდებულო)</span>
         <div class="registration-image-actions">
           <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoCamera').click()" aria-label="სერტიფიკატის ფოტოს გადაღება"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>ფოტოს გადაღება</button>
           <button type="button" class="secondary" onclick="document.getElementById('registrationCertificatePhotoUpload').click()" aria-label="სერტიფიკატის ფოტოს ატვირთვა"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4M9 12h6M9 15.5h6"/></svg>ფოტოს ატვირთვა</button>
@@ -1161,6 +1161,12 @@ function toggleRegistrationCraneControls(operatorType = document.getElementById(
   const select = document.getElementById("registrationCraneControlType");
   if (!field || !select) return;
   const show = registrationAccountType === "operator" && operatorType === "Tower Crane Operator";
+  const certificateQuestion = document.getElementById("registrationCertificatePhotoQuestion");
+  if (certificateQuestion) {
+    certificateQuestion.textContent = operatorType === "Drone Operator"
+      ? "ნამუშევრის ატვირთვა (სავალდებულო)"
+      : "სერტიფიკატის ფოტო (სავალდებულო)";
+  }
   field.classList.toggle("hidden", !show);
   if (!show) select.value = "";
 }
@@ -1277,7 +1283,9 @@ async function register() {
       return;
     }
     if (!registrationOperatorPhotos.certificate) {
-      status.textContent = "ატვირთეთ სერტიფიკატის ფოტო.";
+      status.textContent = operatorType === "Drone Operator"
+        ? "ატვირთეთ ნამუშევრის ფოტო."
+        : "ატვირთეთ სერტიფიკატის ფოტო.";
       return;
     }
     Object.assign(signupMetadata, {
@@ -2335,10 +2343,11 @@ async function showOperatorProfile(operatorId) {
     : "<p class=\"muted\">ტელეფონის ნომერი მითითებული არ არის.</p>";
   const cardProfile = { photo_url: data.photo_url, full_name: data.full_name };
   const aboutMarkup = data.about ? `<section class="operator-profile-about"><h3>ჩემ შესახებ</h3><p>${about}</p></section>` : "";
+  const certificateLabel = data.operator_type === "Drone Operator" ? "ნამუშევარი" : "კოშკურა ამწის სერტიფიკატი";
   const certificateMarkup = data.certificate_url ? `
     <figure class="operator-certificate">
-      <figcaption>კოშკურა ამწის სერტიფიკატი · გასადიდებლად დააჭირე</figcaption>
-      <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="კოშკურა ამწის სერტიფიკატი" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
+      <figcaption>${certificateLabel} · გასადიდებლად დააჭირე</figcaption>
+      <img translate="no" src="${escapeHtml(data.certificate_url)}" alt="${certificateLabel}" role="button" tabindex="0" aria-expanded="false" onclick="toggleCertificatePhoto(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCertificatePhoto(this)}">
     </figure>` : "";
   const calendarMarkup = data.is_employed === true ? "" : `
         <aside class="operator-profile-calendar" aria-label="ოპერატორის თავისუფალი და დაკავებული დღეების კალენდარი">
